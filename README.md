@@ -78,35 +78,38 @@ python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac
 
 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 
+[+] service [+]
+
+
 [+] registry [+]
 
-sample.exe|SetValueKey|HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run\Windows Audio Service,Value:Windows\SysWOW64\svchost_update.exe,Type:1
-svchost_update.exe|DeleteValueKey|HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProxyBypass
-svchost_update.exe|DeleteValueKey|HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProxyBypass
-svchost_update.exe|DeleteValueKey|HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\IntranetName
-	<TRUNCATED>
-ntsystem.exe|RegCreateKeyEx|HKLM,System\CurrentControlSet\Services\Tcpip\Parameters
-netsh.exe|RegSetValueEx|HKLM\SYSTEM\ControlSet001\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\AuthorizedApplications\List,WINDOWS\system32\ntsystem.exe,WINDOWS\system32\ntsystem.exe:*:Enabled:Windows ClipBook
-ntsystem.exe|RegSetValueEx|HKCU\Software\pb,id,1494421186
-ntsystem.exe|RegSetValueEx|HKCU\Software\pb,hl,aHR0cDovL21pYmVycG9ydGVzYWwuY29tL2dvLnBocA==
+sample.exe , SetValueKey , HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run\Windows Audio Service , Value:Windows\SysWOW64\svchost_update.exe , Type:1
+svchost_update.exe , DeleteValueKey , HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProxyBypass
+svchost_update.exe , DeleteValueKey , HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProxyBypass
+svchost_update.exe , DeleteValueKey , HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\IntranetName
+    <TRUNCATED>
+ntsystem.exe , RegCreateKeyEx , HKLM , System\CurrentControlSet\Services\Tcpip\Parameters
+netsh.exe , RegSetValueEx , HKLM\SYSTEM\ControlSet001\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\AuthorizedApplications\List , WINDOWS\system32\ntsystem.exe , WINDOWS\system32\ntsystem.exe:*:Enabled:Windows ClipBook
+ntsystem.exe , RegSetValueEx , HKCU\Software\pb , id , 1494421186
+ntsystem.exe , RegSetValueEx , HKCU\Software\pb , hl , aHR0cDovL21pYmVycG9ydGVzYWwuY29tL2dvLnBocA==
 
 [+] process [+]
 
-sample.exe|created|,Windows\SysWOW64\svchost_update.exe, Windows\SysWOW64\svchost_update.exe
-svchost_update.exe|created|,Windows\SysWOW64\netsh.exe, Windows\System32\netsh.exe  firewall add allowedprogram  Windows\SysWOW64\svchost_update.exe   Windows Audio Service  ENABLE
-svchost_update.exe|terminated|,Windows\SysWOW64\netsh.exe
-None|terminated|,Windows\SysWOW64\svchost_update.exe
-	<TRUNCATED>
-ntsystem.exe|LoadLibraryExW|DNSAPI.dll,,0
-ntsystem.exe|LoadLibraryExW|rasadhlp.dll,,0
-ntsystem.exe|LoadLibraryExW|hnetcfg.dll,,0
-ntsystem.exe|LoadLibraryExW|WINDOWS\System32\wshtcpip.dll,,0
+sample.exe , created ,  , Windows\SysWOW64\svchost_update.exe ,  Windows\SysWOW64\svchost_update.exe
+svchost_update.exe , created ,  , Windows\SysWOW64\netsh.exe ,  Windows\System32\netsh.exe  firewall add allowedprogram  Windows\SysWOW64\svchost_update.exe   Windows Audio Service  ENABLE
+svchost_update.exe , terminated ,  , Windows\SysWOW64\netsh.exe
+unknown , terminated ,  , Windows\SysWOW64\svchost_update.exe
+    <TRUNCATED>
+ntsystem.exe , LoadLibraryExW , DNSAPI.dll ,  , 0
+ntsystem.exe , LoadLibraryExW , rasadhlp.dll ,  , 0
+ntsystem.exe , LoadLibraryExW , hnetcfg.dll ,  , 0
+ntsystem.exe , LoadLibraryExW , WINDOWS\System32\wshtcpip.dll ,  , 0
 
 [+] misc [+]
 
-svchost_update.exe|SetWindowLong|SystemProcess,GWL_WNDPROC
-svchost_update.exe|IsDebuggerPresent|
-ntsystem.exe|SetWindowLong|SystemProcess,GWL_WNDPROC
+svchost_update.exe , SetWindowLong , SystemProcess , GWL_WNDPROC
+svchost_update.exe , IsDebuggerPresent
+ntsystem.exe , SetWindowLong , SystemProcess , GWL_WNDPROC
 
 [+] user_agent [+]
 
@@ -114,29 +117,29 @@ pb
 
 [+] mutex [+]
 
-svchost_update.exe|CreateMutexW|Local\!IETld!Mutex
-ntsystem.exe|CreateMutexW|c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
-ntsystem.exe|CreateMutexW|c:!documents and settings!administrator!cookies!
-ntsystem.exe|CreateMutexW|c:!documents and settings!administrator!local settings!history!history.ie5!
-ntsystem.exe|CreateMutexW|WininetConnectionMutex
-ntsystem.exe|CreateMutexW|<NULL>
+svchost_update.exe , CreateMutexW , Local\!IETld!Mutex
+ntsystem.exe , CreateMutexW , c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
+ntsystem.exe , CreateMutexW , c:!documents and settings!administrator!cookies!
+ntsystem.exe , CreateMutexW , c:!documents and settings!administrator!local settings!history!history.ie5!
+ntsystem.exe , CreateMutexW , WininetConnectionMutex
+ntsystem.exe , CreateMutexW , <NULL>
 
 [+] http [+]
 
-markovqwesta.com|GET|/que.php|pb
-markovqwesta.com|GET|/que.php|pb
-93.189.40.225|GET|/wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW|
+markovqwesta.com , GET , /que.php , pb
+markovqwesta.com , GET , /que.php , pb
+93.189.40.225 , GET , /wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW ,
 
 [+] dns [+]
 
-markovqwesta.com|193.235.147.11|A
-iholpforyou4.com||NXDOMAIN
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
-iholpforyou4.com||NXDOMAIN
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns3.cnmsn.com|NS
+markovqwesta.com , 193.235.147.11 , A
+iholpforyou4.com ,  , NXDOMAIN
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
+iholpforyou4.com ,  , NXDOMAIN
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , 193.235.147.11 , A
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] behavior_type [+]
 
@@ -144,12 +147,7 @@ process
 unknown_traffic
 nx_domain
 registry
-autostart
-ie_security
-malware_domain
-	<TRUNCATED>
-external_netsh
-http_direct_ip
+    <TRUNCATED>
 copy_itself
 sus_ua
 unpack_write_section
@@ -157,23 +155,23 @@ malware_url
 
 [+] connection [+]
 
-None|connect|tcp|193.235.147.11:80|SE
-ntsystem.exe|connect|tcp|93.189.40.225:80|RU
-ntsystem.exe|connect|tcp|193.235.147.11:80|SE
-ntsystem.exe|connect|tcp|46.165.222.212:9505|DE
-ntsystem.exe|connect|tcp|46.165.222.212:495|DE
+unknown , tcp , 193.235.147.11:80 , SE
+ntsystem.exe , tcp-connection , 93.189.40.225:80 ,  , RU
+ntsystem.exe , tcp-connection , 193.235.147.11:80 ,  , SE
+ntsystem.exe , tcp-connection , 46.165.222.212:9505 ,  , DE
+ntsystem.exe , tcp-connection , 46.165.222.212:495 ,  , DE
 
 [+] file [+]
 
-sample.exe|Write|Windows\SysWOW64\9125y5yta.dat
-sample.exe|Create|Windows\SysWOW64\svchost_update.exe
-sample.exe|Write|Windows\SysWOW64\svchost_update.exe
-svchost.exe|Write|Windows\System32\wdi\{86432a0b-3c7d-4ddf-a89c-172faa90485d}\{d873ef00-5982-4c2b-8a78-ea57c88fbba1}\snapshot.etl
-	<TRUNCATED>
-None|create|C:\Documents and Settings\Administrator\Local Settings\Temp\df4.tmp.exe
-None|create|C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\LDKH2A5D\book[2].htm
-None|create|C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[2].htm
-None|delete|C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\K1XHOOEA\book[1].htm
+sample.exe , Write , Windows\SysWOW64\9125y5yta.dat
+sample.exe , Create , Windows\SysWOW64\svchost_update.exe , 00130197 , 00000044
+sample.exe , Write , Windows\SysWOW64\svchost_update.exe
+svchost.exe , Write , Windows\System32\wdi\{86432a0b-3c7d-4ddf-a89c-172faa90485d}\{d873ef00-5982-4c2b-8a78-ea57c88fbba1}\snapshot.etl
+    <TRUNCATED>
+unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temp\df4.tmp.exe , md5=1197f290bae092c70a6cf07a223ed8bc , sha1=5e9a3cc80ea4d2b0b31d2a7e8750cd5f1ce16dc7 , sha256=4adb44b3cd6fe503d218067307302628c3a0a895acfe03998c24c8f3d561dd15
+unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\LDKH2A5D\book[2].htm , md5=ff4e1927bdf5ad3c6e752a8cb02db5d5 , sha1=ac473bd177e1e9ca7ef74d92eb4a9392bcc4a31e , sha256=4677cb12006da7721110ebc6b763ceb52eaf3e516540f57a7704c6aaea76bc79
+unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[2].htm
+unknown , delete , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\K1XHOOEA\book[1].htm , md5=ff4e1927bdf5ad3c6e752a8cb02db5d5 , sha1=ac473bd177e1e9ca7ef74d92eb4a9392bcc4a31e , sha256=4677cb12006da7721110ebc6b763ceb52eaf3e516540f57a7704c6aaea76bc79
 
 [+] processed 1 hashes with a BGM filter of 10000 [+]
 ```
@@ -191,28 +189,28 @@ python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac
 
 [+] http [+]
 
-markovqwesta.com|GET|/que.php|pb
-markovqwesta.com|GET|/que.php|pb
-93.189.40.225|GET|/wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW|
+markovqwesta.com , GET , /que.php , pb
+markovqwesta.com , GET , /que.php , pb
+93.189.40.225 , GET , /wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW ,
 
 [+] dns [+]
 
-markovqwesta.com|193.235.147.11|A
-iholpforyou4.com||NXDOMAIN
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
-iholpforyou4.com||NXDOMAIN
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns3.cnmsn.com|NS
+markovqwesta.com , 193.235.147.11 , A
+iholpforyou4.com ,  , NXDOMAIN
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
+iholpforyou4.com ,  , NXDOMAIN
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , 193.235.147.11 , A
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] connection [+]
 
-None|connect|tcp|193.235.147.11:80|SE
-ntsystem.exe|connect|tcp|93.189.40.225:80|RU
-ntsystem.exe|connect|tcp|193.235.147.11:80|SE
-ntsystem.exe|connect|tcp|46.165.222.212:9505|DE
-ntsystem.exe|connect|tcp|46.165.222.212:495|DE
+unknown , tcp , 193.235.147.11:80 , SE
+ntsystem.exe , tcp-connection , 93.189.40.225:80 ,  , RU
+ntsystem.exe , tcp-connection , 193.235.147.11:80 ,  , SE
+ntsystem.exe , tcp-connection , 46.165.222.212:9505 ,  , DE
+ntsystem.exe , tcp-connection , 46.165.222.212:495 ,  , DE
 
 [+] processed 1 hashes with a BGM filter of 10000 [+]
 ```
@@ -228,14 +226,18 @@ python af_lenz.py -i http -q markovqwesta.com -r common_artifacts
 
 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
-	<TRUNCATED>
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
+    <TRUNCATED>
+234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
 f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
 
 [+] dns [+]
 
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] processed 10 hashes with a BGM filter of 10000 [+]
 ```
@@ -251,7 +253,11 @@ python af_lenz.py -i http -q markovqwesta.com -r common_artifacts -c 70
 
 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
-	<TRUNCATED>
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
+    <TRUNCATED>
+234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
 f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
 
@@ -261,22 +267,17 @@ pb
 
 [+] http [+]
 
-markovqwesta.com|GET|/que.php|pb
+markovqwesta.com , GET , /que.php , pb
 
 [+] dns [+]
 
-markovqwesta.com|ns4.cnmsn.com|NS
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns3.cnmsn.com|NS
+markovqwesta.com , 193.235.147.11 , A
+markovqwesta.com , ns4.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] connection [+]
 
-None|connect|tcp|193.235.147.11:80|SE
-
-[+] file [+]
-
-sample.exe|CopyFileEx|documents and settings\administrator\sample.exe
-sample.exe|CopyFileEx|Users\Administrator\sample.exe
+unknown , tcp , 193.235.147.11:80 , SE
 
 [+] processed 10 hashes with a BGM filter of 10000 [+]
 ```
@@ -292,59 +293,36 @@ python af_lenz.py -i tag -q Unit42.Locky -r common_pieces -c 90
 
 e720f917cd8a02b0372b85068844e132c42ea2c97061b81d378b5a73f9344003
 a486ff7e775624da2283ede1d3959c784afe476b0a69ce88cd12c7238b15c9e6
+3297f99631c92aeb7b5fcccfac1c0b0e54880e399cf10a659b4448e6fe339f9d
+7f540e391b55221f7696031471b6f8d2068677a67ed8782d52a67872096d23a2
     <TRUNCATED>
+1d8cc4e8416b5ac16864583e8bb0d8f8d8ad4b32de7de111067c38da0cfc57b1
+a4770e01d7734498834cc80f762890f332f1156198990b46217f63aa5b916030
 13bd70822009e07f1d0549e96b8a4aec0ade07bea2c28d42d782bacc11259cf5
 b7a593e6b7813d9fc40f435ffe9b080cd0975b05bc47f1e733870fc0af289fdd
 
 [+] registry [+]
 
-HKCU\Software\Locky\completed,Value:1,Type:4
-HKCU\Software\Locky\id,Value:B775A1E4A8880055,Type:1
-RegSetValueEx
-HKCU,Software\Locky
-HKCU\Software\Microsoft\Windows\ShellNoRoam\MUICache\WINDOWS\system32\shimgvw.dll,Value:Windows Picture and Fax Viewer,Type:1
-HKCU\Control Panel\Desktop\WallpaperStyle,Value:0,Type:1
-taskeng.exe
-HKCU\Software\Locky,pubkey
-HKCU\Software\Locky,paytext
-SearchIndexer.exe
-HKCU\Control Panel\Desktop\TileWallpaper,Value:0,Type:1
-SetValueKey
-HKCU\Software\Locky\paytext,-1,Type:3
-HKCU\Software\Locky\pubkey,-1,Type:3
-HKCU\Software\Locky,id,B775A1E4A8880055
-HKCU\Software\Locky,id,74E269BA6A4EF224
-SetKeySecurity
-RegCreateKeyEx
-svchost.exe
-HKCU\Software\Locky,completed,1
-HKCU\Software\Locky\id,Value:74E269BA6A4EF224,Type:1
-DeleteValueKey
+HKCU\Software\Locky\pubkey
+completed
+pubkey
+HKLM\SOFTWARE\Microsoft\WBEM\CIMOM\LastServiceStart
+    <TRUNCATED>
+paytext
+HKCU\Software\Microsoft\Windows\ShellNoRoam\MUICache\WINDOWS\system32\shimgvw.dll
+HKCU\Software\Locky\completed
+WallpaperStyle
 
 [+] process [+]
 
-windows\system32\vssadmin.exe,E23DD973E1444684EB36365DEFF1FC74,4DE7FA20E3224382D8C4A81017E5BDD4673AFBEF9C0F017E203D7B78977FBF8C
-windows\system32\notepad.exe,F2C7BB8ACC97F92E987A2D4087D021B1,142E1D688EF0568370C37187FD9F2351D7DDEDA574F8BFA9B0FA4EF42DB85AA2
-created
-,Windows\System32\notepad.exe, Windows\system32\NOTEPAD.EXE  Users\Administrator\Desktop\_Locky_recover_instructions.txt
-windows\system32\vssadmin.exe,CDF76989D9FE20B7CC79C9C3F7BA2D4C,5BCC6E5537ACBC3F36A00546F1300F2601E9152CEE4914ACBA00E2A96481DCF9
-,WINDOWS\system32\notepad.exe, WINDOWS\system32\NOTEPAD.EXE  Documents and Settings\Administrator\Desktop\_Locky_recover_instructions.txt
-,<null>,vssadmin.exe Delete Shadows /All /Quiet
-vssadmin.exe
-svchost.exe
-,WINDOWS\system32\rundll32.exe,rundll32.exe WINDOWS\system32\shimgvw.dll ImageView_Fullscreen Documents and Settings\Administrator\Desktop\_Locky_recover_instructions.bmp
-,WINDOWS\system32\NOTEPAD.EXE,WINDOWS\system32\NOTEPAD.EXE Documents and Settings\Administrator\Desktop\_Locky_recover_instructions.txt
-LoadLibraryExW
-CreateToolhelp32Snapshot
-Windows\system32\MSCTF.dll,,8
-,WINDOWS\system32\rundll32.exe, rundll32.exe  WINDOWS\system32\shimgvw.dll,ImageView_Fullscreen Documents and Settings\Administrator\Desktop\_Locky_recover_instructions.bmp
-NOTEPAD.EXE
-4,vssadmin.exe
-,Windows\system32\NOTEPAD.EXE,Windows\system32\NOTEPAD.EXE Users\Administrator\Desktop\_Locky_recover_instructions.txt
-,WINDOWS\system32\vssadmin.exe
-hash
+Windows\system32\NOTEPAD.EXE
+Windows\System32\taskeng.exe
+ rundll32.exe  WINDOWS\system32\shimgvw.dll
+142E1D688EF0568370C37187FD9F2351D7DDEDA574F8BFA9B0FA4EF42DB85AA2
+    <TRUNCATED>
 CreateProcessInternalW
-,WINDOWS\system32\vssadmin.exe,vssadmin.exe Delete Shadows /All /Quiet
+F2C7BB8ACC97F92E987A2D4087D021B1
+WINDOWS\system32\rundll32.exe
 terminated
 
 [+] http [+]
@@ -354,40 +332,34 @@ POST
 
 [+] behavior_type [+]
 
-file
-sys_folder
-external_dll
-process
 autostart
 open_process_dup_handle
-browser_proxy
-registry
 http_post
 pending_file_rename
-external_cmd
-external_control_panel
-ie_connection
+    <TRUNCATED>
+process
+file
+registry
 create_doc_exe
 
 [+] connection [+]
 
 tcp
-connect
-None
+unknown
 
 [+] file [+]
 
-Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg
-C:\Users\Administrator\Desktop\_Locky_recover_instructions.txt
+C:\Documents and Settings\Administrator\Desktop\_Locky_recover_instructions.txt
 Documents and Settings\All Users\Documents\My Pictures\Sample Pictures\Blue hills.jpg
 Documents and Settings\Administrator\Cookies\_Locky_recover_instructions.txt
+Documents and Settings\All Users\Start Menu\Programs\Startup\_Locky_recover_instructions.txt
     <TRUNCATED>
-Documents and Settings\Administrator\Cookies\administrator@red[2].txt
-Users\Public\Pictures\Sample Pictures\Lighthouse.jpg
-Documents and Settings\All Users\Documents\My Music\Sample Music\_Locky_recover_instructions.txt
-Documents and Settings\Administrator\My Documents\password_list.txt
+000900a8
+00000060
+0011c017
+Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg
 
-[+] processed 1251 hashes with a BGM filter of 10000 [+]
+[+] processed 1364 hashes with a BGM filter of 10000 [+]
 ```
 
 In addition to the comparison functions, there are scraping functions which will iterate over each sample identified and return all unique data in their respective sections. Below are all HTTP requests made by samples with a IP in their DNS section (resolved to).
@@ -401,47 +373,25 @@ python af_lenz.py -i dns -q 193.235.147.11 -r http_scrape
 
 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+e4b35695fdf6583ca382647bf4587a2ca225cabf9aa7c954489414ea4f433a9e
+75e14aaef0ff2b851ce9775a95a1f54624030786134faf29c0e80a675b9c310e
     <TRUNCATED>
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
 118577d6c021c14cbd9c7226475c982d2ce230568295b86f3104860e544f7317
 
 [+] http [+]
 
-http://markovqwesta.com/que.php
-http://93.189.40.225/wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW
-http://iholpforyou4.com/d_index.php
-http://80.78.242.47/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW
-http://truedonell.com/fa.php
-http://93.189.40.225/xp.php?proxy=5.79.85.212%3A44495&secret=BER5w4evtjszw4MBRW
-http://hostnamessimply1.effers.com/
-http://go.microsoft.com/fwlink/?LinkId=164164
-http://www.msn.com/
-http://93.189.40.225/xp.php?proxy=46.165.223.193%3A2238&secret=BER5w4evtjszw4MBRW
-http://www.adobe.com/go/flashplayer_support/
-http://support.microsoft.com/
-http://93.189.40.225/xp.php?proxy=46.165.222.212%3A2308&secret=BER5w4evtjszw4MBRW
-http://go.microsoft.com/fwlink/?LinkId=120337
-http://go.microsoft.com/fwlink/?LinkId=98073
-http://93.189.40.225/wp-trackback.php?proxy=93.189.42.43%3A1637&secret=BER5w4evtjszw4MBRW
-http://93.189.40.196/i.php?proxy=104.238.173.238%3A5577&secret=BER5w4evtjszw4MBRW
-http://93.189.40.196/i.php?proxy=93.189.42.43%3A13850&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=185.72.246.23%3A38744&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=108.59.9.15%3A20461&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/xp.php?proxy=213.229.102.157%3A10720&secret=BER5w4evtjszw4MBRW
-http://80.78.242.47/pointer.php?proxy=69.64.32.110%3A6461&secret=BER5w4evtjszw4MBRW
-http://80.78.242.47/pointer.php?proxy=91.185.215.141%3A4773&secret=BER5w4evtjszw4MBRW
-http://smic12wer.com/12.php
-http://smic12wer.com/post.php?command=update2&id=1494432142&ip=93.189.40.164&port=17292
-http://93.189.40.225/xp.php?proxy=46.38.51.49%3A14527&secret=BER5w4evtjszw4MBRW
-http://80.78.242.47/pointer.php?proxy=46.38.51.49%3A38388&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=185.72.244.171%3A3398&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=108.59.9.15%3A6232&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=185.72.244.171%3A40240&secret=BER5w4evtjszw4MBRW
-http://93.189.40.225/wp-trackback.php?proxy=108.59.9.15%3A14542&secret=BER5w4evtjszw4MBRW
-http://80.78.242.47/pointer.php?proxy=194.247.12.49%3A27123&secret=BER5w4evtjszw4MBRW
-http://80.78.242.47/pointer.php?proxy=69.64.32.110%3A23622&secret=BER5w4evtjszw4MBRW
-http://93.189.40.196/i.php?proxy=46.38.51.49%3A32045&secret=BER5w4evtjszw4MBRW
-http://66.85.139.195/phinso.php?proxy=46.165.222.212%3A29786&secret=BER5w4evtjszw4MBRW
+hxxp://markovqwesta.com/que.php
+hxxp://93.189.40.225/wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW
+hxxp://iholpforyou4.com/d_index.php
+hxxp://80.78.242.47/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW
+    <TRUNCATED>
+hxxp://80.78.242.47/pointer.php?proxy=194.247.12.49%3A27123&secret=BER5w4evtjszw4MBRW
+hxxp://80.78.242.47/pointer.php?proxy=69.64.32.110%3A23622&secret=BER5w4evtjszw4MBRW
+hxxp://93.189.40.196/i.php?proxy=46.38.51.49%3A32045&secret=BER5w4evtjszw4MBRW
+hxxp://66.85.139.195/phinso.php?proxy=46.165.222.212%3A29786&secret=BER5w4evtjszw4MBRW
 
 [+] processed 17 hashes with a BGM filter of 10000 [+]
 ```
@@ -506,11 +456,10 @@ python af_lenz.py -i mutex -q M_Test -r uniq_sessions
 
 [+] filename [+]
 
-ac90c24e-f340-4bb3-b94f-b39693b843f6_725bb9e4ac0460ce71538a1de652b19a55cfbc9a84f0ecdd22b62d9f6c0eef7b
-851e90328473bca6b8fad472f16e0bd1
-658eac09b4e0e4e7e9c05eeb07a5c3109096a66ee9308abde5fb5525a5ed8b90.file
-99e5a43d-fcf1-4439-adb6-29d10078d641_736769a19751f28f9551953f4765b1308c60aeda7b90e1e672a154a8580f82a7
-605f3468324fceef696d814d29de4047e38af278eac5deab8803cd75bbda6e64.file
+82300c42-320c-4348-afa7-39abb7f1d5f2_a945e5bc9ca9f26be7315f3dd5beae8a89777c7830a466bcc45c06011ab2b903
+a945e5bc9ca9f26be7315f3dd5beae8a89777c7830a466bcc45c06011ab2b90
+8afb8cfd3e73219b3fe25491ea8cbfb42b335cec425eb984b8dedc72c6d0ea7f.file
+sample
     <TRUNCATED>
 hda.exe.bin
 updxs.exe
@@ -538,13 +487,13 @@ Viet Nam
 [+] industry [+]
 
 High Tech
+Wholesale and Retail
 Manufacturing
 Higher Education
-Wholesale and Retail
 Government
 Hospitality
 
-[+] processed 863 sessions [+]
+[+] processed 1056 sessions [+]
 ```
 
 The above shows a varied distribution throughout industry and country (non-targeted most likely), and some additional filenames you may want to search for.
@@ -562,47 +511,44 @@ cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
 
 [+] connection [+]
 
-winlsm.exe|connect|tcp|91.185.215.141:989|SI
-winlsm.exe|connect|tcp|193.235.147.11:80|SE
-winlsm.exe|connect|tcp|46.36.221.85:80|EU
-smss-mon.exe|connect|tcp|193.235.147.11:80|SE
-smss-mon.exe|connect|tcp|46.36.221.85:80|EU
-smss-mon.exe|connect|tcp|217.172.179.88:989|DE
-smss-mon.exe|connect|tcp|217.172.179.88:14450|DE
-smss-mon.exe|connect|tcp|80.78.242.47:80|RU
+winlsm.exe , connect , 91.185.215.141:989 , 2 , SI
+winlsm.exe , connect , 193.235.147.11:80 , 2 , SE
+winlsm.exe , connect , 46.36.221.85:80 , 2 , EU
+smss-mon.exe , tcp-connection , 193.235.147.11:80 ,  , SE
+smss-mon.exe , tcp-connection , 46.36.221.85:80 ,  , EU
+smss-mon.exe , tcp-connection , 217.172.179.88:989 ,  , DE
+smss-mon.exe , tcp-connection , 217.172.179.88:14450 ,  , DE
+smss-mon.exe , tcp-connection , 80.78.242.47:80 ,  , RU
 
 [+] dns [+]
 
-iholpforyou4.com|46.36.221.85|A
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns3.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
-iholpforyou4.com|46.36.221.85|A
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns3.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
+iholpforyou4.com , 46.36.221.85 , A
+markovqwesta.com , 193.235.147.11 , A
+markovqwesta.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns4.cnmsn.com , NS
+    <TRUNCATED>
+markovqwesta.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns3.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] http [+]
 
-markovqwesta.com|GET|/que.php|pb
-iholpforyou4.com|GET|/d_index.php|pb
-iholpforyou4.com|GET|/d_index.php|pb
-80.78.242.47|GET|/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW|
-markovqwesta.com|GET|/que.php|pb
+markovqwesta.com , GET , /que.php , pb
+iholpforyou4.com , GET , /d_index.php , pb
+iholpforyou4.com , GET , /d_index.php , pb
+80.78.242.47 , GET , /pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW ,
+markovqwesta.com , GET , /que.php , pb
 
 [+] mutex [+]
 
-winlsm.exe|CreateMutexW|Local\!IETld!Mutex
-winlsm.exe|CreateMutexW|IESQMMUTEX_0_208
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!cookies!
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!local settings!history!history.ie5!
-smss-mon.exe|CreateMutexW|WininetConnectionMutex
-smss-mon.exe|CreateMutexW|<NULL>
+winlsm.exe , CreateMutexW , Local\!IETld!Mutex
+winlsm.exe , CreateMutexW , IESQMMUTEX_0_208
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!cookies!
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!history!history.ie5!
+smss-mon.exe , CreateMutexW , WininetConnectionMutex
+smss-mon.exe , CreateMutexW , <NULL>
 
 [+] processed 1 hashes with a BGM filter of 10000 [+]
 
@@ -628,7 +574,7 @@ rule generated_by_afIR
 		$http_10 = "/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW"
 
 	condition:
-		1 of ($connection*, $dns*) /* Adjust as needed for accuracy */
+		1 of ($connection*, $http*, $dns*) /* Adjust as needed for accuracy */
 }
 ```
 
@@ -645,53 +591,50 @@ cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
 
 [+] connection [+]
 
-winlsm.exe|connect|tcp|91.185.215.141:989|SI
-winlsm.exe|connect|tcp|193.235.147.11:80|SE
-winlsm.exe|connect|tcp|46.36.221.85:80|EU
-smss-mon.exe|connect|tcp|193.235.147.11:80|SE
-smss-mon.exe|connect|tcp|46.36.221.85:80|EU
-smss-mon.exe|connect|tcp|217.172.179.88:989|DE
-smss-mon.exe|connect|tcp|217.172.179.88:14450|DE
-smss-mon.exe|connect|tcp|80.78.242.47:80|RU
+winlsm.exe , connect , 91.185.215.141:989 , 2 , SI
+winlsm.exe , connect , 193.235.147.11:80 , 2 , SE
+winlsm.exe , connect , 46.36.221.85:80 , 2 , EU
+smss-mon.exe , tcp-connection , 193.235.147.11:80 ,  , SE
+smss-mon.exe , tcp-connection , 46.36.221.85:80 ,  , EU
+smss-mon.exe , tcp-connection , 217.172.179.88:989 ,  , DE
+smss-mon.exe , tcp-connection , 217.172.179.88:14450 ,  , DE
+smss-mon.exe , tcp-connection , 80.78.242.47:80 ,  , RU
 
 [+] dns [+]
 
-iholpforyou4.com|46.36.221.85|A
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns3.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
-iholpforyou4.com|46.36.221.85|A
-markovqwesta.com|193.235.147.11|A
-markovqwesta.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns4.cnmsn.com|NS
-iholpforyou4.com|ns3.cnmsn.com|NS
-markovqwesta.com|ns3.cnmsn.com|NS
+iholpforyou4.com , 46.36.221.85 , A
+markovqwesta.com , 193.235.147.11 , A
+markovqwesta.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns4.cnmsn.com , NS
+    <TRUNCATED>
+markovqwesta.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns4.cnmsn.com , NS
+iholpforyou4.com , ns3.cnmsn.com , NS
+markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] http [+]
 
-markovqwesta.com|GET|/que.php|pb
-iholpforyou4.com|GET|/d_index.php|pb
-iholpforyou4.com|GET|/d_index.php|pb
-80.78.242.47|GET|/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW|
-markovqwesta.com|GET|/que.php|pb
+markovqwesta.com , GET , /que.php , pb
+iholpforyou4.com , GET , /d_index.php , pb
+iholpforyou4.com , GET , /d_index.php , pb
+80.78.242.47 , GET , /pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW ,
+markovqwesta.com , GET , /que.php , pb
 
 [+] mutex [+]
 
-winlsm.exe|CreateMutexW|Local\!IETld!Mutex
-winlsm.exe|CreateMutexW|IESQMMUTEX_0_208
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!cookies!
-smss-mon.exe|CreateMutexW|c:!documents and settings!administrator!local settings!history!history.ie5!
-smss-mon.exe|CreateMutexW|WininetConnectionMutex
-smss-mon.exe|CreateMutexW|<NULL>
+winlsm.exe , CreateMutexW , Local\!IETld!Mutex
+winlsm.exe , CreateMutexW , IESQMMUTEX_0_208
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!cookies!
+smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!history!history.ie5!
+smss-mon.exe , CreateMutexW , WininetConnectionMutex
+smss-mon.exe , CreateMutexW , <NULL>
 
 [+] processed 1 hashes with a BGM filter of 10000 [+]
 
 [+] af import query [+]
 
-{"operator":"all","children":[{"field":"sample.tasks.connection","operator":"contains","value":"91.185.215.141:989"},{"field":"sample.tasks.connection","operator":"contains","value":"193.235.147.11:80"},{"field":"sample.tasks.connection","operator":"contains","value":"46.36.221.85:80"},{"field":"sample.tasks.connection","operator":"contains","value":"193.235.147.11:80"},{"field":"sample.tasks.connection","operator":"contains","value":"46.36.221.85:80"},{"field":"sample.tasks.connection","operator":"contains","value":"217.172.179.88:989"},{"field":"sample.tasks.connection","operator":"contains","value":"217.172.179.88:14450"},{"field":"sample.tasks.connection","operator":"contains","value":"80.78.242.47:80"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,46.36.221.85,A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,193.235.147.11,A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,ns4.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,ns4.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,ns3.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,ns3.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,46.36.221.85,A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,193.235.147.11,A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,ns4.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,ns4.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com,ns3.cnmsn.com,NS"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com,ns3.cnmsn.com,NS"},{"field":"sample.tasks.http","operator":"contains","value":"markovqwesta.com,GET,/que.php,pb"},{"field":"sample.tasks.http","operator":"contains","value":"iholpforyou4.com,GET,/d_index.php,pb"},{"field":"sample.tasks.http","operator":"contains","value":"iholpforyou4.com,GET,/d_index.php,pb"},{"field":"sample.tasks.http","operator":"contains","value":"80.78.242.47,GET,/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW,"},{"field":"sample.tasks.http","operator":"contains","value":"markovqwesta.com,GET,/que.php,pb"},{"field":"sample.tasks.mutex","operator":"contains","value":"winlsm.exe,CreateMutexW,Local\\!IETld!Mutex"},{"field":"sample.tasks.mutex","operator":"contains","value":"winlsm.exe,CreateMutexW,IESQMMUTEX_0_208"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe,CreateMutexW,c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe,CreateMutexW,c:!documents and settings!administrator!cookies!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe,CreateMutexW,c:!documents and settings!administrator!local settings!history!history.ie5!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe,CreateMutexW,WininetConnectionMutex"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe,CreateMutexW,<NULL>"}]}
+{"operator":"all","children":[{"field":"sample.tasks.connection","operator":"contains","value":"91.185.215.141:989"},{"field":"sample.tasks.connection","operator":"contains","value":"193.235.147.11:80"},{"field":"sample.tasks.connection","operator":"contains","value":"46.36.221.85:80"},{"field":"sample.tasks.connection","operator":"contains","value":"193.235.147.11:80"},{"field":"sample.tasks.connection","operator":"contains","value":"46.36.221.85:80"},{"field":"sample.tasks.connection","operator":"contains","value":"217.172.179.88:989"},{"field":"sample.tasks.connection","operator":"contains","value":"217.172.179.88:14450"},{"field":"sample.tasks.connection","operator":"contains","value":"80.78.242.47:80"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , 46.36.221.85 , A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , 193.235.147.11 , A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , ns4.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , ns4.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , ns3.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , ns3.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , 46.36.221.85 , A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , 193.235.147.11 , A"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , ns4.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , ns4.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"iholpforyou4.com , ns3.cnmsn.com , NS"},{"field":"sample.tasks.dns","operator":"contains","value":"markovqwesta.com , ns3.cnmsn.com , NS"},{"field":"sample.tasks.http","operator":"contains","value":"markovqwesta.com , GET , /que.php , pb"},{"field":"sample.tasks.http","operator":"contains","value":"iholpforyou4.com , GET , /d_index.php , pb"},{"field":"sample.tasks.http","operator":"contains","value":"iholpforyou4.com , GET , /d_index.php , pb"},{"field":"sample.tasks.http","operator":"contains","value":"80.78.242.47 , GET , /pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW , "},{"field":"sample.tasks.http","operator":"contains","value":"markovqwesta.com , GET , /que.php , pb"},{"field":"sample.tasks.mutex","operator":"contains","value":"winlsm.exe , CreateMutexW , Local\\!IETld!Mutex"},{"field":"sample.tasks.mutex","operator":"contains","value":"winlsm.exe , CreateMutexW , IESQMMUTEX_0_208"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!cookies!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!history!history.ie5!"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe , CreateMutexW , WininetConnectionMutex"},{"field":"sample.tasks.mutex","operator":"contains","value":"smss-mon.exe , CreateMutexW , <NULL>"}]}
 ```
 
 You can also send more complex AF queries by passing the "query" value to the *-i* flag. Below we run the "uniq_sessions" function to look at session data for all samples tagged with Locky betwen March 15th-18th that were delivered via web-browsing.
@@ -703,17 +646,15 @@ python af_lenz.py -i query -q '{"operator":"all","children":[{"field":"sample.ta
 
 [+] filename [+]
 
-nbver5w
 dh32f
-89h8btyfde445.exe
-740e6de2613bac3443057574b7ad5464
-b2b8d5d6dd1b3c21572279ee3aa40e34
+wqi3pd
+nc4f6gf
+kjshdf4dj
     <TRUNCATED>
-508f5770f18098cbe8c14ebb696998ae
-98o7kj56h
-69b933a694710f8ceb314dc897a94cbe
+9c09891883e4170fe92321700ef42c4f
 ce31e5c123842708522c5b8330481345
 a02f352bb0f1e0513a7c9cc8428f353b
+sample
 
 [+] application [+]
 
@@ -722,26 +663,114 @@ web-browsing
 [+] country [+]
 
 Spain
-United States
 South Africa
-Germany
+Mexico
+United States
     <TRUNCATED>
-Korea Republic Of
+Netherlands
 Austria
-Reserved
 Colombia
+Korea Republic Of
 
 [+] industry [+]
 
 High Tech
-Telecommunications
+Utilities
+Higher Education
 Professional and Legal Services
-Transportation and Logistics
     <TRUNCATED>
+Hospitality
+Other
 Automotive
-Finance
-Construction
 Energy
 
-[+] processed 1812 sessions [+]
-```_ 
+[+] processed 1851 sessions [+]
+```
+
+You're also not limited to just PE files, but can run the functions on the other analyzers used in AutoFocus.
+
+```
+python af_lenz.py -i query -q '{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}' -r common_artifacts -c 70
+
+{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}
+
+[+] hashes [+]
+
+92c7a01800b9eaf29c3f3808dc1b1285a2a452c2ce87888daa9cba6dedfbbb61
+304efc1f0b5b8c6c711c03a13d5d8b90755cec00cac1218a7a4a22b091ffb30b
+9f05372f74ddb9949f8b260ca360335651ae8282bfa615a29cd448e01667ca06
+bd69ea8206070cf4db9b10a07a85412cf6be85d84d905a6b16c0bda61bbe8b55
+    <TRUNCATED>
+0a56882c6ae7e211e4cf3b222d8ece2b1b744ef6abb219167a834c3569e7cca8
+88881454cee58f8ecbf33a5e0875ba03ceb8e3ca2660421fb986b1bb67cedd87
+a71073af1c81263e90d5ec0e6ac8b3f9480ebcb0c42bc8f49be5e6c99c069bc5
+2db3f60e5b8f60bc28404e2550103c9a6fb9b8f7cb5803017ad8a5cf37f1d1f8
+
+[+] apk_misc [+]
+
+com.simplelocker.DeviceAdminChecker
+com.simplelocker.Main
+
+[+] apk_filter [+]
+
+android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE
+
+[+] apk_receiver [+]
+
+com.simplelocker.MessageReceiver
+com.simplelocker.SDCardServiceStarter
+com.simplelocker.MyDeviceAdminReceiver
+com.simplelocker.ServiceStarter
+
+[+] apk_service [+]
+
+com.simplelocker.CheckService
+com.simplelocker.MainService
+com.simplelocker.DecryptService
+
+[+] processed 24 hashes with a BGM filter of 10000 [+]
+```
+
+Finally, you can almost limit the number of samples to analyze - running the above query again but limiting to 5 results.
+
+```
+python af_lenz.py -i query -q '{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}' -r common_artifacts -c 70 -l 5
+
+{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}
+
+[+] hashes [+]
+
+5e650b16b6565d66d3c4ae0800b89cc4942d57d6324b2bfa41b3a331cbdc2659
+c9335985a3f04611c155528827b38447f549307997715a015acc73a396d7c2b7
+88881454cee58f8ecbf33a5e0875ba03ceb8e3ca2660421fb986b1bb67cedd87
+a71073af1c81263e90d5ec0e6ac8b3f9480ebcb0c42bc8f49be5e6c99c069bc5
+304efc1f0b5b8c6c711c03a13d5d8b90755cec00cac1218a7a4a22b091ffb30b
+
+[+] connection [+]
+
+unknown , tcp , 89.144.14.29:80 , DE
+
+[+] apk_misc [+]
+
+com.simplelocker.DeviceAdminChecker
+com.simplelocker.Main
+
+[+] apk_filter [+]
+
+android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE
+
+[+] apk_receiver [+]
+
+com.simplelocker.ServiceStarter
+com.simplelocker.SDCardServiceStarter
+com.simplelocker.MyDeviceAdminReceiver
+com.simplelocker.MessageReceiver
+
+[+] apk_service [+]
+
+com.simplelocker.MainService
+com.simplelocker.CheckService
+com.simplelocker.DecryptService
+
+[+] processed 5 hashes with a BGM filter of 10000 [+]
+```

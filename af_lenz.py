@@ -1,65 +1,80 @@
 #!/usr/bin/env python
+from inspect import isfunction
 from autofocus import AutoFocusAPI
 AutoFocusAPI.api_key = ""
-from autofocus import AFSession, AFSample, AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragments, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
+from autofocus import AFSession, AFSample
+from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
+# APK Specific
+from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
-__version__ = "1.0.2"
+__version__ = "1.0.4"
 
 ##########################
 # AF QUERY SECTION BELOW #
 ##########################
 
-def af_query(input_type,query_value):
-    operator_value = "contains"
-    if input_type == "ip": # IP Address Field
-        field_value = "alias.ip_address"
-        #field_value = "sample.tasks.connection"
-    elif input_type == "dns": # DNS/Domain Field
-        field_value = "alias.domain"
-        #field_value = "sample.tasks.dns"
-    elif input_type == "hash": # Hash Field
-        operator_value = "is"
-        if len(query_value) == 32:
-            field_value = "sample.md5"
-        elif len(query_value) == 40:
-            field_value = "sample.sha1"
-        elif len(query_value) == 64:
-            field_value = "sample.sha256"
-    elif input_type == "http":
-        field_value = "sample.tasks.http" # HTTP Activity Field
-    elif input_type == "file":
-        field_value = "sample.tasks.file" # File Activity Field
-        query_value = query_value.replace("\\", "\\\\") # Covert 1 '\' to '\\' - double escaping for AF query
-    elif input_type == "process":
-        field_value = "sample.tasks.process" # Tasks Activity Field
-    elif input_type == "mutex":
-        field_value = "sample.tasks.mutex" # Mutex Activity Field
-    elif input_type == "registry":
-        field_value = "sample.tasks.registry" # Registry Activity Field
-        query_value = query_value.replace("\\", "\\\\") # Covert 1 '\' to '\\' - double escaping for AF query
-    elif input_type == "service":
-        field_value = "sample.tasks.service" # Service Activity Field
-    elif input_type == "connection":
-        field_value = "sample.tasks.connection" # Network/Connection Activity Field
-    elif input_type == "user_agent":
-        field_value = "sample.tasks.user_agent" # User-Agent Activity Field
-        operator_value = "is"
-    elif input_type == "tag":
-        field_value = "sample.tag"
-        operator_value = "is in the list"
-    elif input_type == "hash_list":
-        field_value = "sample.sha256"
-        operator_value = "is in the list"
+def af_query(args):
+
+    # A callable to find the proper field_value for the input_type hash, based on the query_value
+    def map_hash_value(qv):
+        if len(qv) == 32:
+            return "sample.md5"
+        if len(qv) == 40:
+            return "sample.sha1"
+        if len(qv) == 64:
+            return "sample.sha256"
+        raise Exception("Unknown hash type")
+
+    # Create a map of input_type to field_value
+    field_map = {
+        "ip"		    : "alias.ip_address",
+        "dns"		    : "alias.domain",
+        "hash"		    : map_hash_value,
+        "http"		    : "sample.tasks.http",
+        "file"		    : "sample.tasks.file",
+        "process"	    : "sample.tasks.process",
+        "mutex"		    : "sample.tasks.mutex",
+        "registry"	    : "sample.tasks.registry",
+        "service"	    : "sample.tasks.service",
+        "connection"	: "sample.tasks.connection",
+        "user_agent"	: "sample.tasks.user_agent",
+        "tag"		    : "sample.tag",
+        "hash_list"	    : "sample.sha256",
+        "fileurl"       : "session.fileurl",
+        "filename"      : "alias.filename"
+    }
+
+    # Create a map of input_type to operator
+    operator_map = {
+        "hash"          : "is",
+        "user_agent"    : "is",
+        "tag"           : "is in the list",
+        "hash_list"     : "is in the list"
+    }
+
+    # Lookup the operator to use with this input type
+    operator_value = operator_map.get(args.ident, "contains")
+
+    try:
+        # Get the field value from the map
+        field_value = field_map[args.ident]
+
+        # Is the query value callable? Call it with the query_value to get the field value (hashes)
+        if isfunction(field_value):
+            field_value = field_value(args.query)
+    except Exception as e:
+        # Mimic the original catch all, if we don't know what the field is, just exit
+        #sys.exit(1)
+        raise e
+
+    # Everything that is a list (including hash_list and tag)
+    if operator_value == "is in the list":
+        params = [v.strip() for v in args.query.split(",")]
+        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":[%s]}]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in params]))
     else:
-        sys.exit(1)
-    if input_type == "tag": # Return as an array
-        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":["%s"]}]}' % (field_value, operator_value, query_value)
-    elif input_type == "hash_list":
-        query_value = query_value.split(",")
-        af_search = ('{"operator":"all","children":[{"field":"%s","operator":"%s","value":%s}]}' % (field_value, operator_value, query_value)).replace("\'", "\"")
-    else:
-        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query_value)
+        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, args.query)
+
     return af_search
 
 ###########################
@@ -70,83 +85,188 @@ def af_query(input_type,query_value):
 # Builds the hash library which is used by every other function
 # Returns data as dictionary with each key being the hash and a dictionary value with each section featuring a list {hash:{section:[value1,value2]}}
 
-def hash_library(ident, query, filter_size):
+def hash_library(args):
     hashes = {}
     print "\n[+] hashes [+]\n"
-    if ident == "query":
-        for sample in AFSample.scan(query):
-            hashes[sample.sha256] = {}
+    count = 0
+    if args.ident == "query":
+        for sample in AFSample.scan(args.query):
+            if count < args.limit:
+                hashes[sample.sha256] = {}
+                count += 1
     else:
-        for sample in AFSample.search(af_query(ident, query)):
-            hashes[sample.sha256] = {}
+        for sample in AFSample.scan(af_query(args)):
+            if count < args.limit:
+                hashes[sample.sha256] = {}
+                count += 1
     thread_queue = Queue.Queue()
+    count = 0
     for hash in hashes.keys():
         print hash
-        hash_thread = threading.Thread(target=hash_lookup, args=(hash, filter_size, thread_queue))
+        args.query = hash
+        hash_thread = threading.Thread(target=hash_lookup, args=(args, thread_queue))
         hash_thread.start()
         hashes[hash] = thread_queue.get()
     return hashes
 
 # Hash Lookup Function
 # Basic hash lookup for a sample
-# If delimeter is changed, or new fields added to what's provided here, there is a possibility of messing up other functions
+# Provides raw data for each section requested
 
-def hash_lookup(query, filter_size, thread_queue):
-    sample_data = {"service":[],"registry":[],"process":[],"misc":[],"user_agent":[],"mutex":[],"http":[],"dns":[],"behavior_type":[],"connection":[],"file":[]}
-    for sample in AFSample.search(af_query("hash", query)):
+def hash_lookup(args, thread_queue):
+
+    # Dictionary mapping the raw data for each type of sample analysis
+    analysis_data = {
+        "service"	        :[],
+        "registry"	        :[],
+        "process"	        :[],
+        "misc"		        :[],
+        "user_agent"	    :[],
+        "mutex"		        :[],
+        "http"		        :[],
+        "dns"		        :[],
+        "behavior_type"	    :[],
+        "connection"	    :[],
+        "file"		        :[],
+        "apk_misc"          :[],
+        "apk_filter"        :[],
+        "apk_receiver"      :[],
+        "apk_sensor"        :[],
+        "apk_service"       :[],
+        "apk_embedurl"      :[],
+        "apk_permission"    :[],
+        "apk_sensitiveapi"  :[],
+        "apk_suspiciousapi" :[],
+        "apk_file"          :[],
+        "apk_string"        :[],
+        "default"   	    :[]
+    }
+
+    # Map analysis types to analysis_data keys
+    analysis_data_map = {
+        AFServiceActivity	                : "service",
+        AFRegistryActivity	                : "registry",
+        AFProcessActivity       	        : "process",
+        AFApiActivity		                : "misc",
+        AFUserAgentFragment	            : "user_agent",
+        AFMutexActivity		                : "mutex",
+        AFHttpActivity		                : "http",
+        AFDnsActivity       		        : "dns",
+        AFBehaviorTypeAnalysis      	    : "behavior_type",
+        AFConnectionActivity        	    : "connection",
+        AFFileActivity		                : "file",
+        AFApkActivityAnalysis               : "apk_misc",
+        AFApkIntentFilterAnalysis           : "apk_filter",
+        AFApkReceiverAnalysis               : "apk_receiver",
+        AFApkSensorAnalysis                 : "apk_sensor",
+        AFApkServiceAnalysis                : "apk_service",
+        AFApkEmbededUrlAnalysis             : "apk_embedurl",
+        AFApkRequestedPermissionAnalysis    : "apk_permission",
+        AFApkSensitiveApiCallAnalysis       : "apk_sensitiveapi",
+        AFApkSuspiciousApiCallAnalysis      : "apk_suspiciousapi",
+        AFApkSuspiciousFileAnalysis         : "apk_file",
+        AFApkSuspiciousStringAnalysis       : "apl_string"
+    }
+    # If there are no counts for the activity, ignore them for the filter
+    args.ident = "hash"
+    for sample in AFSample.search(af_query(args)):
         for analysis in sample.get_analyses():
-            #print "\n".join(["{}={}".format(k,v) for k,v in analysis.__dict__.items()]) # For troubleshooting
-            #print "[[***********]]"
-            if type(analysis) is AFServiceActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['service'].append(analysis._raw_line)
-            if type(analysis) is AFRegistryActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['registry'].append(analysis._raw_line)
-            if type(analysis) is AFProcessActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['process'].append(analysis._raw_line)
-            if type(analysis) is AFApiActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['misc'].append(analysis._raw_line)
-            if type(analysis) is AFUserAgentFragments:
-                if analysis.fragment not in sample_data['user_agent']:
-                    sample_data['user_agent'].append(analysis._raw_line)
-            if type(analysis) is AFMutexActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['mutex'].append(analysis._raw_line)
-            if type(analysis) is AFHttpActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['http'].append(analysis._raw_line)
-            if type(analysis) is AFDnsActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['dns'].append(analysis._raw_line)
-            if type(analysis) is AFBehaviorTypeAnalysis:
-                sample_data['behavior_type'].append("%s" % (analysis.behavior))
-            if type(analysis) is AFConnectionActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    if "listen" in analysis.action: # Added and submitted bug on the normalization of listen
-                        continue
-                    else:
-                        sample_data['connection'].append(analysis._raw_line)
-            if type(analysis) is AFFileActivity:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < filter_size:
-                    sample_data['file'].append(analysis._raw_line)
-    thread_queue.put(sample_data)
-    return sample_data
+            analysis_data_section = analysis_data_map.get(type(analysis), "default")
+            try:
+                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
+                    analysis_data[analysis_data_section].append(analysis._raw_line)
+            except:
+                pass
+    thread_queue.put(analysis_data)
+    return analysis_data
 
 # Common Artifacts Function
 # Identifies lines that exist, per section, in every identified sample
 # Must be a 100% match across all samples to be reported, thus samples that unique every install may not have certain entries appear
 
-def common_artifacts(ident, query, filter_size, commonality):
-    commonality = float(commonality)/float(100)
-    compare_data = {"service":{},"registry":{},"process":{},"misc":{},"user_agent":{},"mutex":{},"http":{},"dns":{},"behavior_type":{},"connection":{},"file":{}}
-    common_data = {"service":[],"registry":[],"process":[],"misc":[],"user_agent":[],"mutex":[],"http":[],"dns":[],"behavior_type":[],"connection":[],"file":[]}
+def common_artifacts(args):
+    commonality = float(args.commonality)/float(100)
+    # Used for collecting all of the artifacts and counts
+    compare_data = {
+        "service"           :{},
+        "registry"          :{},
+        "process"           :{},
+        "misc"              :{},
+        "user_agent"        :{},
+        "mutex"             :{},
+        "http"              :{},
+        "dns"               :{},
+        "behavior_type"     :{},
+        "connection"        :{},
+        "file"              :{},
+        "apk_misc"          :{},
+        "apk_filter"        :{},
+        "apk_receiver"      :{},
+        "apk_sensor"        :{},
+        "apk_service"       :{},
+        "apk_embedurl"      :{},
+        "apk_permission"    :{},
+        "apk_sensitiveapi"  :{},
+        "apk_suspiciousapi" :{},
+        "apk_file"          :{},
+        "apk_string"        :{},
+        "default"   	    :{}
+    }
+    # Final collection of all common artifacts
+    common_data = {
+        "service"	        :[],
+        "registry"	        :[],
+        "process"	        :[],
+        "misc"		        :[],
+        "user_agent"	    :[],
+        "mutex"		        :[],
+        "http"		        :[],
+        "dns"		        :[],
+        "behavior_type"	    :[],
+        "connection"	    :[],
+        "file"		        :[],
+        "apk_misc"          :[],
+        "apk_filter"        :[],
+        "apk_receiver"      :[],
+        "apk_sensor"        :[],
+        "apk_service"       :[],
+        "apk_embedurl"      :[],
+        "apk_permission"    :[],
+        "apk_sensitiveapi"  :[],
+        "apk_suspiciousapi" :[],
+        "apk_file"          :[],
+        "apk_string"        :[],
+        "default"   	    :[]
+    }
     count = 0
-    hashes = hash_library(ident, query, filter_size)
+    hashes = hash_library(args)
     for hash in hashes.keys():
-        hash_data = {"service":{},"registry":{},"process":{},"misc":{},"user_agent":{},"mutex":{},"http":{},"dns":{},"behavior_type":{},"connection":{},"file":{}}
+        # Sample data
+        hash_data = {
+            "service"           :{},
+            "registry"          :{},
+            "process"           :{},
+            "misc"              :{},
+            "user_agent"        :{},
+            "mutex"             :{},
+            "http"              :{},
+            "dns"               :{},
+            "behavior_type"     :{},
+            "connection"        :{},
+            "file"              :{},
+            "apk_misc"          :{},
+            "apk_filter"        :{},
+            "apk_receiver"      :{},
+            "apk_sensor"        :{},
+            "apk_service"       :{},
+            "apk_embedurl"      :{},
+            "apk_permission"    :{},
+            "apk_sensitiveapi"  :{},
+            "apk_suspiciousapi" :{},
+            "apk_file"          :{},
+            "apk_string"        :{},
+            "default"   	    :{}
+        }
         for section in hashes[hash]:
             for value in hashes[hash][section]:
                 if value in compare_data[section] and value not in hash_data[section]:
@@ -167,14 +287,89 @@ def common_artifacts(ident, query, filter_size, commonality):
 # Similar to the "comnmon_artifact" function, but further breaks down each line to look for commonalities
 # Will have more hits but likely less accurate
 
-def common_pieces(ident, query, filter_size, commonality):
-    commonality = float(commonality)/float(100)
-    compare_data = {"service":{},"registry":{},"process":{},"misc":{},"user_agent":{},"mutex":{},"http":{},"dns":{},"behavior_type":{},"connection":{},"file":{}}
-    common_pieces = {"service":[],"registry":[],"process":[],"misc":[],"user_agent":[],"mutex":[],"http":[],"dns":[],"behavior_type":[],"connection":[],"file":[]}
+def common_pieces(args):
+    commonality = float(args.commonality)/float(100)
+    # Used for collecting all of the artifacts and counts
+    compare_data = {
+        "service"           :{},
+        "registry"          :{},
+        "process"           :{},
+        "misc"              :{},
+        "user_agent"        :{},
+        "mutex"             :{},
+        "http"              :{},
+        "dns"               :{},
+        "behavior_type"     :{},
+        "connection"        :{},
+        "file"              :{},
+        "apk_misc"          :{},
+        "apk_filter"        :{},
+        "apk_receiver"      :{},
+        "apk_sensor"        :{},
+        "apk_service"       :{},
+        "apk_embedurl"      :{},
+        "apk_permission"    :{},
+        "apk_sensitiveapi"  :{},
+        "apk_suspiciousapi" :{},
+        "apk_file"          :{},
+        "apk_string"        :{},
+        "default"   	    :{}
+    }
+    # Final collection of all common pieces
+    common_pieces = {
+        "service"	        :[],
+        "registry"	        :[],
+        "process"	        :[],
+        "misc"		        :[],
+        "user_agent"	    :[],
+        "mutex"		        :[],
+        "http"		        :[],
+        "dns"		        :[],
+        "behavior_type"	    :[],
+        "connection"	    :[],
+        "file"		        :[],
+        "apk_misc"          :[],
+        "apk_filter"        :[],
+        "apk_receiver"      :[],
+        "apk_sensor"        :[],
+        "apk_service"       :[],
+        "apk_embedurl"      :[],
+        "apk_permission"    :[],
+        "apk_sensitiveapi"  :[],
+        "apk_suspiciousapi" :[],
+        "apk_file"          :[],
+        "apk_string"        :[],
+        "default"   	    :[]
+    }
     count = 0
-    hashes = hash_library(ident, query, filter_size)
+    hashes = hash_library(args)
     for hash in hashes.keys():
-        hash_data = {"service":{},"registry":{},"process":{},"misc":{},"user_agent":{},"mutex":{},"http":{},"dns":{},"behavior_type":{},"connection":{},"file":{}}
+        # Sample data
+        hash_data = {
+            "service"           :{},
+            "registry"          :{},
+            "process"           :{},
+            "misc"              :{},
+            "user_agent"        :{},
+            "mutex"             :{},
+            "http"              :{},
+            "dns"               :{},
+            "behavior_type"     :{},
+            "connection"        :{},
+            "file"              :{},
+            "apk_misc"          :{},
+            "apk_filter"        :{},
+            "apk_receiver"      :{},
+            "apk_sensor"        :{},
+            "apk_service"       :{},
+            "apk_embedurl"      :{},
+            "apk_permission"    :{},
+            "apk_sensitiveapi"  :{},
+            "apk_suspiciousapi" :{},
+            "apk_file"          :{},
+            "apk_string"        :{},
+            "default"   	    :{}
+        }
         for section in hashes[hash]:
             for value in hashes[hash][section]:
                 section_data = value.split(" , ")
@@ -197,17 +392,31 @@ def common_pieces(ident, query, filter_size, commonality):
 # Will gather session data from the identified samples and then report back the unique values per section
 # Session data isn't normalized quite the same as sample data so this may be more error-prone
 
-def uniq_sessions(ident, query):
-    session_data = {"subject":[],"filename":[],"application":[],"country":[],"industry":[],"email":[]}
+def uniq_sessions(args):
+    session_data = {
+        "email_subject" :[],
+        "filename"      :[],
+        "application"   :[],
+        "country"       :[],
+        "industry"      :[],
+        "email_sender"  :[],
+        "fileurl"       :[]
+    }
     count = 0
-    if ident == "query":
-        query = query
+    if args.ident == "query":
+        query = args.query
     else:
-        query = af_query(ident, query)
+        query = af_query(args)
     for session in AFSession.scan(query):
-        subject, filename, application, country, industry, email = session.email_subject, session.file_name, session.application, session.dst_country, session.industry, session.email_sender
-        if subject not in session_data['subject'] and subject:
-            session_data['subject'].append(subject)
+        subject     = session.email_subject
+        filename    = session.file_name
+        application = session.application
+        country     = session.dst_country
+        industry    = session.industry
+        sender      = session.email_sender
+        fileurl     = session.file_url
+        if subject not in session_data['email_subject'] and subject:
+            session_data['email_subject'].append(subject)
         if filename not in session_data['filename'] and filename:
             session_data['filename'].append(filename)
         if application not in session_data['application'] and application:
@@ -216,8 +425,10 @@ def uniq_sessions(ident, query):
             session_data['country'].append(country)
         if industry not in session_data['industry'] and industry:
             session_data['industry'].append(industry)
-        if email not in session_data['email'] and email:
-            session_data['email'].append(email)
+        if sender not in session_data['email_sender'] and sender:
+            session_data['email_sender'].append(sender)
+        if fileurl not in session_data['fileurl'] and fileurl:
+            session_data['fileurl'].append(fileurl)
         count += 1
     session_data['count'] = count
     return session_data
@@ -226,10 +437,10 @@ def uniq_sessions(ident, query):
 # Extracts all HTTP requests made from the identified samples
 # BGM filtering is done on the entire line and not just the URL, so it won't be as precise
 
-def http_scrape(ident, query, filter_size):
+def http_scrape(args):
     http_data = {"http":[]}
     count = 0
-    hashes = hash_library(ident, query, filter_size)
+    hashes = hash_library(args)
     for hash in hashes.keys():
         sample_data = hashes[hash]
         for entry in sample_data['http']:
@@ -245,10 +456,10 @@ def http_scrape(ident, query, filter_size):
 # Extracts all DNS queries made from the identified samples
 # BGM filtering is done on the entire line and not just the URL, so it won't be as precise
 
-def dns_scrape(ident, query, filter_size):
+def dns_scrape(args):
     dns_data = {"dns":[]}
     count = 0
-    hashes = hash_library(ident, query, filter_size)
+    hashes = hash_library(args)
     for hash in hashes.keys():
         sample_data = hashes[hash]
         for entry in sample_data['dns']:
@@ -264,10 +475,10 @@ def dns_scrape(ident, query, filter_size):
 # Extracts all mutexes created within the identified samples
 # BGM filtering is done on the entire line and not just the URL, so it won't be as precise
 
-def mutex_scrape(ident, query, filter_size):
+def mutex_scrape(args):
     mutex_data = {"mutex":[]}
     count = 0
-    hashes = hash_library(ident, query, filter_size)
+    hashes = hash_library(args)
     for hash in hashes.keys():
         sample_data = hashes[hash]
         for entry in sample_data['mutex']:
@@ -289,19 +500,50 @@ def mutex_scrape(ident, query, filter_size):
 
 def output_analysis(output, sample_data, filter, funct_type):
     output = output.split(",")
-    # SESSIONS: subject, filename, application, country, industry, email
+    # SESSIONS: email_subject, filename, application, country, industry, email_sender, fileurl
     # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file
-    section_list = ["service", "registry", "process", "misc", "user_agent", "mutex", "http", "dns", "behavior_type", "connection", "file", "subject", "filename", "application", "country", "industry", "email"]
+    section_list = [
+        "email_subject",
+        "filename",
+        "application",
+        "country",
+        "industry",
+        "email_sender",
+        "fileurl",
+        "service",
+        "registry",
+        "process",
+        "misc",
+        "user_agent",
+        "mutex",
+        "http",
+        "dns",
+        "behavior_type",
+        "connection",
+        "file",
+        "apk_misc",
+        "apk_filter",
+        "apk_receiver",
+        "apk_sensor",
+        "apk_service",
+        "apk_embedurl",
+        "apk_permission",
+        "apk_sensitiveapi",
+        "apk_suspiciousapi",
+        "apk_file",
+        "apk_string",
+        "default"
+    ]
     if "all" in output:
         for entry in section_list:
-            if entry in sample_data.keys():
+            if entry in sample_data.keys() and sample_data[entry] != []:
                 print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
                     if value != "":
                         print value
     else:
         for entry in output:
-            if sample_data[entry]:
+            if sample_data[entry] != []:
                 print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
                     if value != "":
@@ -484,47 +726,110 @@ def yara_rule(output, sample_data):
     else:
         print "No yara rule could be generated.\n"
 
+def testing(args):
+    print args
+    print args.filter
+    sys.exit(1)
+
 ################
 # MAIN PROGRAM #
 ################
 
 def main():
     # Set initial values
-    functions = ["uniq_sessions", "hash_lookup", "common_artifacts", "common_pieces", "http_scrape", "dns_scrape", "mutex_scrape"]
-    sections = ["service", "registry", "process", "misc", "user_agent", "mutex", "http", "dns", "behavior_type", "connection", "file", "subject", "filename", "application", "country", "industry", "email"]
-    identifiers = ["hash", "hash_list", "ip", "network", "dns", "file", "http", "mutex", "process", "registry", "service", "user_agent", "tag", "query"]
-    specials = ["yara_rule", "af_import"]
+    functions = [
+        "uniq_sessions",
+        "hash_lookup",
+        "common_artifacts",
+        "common_pieces",
+        "http_scrape",
+        "dns_scrape",
+        "mutex_scrape"
+    ]
+    sections = [
+        "email_subject",
+        "filename",
+        "application",
+        "country",
+        "industry",
+        "email_sender",
+        "fileurl",
+        "service",
+        "registry",
+        "process",
+        "misc",
+        "user_agent",
+        "mutex",
+        "http",
+        "dns",
+        "behavior_type",
+        "connection",
+        "file",
+        "apk_misc",
+        "apk_filter",
+        "apk_receiver",
+        "apk_sensor",
+        "apk_service",
+        "apk_embedurl",
+        "apk_permission",
+        "apk_sensitiveapi",
+        "apk_suspiciousapi",
+        "apk_file",
+        "apk_string"
+    ]
+    identifiers = [
+        "hash",
+        "hash_list",
+        "ip",
+        "network",
+        "dns",
+        "file",
+        "http",
+        "mutex",
+        "process",
+        "registry",
+        "service",
+        "user_agent",
+        "tag",
+        "query"
+    ]
+    specials = [
+        "yara_rule",
+        "af_import"
+    ]
     # Grab initial arguments from CLI
     parser = argparse.ArgumentParser(description="Run functions to retrieve information from AutoFocus.")
     parser.add_argument("-i", "--ident", help="Query identifier type for AutoFocus search. [" + ", ".join(identifiers) + "]", metavar='<query_type>', required=True)
     parser.add_argument("-q", "--query", help="Value to query Autofocus for.", metavar='<query>', required=True)
     parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. [" + ", ".join(sections) + "]", metavar='<section_output>', default="all")
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000.", metavar="<number>", type=int, default=10000)
+    parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>")
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
     args = parser.parse_args()
+    #testing(args)
     # Gather results from functions
     funct_type = "sample"
     if args.ident == "query":
         print "\n", args.query
     else:
-        print "\n" + af_query(args.ident, args.query).strip()
+        print "\n" + af_query(args).strip()
     if args.run == "uniq_sessions":
-        out_data = uniq_sessions(args.ident, args.query)
+        out_data = uniq_sessions(args)
         funct_type = "session"
     elif args.run == "hash_lookup":
-        out_data = hash_library(args.ident, args.query, args.filter)[args.query] # Pull itself out of the hash library
+        out_data = hash_library(args)[args.query] # Pull itself out of the hash library
     elif args.run == "common_artifacts":
-        out_data = common_artifacts(args.ident, args.query, args.filter, args.commonality)
+        out_data = common_artifacts(args)
     elif args.run == "common_pieces":
-        out_data = common_pieces(args.ident, args.query, args.filter, args.commonality)
+        out_data = common_pieces(args)
     elif args.run == "http_scrape":
-        out_data = http_scrape(args.ident, args.query, args.filter)
+        out_data = http_scrape(args)
     elif args.run == "dns_scrape":
-        out_data = dns_scrape(args.ident, args.query, args.filter)
+        out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
-        out_data = mutex_scrape(args.ident, args.query, args.filter)
+        out_data = mutex_scrape(args)
     # Output results to console
     if "count" not in out_data:
         out_data['count'] = 1

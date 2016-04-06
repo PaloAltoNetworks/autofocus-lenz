@@ -48,21 +48,21 @@ optional arguments:
 ```
 
 Quick links to examples:
-[Hash Lookup function](#hash_lookup)
-[Common Artifacts function](#common_artifacts)
-[Common Pieces function](#common_pieces)
-[HTTP Scrape function](#http_scrape)
-[DNS Scrape function](#dns_scrape)
-[Mutex Scrape function](#mutex_scrape)
-[Unique Sessions function](#uniq_sessions)
-[Generate Yara rule](#yara_rule)
-[Generate AutoFocus query](#af_import)
-[Control output](#section_output)
-[Set commonality percent](#commonality)
-[Submit complex AutoFocus queries](#complex_query)
-[Analyze non-PE files](#apk_analyzer)
-[Limit analyzed samples](#limit_result)
-[Collect bulk sample meta data](#meta_data)
+* [Hash Lookup function](#markdown-header-hash_lookup)
+* [Common Artifacts function](#markdown-header-common_artifacts)
+* [Common Pieces function](#markdown-header-common_pieces)
+* [HTTP Scrape function](#markdown-header-http_scrape)
+* [DNS Scrape function](#markdown-header-dns_scrape)
+* [Mutex Scrape function](#markdown-header-mutex_scrape)
+* [Unique Sessions function](#markdown-header-uniq_sessions)
+* [Generate Yara rule](#markdown-header-yara_rule)
+* [Generate AutoFocus query](#markdown-header-af_import)
+* [Control output](#markdown-header-section_output)
+* [Set commonality percent](#markdown-header-commonality)
+* [Submit complex AutoFocus queries](#markdown-header-complex_query)
+* [Analyze non-PE files](#markdown-header-apk_analyzer)
+* [Limit analyzed samples](#markdown-header-limit_result)
+* [Collect bulk sample meta data](#markdown-header-meta_data)
 
 ### [+] CHANGE LOG [+]
 
@@ -105,7 +105,7 @@ Analyzing activity of malware can be very noisy and AutoFocus provides a good wa
 
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
 
-# hash_lookup
+##### hash_lookup
 
 ```
 python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup
@@ -216,7 +216,7 @@ unknown , delete , C:\Documents and Settings\Administrator\Local Settings\Tempor
 
 You can also use the *-o* flag to specify only the sections of output you're interested in.
 
-# section_output
+##### section_output
 
 ```
 python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup -o http,dns,connection

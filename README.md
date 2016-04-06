@@ -7,8 +7,8 @@ The AutoFocus API exposes a wealth of dynamic analysis information about malware
 ```
 python af_lenz.py -h
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
-                  [-f <number>] -r <function_name> [-s <special_output>]
-                  [-c <integer_percent>]
+                  [-f <number>] [-l <number>] -r <function_name>
+                  [-s <special_output>] [-c <integer_percent>]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -17,23 +17,28 @@ optional arguments:
   -i <query_type>, --ident <query_type>
                         Query identifier type for AutoFocus search. [hash,
                         hash_list, ip, network, dns, file, http, mutex,
-                        process, registry, service, user_agent, tag]
+                        process, registry, service, user_agent, tag, query]
   -q <query>, --query <query>
                         Value to query Autofocus for.
   -o <section_output>, --output <section_output>
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
-                        default. [service, registry, process, misc,
-                        user_agent, mutex, http, dns, behavior_type,
-                        connection, file, subject, filename, application,
-                        country, industry, email]
+                        default. [email_subject, filename, application,
+                        country, industry, email_sender, fileurl, service,
+                        registry, process, misc, user_agent, mutex, http, dns,
+                        behavior_type, connection, file, apk_misc, apk_filter,
+                        apk_receiver, apk_sensor, apk_service, apk_embedurl,
+                        apk_permission, apk_sensitiveapi, apk_suspiciousapi,
+                        apk_file, apk_string]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000.
+  -l <number>, --limit <number>
+                        Limit the number of analyzed samples, default 200.
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, hash_lookup,
                         common_artifacts, common_pieces, http_scrape,
-                        dns_scrape, mutex_scrape]
+                        dns_scrape, mutex_scrape, sample_meta]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import]
@@ -42,7 +47,37 @@ optional arguments:
                         default is 100
 ```
 
+Quick links to examples:
+[Hash Lookup function](#hash_lookup)
+[Common Artifacts function](#common_artifacts)
+[Common Pieces function](#common_pieces)
+[HTTP Scrape function](#http_scrape)
+[DNS Scrape function](#dns_scrape)
+[Mutex Scrape function](#mutex_scrape)
+[Unique Sessions function](#uniq_sessions)
+[Generate Yara rule](#yara_rule)
+[Generate AutoFocus query](#af_import)
+[Control output](#section_output)
+[Set commonality percent](#commonality)
+[Submit complex AutoFocus queries](#complex_query)
+[Analyze non-PE files](#apk_analyzer)
+[Limit analyzed samples](#limit_result)
+[Collect bulk sample meta data](#meta_data)
+
 ### [+] CHANGE LOG [+]
+
+v1.0.5 - 06APR2016
+* Added function "sample_meta" to return meta data about identified samples.
+
+v1.0.4 - 04APR2016
+* Added *-l* flag to limit the number of samples for analysis.
+* Added APK sample sections for output.
+* Fixed a number of logic issues.
+* Cleaned up code significantly.
+
+v1.0.3 - 31MAR2016
+* Moved to BitBucket.
+* Merged updates into code.
 
 v1.0.2 - 22MAR2016
 * Converted over to using _raw_line for everything.
@@ -58,16 +93,19 @@ v1.0.0 - 17MAR2016
 
 In no particular order...
 * Code review
+* Automated testing
 
 ### [+] NOTES [+]
 
-Note stuff
+If you find any issues or have requests for functionality, please contact Jeff White.
 
 ### [+] EXAMPLES [+]
 
 Analyzing activity of malware can be very noisy and AutoFocus provides a good way to identify whether something might be noise through the use of the B/G/M system. For each sample with a matching entry for the activity, whether its file, network, or process based, it will be added to a count for benign, grayware, and malicious samples. In this fashion, if a entry has 5 million matches to benign samples, it's likely just noise; that being said, *af_lenz.py* has a built-in filter of 10,000 matches but can be adjusted with the *-f* flag to override it.
 
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
+
+# hash_lookup
 
 ```
 python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup
@@ -178,6 +216,8 @@ unknown , delete , C:\Documents and Settings\Administrator\Local Settings\Tempor
 
 You can also use the *-o* flag to specify only the sections of output you're interested in.
 
+# section_output
+
 ```
 python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup -o http,dns,connection
 
@@ -217,6 +257,8 @@ ntsystem.exe , tcp-connection , 46.165.222.212:495 ,  , DE
 
 Using the previous data, we see an HTTP request that looks interesting and want to investigate further. It can be very cumbersome to go through multiple samples, so the "common_artifacts" function can be run to compare every sample and report back only items that exist across the set. For this query, we are matching any samples that contain the domain in question.
 
+# common_artifacts
+
 ```
 python af_lenz.py -i http -q markovqwesta.com -r common_artifacts
 
@@ -243,6 +285,8 @@ markovqwesta.com , ns3.cnmsn.com , NS
 ```
 
 One problem with DA is that, by its very nature, its dynamic and has the potential to provide inconsistent results - malware may not run due to certain features being enabled, software being installed, so on and so forth. Continuing with the previous example, instead of a 100% match across all samples, we'll loosen it up to matches across 70% of the set.
+
+# commonality
 
 ```
 python af_lenz.py -i http -q markovqwesta.com -r common_artifacts -c 70
@@ -283,6 +327,8 @@ unknown , tcp , 193.235.147.11:80 , SE
 ```
 
 The "common_pieces" function, which is the similar to the "common_artifacts" function, further breaks up each entry into individual pieces. This is beneficial when malware might inject into random processes or use unique names each time that won't match across samples. All comparison functions can use the *-c* flag to specify the commonality match percentage. In this next query we are search for common pieces for samples matching the Unit 42 Locky tag with a commonality match of 90%.
+
+# common_pieces
 
 ```
 python af_lenz.py -i tag -q Unit42.Locky -r common_pieces -c 90
@@ -364,6 +410,8 @@ Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg
 
 In addition to the comparison functions, there are scraping functions which will iterate over each sample identified and return all unique data in their respective sections. Below are all HTTP requests made by samples with a IP in their DNS section (resolved to).
 
+# http_scrape
+
 ```
 python af_lenz.py -i dns -q 193.235.147.11 -r http_scrape
 
@@ -398,6 +446,8 @@ hxxp://66.85.139.195/phinso.php?proxy=46.165.222.212%3A29786&secret=BER5w4evtjsz
 
 DNS scrape of three hashes pasted as a comma separated list.
 
+# dns_scrape
+
 ```
 python af_lenz.py -i hash_list -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d,cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03,e4b35695fdf6583ca382647bf4587a2ca225cabf9aa7c954489414ea4f433a9e -r dns_scrape
 
@@ -419,6 +469,8 @@ truedonell.com
 ```
 
 Mutex scrape of the same three hashes.
+
+# mutex_scrape
 
 ```
 python af_lenz.py -i hash_list -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d,cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03,e4b35695fdf6583ca382647bf4587a2ca225cabf9aa7c954489414ea4f433a9e -r mutex_scrape
@@ -448,6 +500,8 @@ PB_SCH_MUTEX_GL_A58B78398f17
 ```
 
 Another common use-case might be to look at the session data related to how malware was delivered. By using the "uniq_session" function, you can view the session data attached to the samples in AutoFocus. In this query, we search for samples matching a unique mutex and pull back their session data.
+
+# uniq_sessions
 
 ```
 python af_lenz.py -i mutex -q M_Test -r uniq_sessions
@@ -498,7 +552,9 @@ Hospitality
 
 The above shows a varied distribution throughout industry and country (non-targeted most likely), and some additional filenames you may want to search for.
 
-Last, there are a few special ways you can take the data returned from the functions and output them for other tools. Below is creating a yara rule out of 4 sections of DA for a hash.
+There are also a few special ways you can take the data returned from the functions and output them for other tools. Below is creating a yara rule out of 4 sections of DA for a hash.
+
+# yara_rule
 
 ```
 python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_lookup -s yara_rule
@@ -580,6 +636,8 @@ rule generated_by_afIR
 
 You can also build an AutoFocus query based on the output.
 
+# af_import
+
 ```
 python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_lookup -s af_import
 
@@ -639,6 +697,8 @@ smss-mon.exe , CreateMutexW , <NULL>
 
 You can also send more complex AF queries by passing the "query" value to the *-i* flag. Below we run the "uniq_sessions" function to look at session data for all samples tagged with Locky betwen March 15th-18th that were delivered via web-browsing.
 
+# complex_query
+
 ```
 python af_lenz.py -i query -q '{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.Locky"]},{"field":"sample.create_date","operator":"is in the range","value":["2016-03-15T00:00:00","2016-03-18T23:59:59"]},{"field":"session.app","operator":"is","value":"web-browsing"}]}' -r uniq_sessions
 
@@ -689,6 +749,8 @@ Energy
 
 You're also not limited to just PE files, but can run the functions on the other analyzers used in AutoFocus.
 
+# apk_analyzer
+
 ```
 python af_lenz.py -i query -q '{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}' -r common_artifacts -c 70
 
@@ -731,7 +793,9 @@ com.simplelocker.DecryptService
 [+] processed 24 hashes with a BGM filter of 10000 [+]
 ```
 
-Finally, you can almost limit the number of samples to analyze - running the above query again but limiting to 5 results.
+Additionally, you can also limit the number of samples to analyze - running the above query again but limiting to 5 results.
+
+# limit_result
 
 ```
 python af_lenz.py -i query -q '{"operator":"any","children":[{"field":"sample.tasks.apk_embeded_url","operator":"contains","value":"smali/com/simplelocker"},{"field":"sample.tasks.apk_suspicious_api_call","operator":"contains","value":"smali/com/simplelocker"}]}' -r common_artifacts -c 70 -l 5
@@ -773,4 +837,29 @@ com.simplelocker.CheckService
 com.simplelocker.DecryptService
 
 [+] processed 5 hashes with a BGM filter of 10000 [+]
+```
+
+The last function is more for quick meta-data analysis, but "sample_info" will return the hash, file type, create date, verdict, file size, and tags that associate to samples from a query. These are pipe delimeted for quick parsing.
+
+# meta_data
+
+```
+python af_lenz.py -i file -q "VAULT.KEY" -r sample_meta -l 10
+
+{"operator":"all","children":[{"field":"sample.tasks.file","operator":"contains","value":"VAULT.KEY"}]}
+
+[+] sample_meta [+]
+
+8633e5fafb733bcfdaf6e8d236c6ef6c9352afd4708dd6b239e28dbf76581437 | PE         | 2016-04-03 21:00:49 | malware    | 172032     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'Commodity.Pony']
+99d6e828adcda3207b5ee7f2850fbb6c9e73c0c3e4d302bb94094acaf1a973f3 | PE         | 2016-03-15 21:00:25 | malware    | 151552     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'1504.TorHiddenService', u'Commodity.Pony']
+dd34c090ddac627ed38df222df013f720be2480e65e5ac7f134f45569c267522 | PE         | 2016-03-14 22:37:01 | malware    | 200704     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'1504.TorHiddenService', u'Commodity.Pony']
+5769d7a68cea66a0972ce657ecca8006bbbb68b15254fce2f721ef7705f86110 | PE         | 2016-03-14 10:58:29 | malware    | 187289     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
+678dda0327f46c03912693b8092b068b6ee59a8503fd2be322be92735aa469a7 | PE         | 2016-02-23 18:57:28 | malware    | 79965      | [u'Unit42.RansomCrypt', u'1504.Delete_VolumeSnapshots']
+f2a1abba968355c1e4a37e9a3cb4ff91a080f8720bdafc533d6023e26dfa120c | PE         | 2016-02-21 09:23:23 | malware    | 110807     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
+a996ce853783a92927856b8559e157c20c7a950b68da4bc214568d32e9246352 | PE         | 2016-02-18 17:05:04 | malware    | 186882     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
+b20d67bab9c75b02c5894299f332fff9d34ace41e1a9042f39f1799d0f457df6 | PE         | 2016-01-29 18:15:49 | malware    | 112642     | [u'Unit42.RansomCrypt']
+69d023ca57f4e3fdf7280ca4e5a5a7b547797f467315eaf462d6cf3cbf8696cc | PE         | 2016-01-22 19:42:54 | malware    | 135682     | [u'Unit42.RansomCrypt']
+dae88a5dac46e9e15a1ed71be06613c1d6f98d532063e13414f4fb8795c87de8 | PE         | 2016-01-27 17:13:32 | malware    | 168450     | [u'Unit42.RansomCrypt']
+
+[+] processed 10 samples [+]
 ```

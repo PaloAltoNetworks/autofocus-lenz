@@ -8,7 +8,7 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -498,10 +498,11 @@ def mutex_scrape(args):
 # This is what gets printed out to the screen
 # Takes a normalized input of sections and returns the sections requested by the user
 
-def output_analysis(output, sample_data, filter, funct_type):
-    output = output.split(",")
+def output_analysis(args, sample_data, funct_type):
+    output = args.output.split(",")
     # SESSIONS: email_subject, filename, application, country, industry, email_sender, fileurl
-    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file
+    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter, apk_receiver, apk_sensor, apk_service, apk_embedurl,
+    #           apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file, apk_string
     section_list = [
         "email_subject",
         "filename",
@@ -549,17 +550,36 @@ def output_analysis(output, sample_data, filter, funct_type):
                     if value != "":
                         print value
     if funct_type == "sample":
-        print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(filter), "[+]\n"
+        print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(args.filter), "[+]\n"
     elif funct_type == "session":
         print "\n[+] processed", sample_data['count'], "sessions [+]\n"
+
+# Output List Function
+# This just returns sample based meta-data based on the query provided
+# Intended to be filtered/sorted afterwards by "|" pipe delimited characters
+
+def output_list(args):
+    count = 0
+    print "\n[+] sample_meta [+]\n"
+    if args.ident == "query":
+        for sample in AFSample.scan(args.query):
+            if count < args.limit:
+                print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                count += 1
+    else:
+        for sample in AFSample.scan(af_query(args)):
+            if count < args.limit:
+                print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                count += 1
+    print "\n[+] processed", str(count), "samples [+]\n"
 
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results
 # AutoFocus API has a limit on the lines allowed and too many results will make it more challenging to manage in the portal
 
-def af_import(output, sample_data):
+def af_import(args, sample_data):
     # Initialize some values
-    output = output.split(",")
+    output = args.output.split(",")
     if "all" in output:
         output = []
         for key in sample_data.keys():
@@ -607,9 +627,9 @@ def af_import(output, sample_data):
 # Attempts to take the likely data you might find from dynamic analysis and build a yara rule for memory process scanning using volatility/other tools
 # Some sections commented out as they generate far too many entries/false positives that haven't been programatically filtered
 
-def yara_rule(output, sample_data):
+def yara_rule(args, sample_data):
     # Initialize some values
-    output = output.split(",")
+    output = args.output.split(",")
     if "all" in output:
         output = []
         for key in sample_data.keys():
@@ -726,11 +746,6 @@ def yara_rule(output, sample_data):
     else:
         print "No yara rule could be generated.\n"
 
-def testing(args):
-    print args
-    print args.filter
-    sys.exit(1)
-
 ################
 # MAIN PROGRAM #
 ################
@@ -744,7 +759,8 @@ def main():
         "common_pieces",
         "http_scrape",
         "dns_scrape",
-        "mutex_scrape"
+        "mutex_scrape",
+        "sample_meta"
     ]
     sections = [
         "email_subject",
@@ -808,7 +824,7 @@ def main():
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>")
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
     args = parser.parse_args()
-    #testing(args)
+    args.query = args.query.replace("\\", "\\\\")
     # Gather results from functions
     funct_type = "sample"
     if args.ident == "query":
@@ -830,14 +846,20 @@ def main():
         out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
         out_data = mutex_scrape(args)
+    elif args.run == "sample_meta":
+        out_data = {}
+        funct_type = "list"
     # Output results to console
     if "count" not in out_data:
         out_data['count'] = 1
-    output_analysis(args.output, out_data, args.filter, funct_type)
+    if args.run == "sample_meta":
+        output_list(args)
+    else:
+        output_analysis(args, out_data, funct_type)
     if args.special == "af_import":
-        af_import(args.output, out_data)
+        af_import(args, out_data)
     elif args.special == "yara_rule":
-        yara_rule(args.output, out_data)
+        yara_rule(args, out_data)
 
 if __name__ == '__main__':
     main()

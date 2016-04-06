@@ -48,7 +48,8 @@ optional arguments:
 ```
 
 Quick links to examples:
-**[Hash Lookup function](#markdown-header-hash_lookup)**
+* [Hash Lookup function](#markdown-header-hash-lookup)
+* [Hash Lookup function](#markdown-header-hashlookup)
 * [Common Artifacts function](#markdown-header-common_artifacts)
 * [Common Pieces function](#markdown-header-common_pieces)
 * [HTTP Scrape function](#markdown-header-http_scrape)
@@ -106,6 +107,8 @@ Analyzing activity of malware can be very noisy and AutoFocus provides a good wa
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
 
 ## hash_lookup
+## hash lookup
+## hashlookup
 
 ```
 python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup

@@ -148,7 +148,7 @@ def hash_lookup(args, thread_queue):
         AFRegistryActivity	                : "registry",
         AFProcessActivity       	        : "process",
         AFApiActivity		                : "misc",
-        AFUserAgentFragment	            : "user_agent",
+        AFUserAgentFragment	                : "user_agent",
         AFMutexActivity		                : "mutex",
         AFHttpActivity		                : "http",
         AFDnsActivity       		        : "dns",

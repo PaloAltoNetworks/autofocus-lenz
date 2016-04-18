@@ -8,7 +8,7 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -182,7 +182,7 @@ def hash_lookup(args, thread_queue):
 
 # Common Artifacts Function
 # Identifies lines that exist, per section, in every identified sample
-# Must be a 100% match across all samples to be reported, thus samples that unique every install may not have certain entries appear
+# Must be a 100% match, unless adjusted by -c flag, across all samples to be reported, thus samples that unique every install may not have certain entries appear
 
 def common_artifacts(args):
     commonality = float(args.commonality)/float(100)
@@ -279,7 +279,11 @@ def common_artifacts(args):
     for section in compare_data:
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
-                common_data[section].append(value)
+                match_percent = int(float(compare_data[section][value])/float(count) * 100)
+                if args.special == "range":
+                    common_data[section].append(str(match_percent) + " |" + value)
+                else:
+                    common_data[section].append(value)
     common_data['count'] = count # Keep track of how many samples processed
     return common_data
 
@@ -384,7 +388,11 @@ def common_pieces(args):
     for section in compare_data:
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
-                common_pieces[section].append(value)
+                match_percent = int(float(compare_data[section][value])/float(count) * 100)
+                if args.special == "range":
+                    common_pieces[section].append(str(match_percent) + " |" + value)
+                else:
+                    common_pieces[section].append(value)
     common_pieces['count'] = count # Keep track of how many samples processed
     return common_pieces
 
@@ -811,7 +819,8 @@ def main():
     ]
     specials = [
         "yara_rule",
-        "af_import"
+        "af_import",
+        "range"
     ]
     # Grab initial arguments from CLI
     parser = argparse.ArgumentParser(description="Run functions to retrieve information from AutoFocus.")

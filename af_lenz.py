@@ -8,7 +8,7 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -647,22 +647,29 @@ def yara_rule(args, sample_data):
     contained_list = []
     entry_list = []
     # Build yara rule
-    yara_sig = "rule generated_by_afIR\n{\n\tstrings:\n"
+    yara_sig = "rule generated_by_afLenz\n{\n\tstrings:\n"
     for entry in output:
         if entry in sample_data.keys() and entry == "dns":
             count = 0
-            for value in sample_data[entry]:
-                dns_entry = value.split(" , ")[0]
-                dns_resolve = value.split(" , ")[1]
-                if dns_entry not in contained_list and dns_entry != "" and len(dns_entry) > min_len:
-                    entry_list.append("dns")
-                    contained_list.append(dns_entry)
-                    yara_sig += "\t\t$dns_" + str(count) + " = \"" + dns_entry + "\"\n" # Just grab the domain
-                if dns_resolve not in contained_list and dns_resolve != "" and len(dns_resolve) > min_len:
-                    entry_list.append("dns")
-                    contained_list.append(dns_resolve)
-                    yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\"\n" # Just grab the resolved IP
-                count += 2
+            if args.run == "dns_scrape":
+                for value in sample_data[entry]:
+                    if value not in contained_list and value != "" and len(value) > min_len:
+                        entry_list.append("dns")
+                        contained_list.append(value)
+                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + value + "\"\n" # Just grab the domain
+            else:
+                for value in sample_data[entry]:
+                    dns_entry = value.split(" , ")[0]
+                    dns_resolve = value.split(" , ")[1]
+                    if dns_entry not in contained_list and dns_entry != "" and len(dns_entry) > min_len:
+                        entry_list.append("dns")
+                        contained_list.append(dns_entry)
+                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + dns_entry + "\"\n" # Just grab the domain
+                    if dns_resolve not in contained_list and dns_resolve != "" and len(dns_resolve) > min_len:
+                        entry_list.append("dns")
+                        contained_list.append(dns_resolve)
+                        yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\"\n" # Just grab the resolved IP
+                    count += 2
         if entry in sample_data.keys() and entry == "http":
             count = 0
             for value in sample_data[entry]:

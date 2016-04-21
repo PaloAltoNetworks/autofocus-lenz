@@ -51,6 +51,7 @@ Quick links to examples (not working in BitBucket...):
 * [Hash Lookup function](#markdown-header-hash_lookup)
 * [Common Artifacts function](#markdown-header-common_artifacts)
 * [Common Pieces function](#markdown-header-common_pieces)
+* [Show commonality range](#markdown-header-range)
 * [HTTP Scrape function](#markdown-header-http_scrape)
 * [DNS Scrape function](#markdown-header-dns_scrape)
 * [Mutex Scrape function](#markdown-header-mutex_scrape)
@@ -63,8 +64,15 @@ Quick links to examples (not working in BitBucket...):
 * [Analyze non-PE files](#markdown-header-apk_analyzer)
 * [Limit analyzed samples](#markdown-header-limit_result)
 * [Collect bulk sample meta data](#markdown-header-meta_data)
+* [Extract all unique entries](#markdown-header-extract_all)
 
 ### [+] CHANGE LOG [+]
+
+v1.0.7 - 21APR2016
+* Fixed DNS scrape data not being parsed correctly for Yara rule generation.
+
+v1.0.6 - 18APR2016
+* Added output "range" to print commonality match percents next to artifacts.
 
 v1.0.5 - 06APR2016
 * Added function "sample_meta" to return meta data about identified samples.
@@ -92,8 +100,7 @@ v1.0.0 - 17MAR2016
 ### [+] FUTURE TO-DOs [+]
 
 In no particular order...
-* Code review
-* Automated testing
+* Corporate review/blog release
 
 ### [+] NOTES [+]
 
@@ -406,6 +413,72 @@ Documents and Settings\All Users\Start Menu\Programs\Startup\_Locky_recover_inst
 Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg
 
 [+] processed 1364 hashes with a BGM filter of 10000 [+]
+```
+
+There is also a special output for the commonality functions, called "range", which prints out the percentage of commonality. For example, if you set a lower commonality requirement, you can see in which bands of commonality artifacts fall. This may be useful of identifying trends in subsets of the samples or how strong an artifact might be.
+
+##### range
+
+```
+python af_lenz.py -i dns -q markovqwesta.com -r common_artifacts -c 30 -s range
+
+{"operator":"all","children":[{"field":"alias.domain","operator":"contains","value":"markovqwesta.com"}]}
+
+[+] hashes [+]
+
+232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
+cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
+    <TRUNCATED>
+234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
+f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
+23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
+
+[+] registry [+]
+
+33 |sample.exe , SetValueKey , HKCU\Software\kg\cat ,
+33 |sample.exe , DeleteValueKey , HKCU\Software\kg\chk ,
+33 |sample.exe , DeleteValueKey , HKCU\Software\kg\main ,
+33 |sample.exe , SetValueKey , HKCU\Software\kg\chk ,
+    <TRUNCATED>
+33 |sample.exe , DeleteValueKey , HKCU\Software\kg\main
+33 |sample.exe , RegCreateKeyEx , HKCU , SOFTWARE\kg
+33 |sample.exe , DeleteValueKey , HKCU\Software\kg\name
+33 |sample.exe , DeleteValueKey , HKCU\Software\kg\chk
+
+[+] user_agent [+]
+
+75 |pb
+
+[+] mutex [+]
+
+33 |sample.exe , CreateMutexW , PB_SN_MUTEX_GL_F348B3A2387
+
+[+] http [+]
+
+75 |markovqwesta.com , GET , /que.php , pb
+
+[+] dns [+]
+
+75 |markovqwesta.com , 193.235.147.11 , A
+83 |markovqwesta.com , ns4.cnmsn.com , NS
+83 |markovqwesta.com , ns3.cnmsn.com , NS
+
+[+] connection [+]
+
+66 |unknown , tcp , 193.235.147.11:80 , SE
+
+[+] file [+]
+
+33 |unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[2].htm
+33 |sample.exe , Write , Windows\SysWOW64\9125y5yta.dat
+33 |netsh.exe , CreateFileFail , Users\Administrator\sample.exe , 00000080 , 00200000 , c0000034
+33 |unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[1].htm , md5=46788efce76ebf3e09fc844af99c5309 , sha1=d25ec96232263c0eb834d9c7b437dbe97029a809 , sha256=3376bb271f1e1e7b2e0eb28475f8bab01ed69627861682ac809a732cb023d230
+33 |sample.exe , Write , WINDOWS\system32\9125y5yta.dat ,
+
+[+] processed 12 hashes with a BGM filter of 10000 [+]
 ```
 
 In addition to the comparison functions, there are scraping functions which will iterate over each sample identified and return all unique data in their respective sections. Below are all HTTP requests made by samples with a IP in their DNS section (resolved to).
@@ -839,7 +912,7 @@ com.simplelocker.DecryptService
 [+] processed 5 hashes with a BGM filter of 10000 [+]
 ```
 
-The last function is more for quick meta-data analysis, but "sample_info" will return the hash, file type, create date, verdict, file size, and tags that associate to samples from a query. These are pipe delimeted for quick parsing.
+The next function is more for quick meta-data analysis, but "sample_info" will return the hash, file type, create date, verdict, file size, and tags that associate to samples from a query. These are pipe delimeted for quick parsing.
 
 ##### meta_data
 
@@ -862,4 +935,40 @@ b20d67bab9c75b02c5894299f332fff9d34ace41e1a9042f39f1799d0f457df6 | PE         | 
 dae88a5dac46e9e15a1ed71be06613c1d6f98d532063e13414f4fb8795c87de8 | PE         | 2016-01-27 17:13:32 | malware    | 168450     | [u'Unit42.RansomCrypt']
 
 [+] processed 10 samples [+]
+```
+
+##### extract_all
+
+You can also use the "common_artifacts" function to pull back ALL data if you set a commonality to 0. For example, if you want to know every unique Process entry across a sample set for further analysis, along with wanting to know how common the items were, you can run the below.
+
+```
+python af_lenz.py -i dns -q markovqwesta.com -r common_artifacts -c 0 -o process -s range
+
+{"operator":"all","children":[{"field":"alias.domain","operator":"contains","value":"markovqwesta.com"}]}
+
+[+] hashes [+]
+
+232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
+cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
+    <TRUNCATED>
+234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
+f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
+23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
+
+[+] process [+]
+
+16 |ntsystem.exe , LoadLibraryExW , hnetcfg.dll ,  , 0
+8 |mswinlogon.exe , LoadLibraryExW , USER32.dll ,  , 0
+8 |ntreader_sl.exe , LoadLibraryExW , ADVAPI32.dll ,  , 0
+8 |wincsrss.exe , ZwTerminateProcess , ntwinlogon.exe ,
+    <TRUNCATED>
+8 |wincsrss.exe , LoadLibraryExW , Windows\SysWOW64\ieframe.dll ,  , 8
+8 |winlogonsvc.exe , LoadLibraryExW , WININET.dll ,  , 0
+8 |ntcsrss.exe , GetModuleHandle , documents and settings\administrator\sample.exe
+8 |system-updater.exe , LoadLibraryExW , SHELL32.dll ,  , 0
+
+[+] processed 12 hashes with a BGM filter of 10000 [+]
 ```

@@ -657,6 +657,7 @@ def yara_rule(args, sample_data):
                         entry_list.append("dns")
                         contained_list.append(value)
                         yara_sig += "\t\t$dns_" + str(count) + " = \"" + value + "\"\n" # Just grab the domain
+                        count += 1
             else:
                 for value in sample_data[entry]:
                     dns_entry = value.split(" , ")[0]
@@ -672,29 +673,38 @@ def yara_rule(args, sample_data):
                     count += 2
         if entry in sample_data.keys() and entry == "http":
             count = 0
-            for value in sample_data[entry]:
-                domain_name = value.split(" , ")[0]
-                try:
-                    url_path = value.split(" , ")[2]
-                except:
-                    url_path = ""
-                try:
-                    full_ua = value.split(" , ")[3]
-                except:
-                    full_ua = ""
-                if domain_name not in contained_list and domain_name != "" and len(domain_name) > min_len:
-                    entry_list.append("http")
-                    contained_list.append(domain_name)
-                    yara_sig += "\t\t$http_" + str(count) + " = \"" + domain_name + "\"\n" # Just grab the domain
-                if url_path not in contained_list and url_path != "" and len(url_path) > min_len:
-                    entry_list.append("http")
-                    contained_list.append(url_path)
-                    yara_sig += "\t\t$http_" + str(count+1) + " = \"" + url_path + "\"\n" # Just grab the URL path
-                if full_ua not in contained_list and full_ua != "" and len(full_ua) > min_len:
-                    entry_list.append("http")
-                    contained_list.append(full_ua)
-                    yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\"\n" # Just grab the full user-agent
-                count += 3
+            if args.run == "http_scrape":
+                for value in sample_data[entry]:
+                    value = value.replace("hxxp", "http")
+                    if value not in contained_list and value != "" and len(value) > min_len:
+                        entry_list.append("http")
+                        contained_list.append(value)
+                        yara_sig += "\t\t$http_" + str(count) + " = \"" + value + "\"\n" # Just grab the domain
+                        count += 1
+            else:
+                for value in sample_data[entry]:
+                    domain_name = value.split(" , ")[0]
+                    try:
+                        url_path = value.split(" , ")[2]
+                    except:
+                        url_path = ""
+                    try:
+                        full_ua = value.split(" , ")[3]
+                    except:
+                        full_ua = ""
+                    if domain_name not in contained_list and domain_name != "" and len(domain_name) > min_len:
+                        entry_list.append("http")
+                        contained_list.append(domain_name)
+                        yara_sig += "\t\t$http_" + str(count) + " = \"" + domain_name + "\"\n" # Just grab the domain
+                    if url_path not in contained_list and url_path != "" and len(url_path) > min_len:
+                        entry_list.append("http")
+                        contained_list.append(url_path)
+                        yara_sig += "\t\t$http_" + str(count+1) + " = \"" + url_path + "\"\n" # Just grab the URL path
+                    if full_ua not in contained_list and full_ua != "" and len(full_ua) > min_len:
+                        entry_list.append("http")
+                        contained_list.append(full_ua)
+                        yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\"\n" # Just grab the full user-agent
+                    count += 3
         if entry in sample_data.keys() and entry == "connection":
             count = 0
             for value in sample_data[entry]:
@@ -722,13 +732,21 @@ def yara_rule(args, sample_data):
                                "WininetConnectionMutex",
                                "<NULL>"] # Entries to ignore
             count = 0
-            for value in sample_data[entry]:
-                mutex_name = value.split(" , ")[2]
-                if mutex_name not in contained_list and mutex_name != "" and mutex_name not in mutex_blacklist and len(mutex_name) > min_len: # Just grab mutex name
-                    entry_list.append("mutex")
-                    contained_list.append(mutex_name)
-                    yara_sig += "\t\t$mutex_" + str(count) + " = \"" + mutex_name + "\"\n"
-                count += 1
+            if args.run == "mutex_scrape":
+                for mutex in sample_data[entry]:
+                    if mutex not in contained_list and mutex != "" and mutex not in mutex_blacklist and len(mutex) > min_len:
+                        entry_list.append("mutex")
+                        contained_list.append(mutex)
+                        yara_sig += "\t\t$mutex_" + str(count) + " = \"" + mutex + "\"\n" # Just grab the domain
+                        count += 1
+            else:
+                for mutex in sample_data[entry]:
+                    mutex = mutex.split(" , ")[2]
+                    if mutex not in contained_list and mutex != "" and mutex not in mutex_blacklist and len(mutex) > min_len: # Just grab mutex name
+                        entry_list.append("mutex")
+                        contained_list.append(mutex)
+                        yara_sig += "\t\t$mutex_" + str(count) + " = \"" + mutex + "\"\n"
+                    count += 1
         #if entry in sample_data.keys() and entry == "process":
         #    count = 0
         #    for value in sample_data[entry]:

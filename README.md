@@ -69,7 +69,7 @@ Quick links to examples (not working in BitBucket...):
 ### [+] CHANGE LOG [+]
 
 v1.0.7 - 21APR2016
-* Fixed DNS scrape data not being parsed correctly for Yara rule generation.
+* Fixed scrape functions not being parsed correctly for Yara rule generation.
 
 v1.0.6 - 18APR2016
 * Added output "range" to print commonality match percents next to artifacts.

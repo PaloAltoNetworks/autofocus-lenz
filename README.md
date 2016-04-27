@@ -24,31 +24,32 @@ optional arguments:
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
                         default. [email_subject, filename, application,
-                        country, industry, email_sender, fileurl, service,
-                        registry, process, misc, user_agent, mutex, http, dns,
-                        behavior_type, connection, file, apk_misc, apk_filter,
-                        apk_receiver, apk_sensor, apk_service, apk_embedurl,
-                        apk_permission, apk_sensitiveapi, apk_suspiciousapi,
-                        apk_file, apk_string]
+                        country, industry, email_sender, fileurl,
+                        email_recipient, service, registry, process, misc,
+                        user_agent, mutex, http, dns, behavior_type,
+                        connection, file, apk_misc, apk_filter, apk_receiver,
+                        apk_sensor, apk_service, apk_embedurl, apk_permission,
+                        apk_sensitiveapi, apk_suspiciousapi, apk_file,
+                        apk_string]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000.
   -l <number>, --limit <number>
                         Limit the number of analyzed samples, default 200.
   -r <function_name>, --run <function_name>
-                        Function to run. [uniq_sessions, hash_lookup,
-                        common_artifacts, common_pieces, http_scrape,
-                        dns_scrape, mutex_scrape, sample_meta]
+                        Function to run. [uniq_sessions, common_artifacts,
+                        common_pieces, hash_scrape, http_scrape, dns_scrape,
+                        mutex_scrape, meta_scrape]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
-                        [yara_rule, af_import]
+                        [yara_rule, af_import, range]
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
 ```
 
 Quick links to examples (not working in BitBucket...):
-* [Hash Lookup function](#markdown-header-hash_lookup)
+* [Hash Scrape function](#markdown-header-hash_scrape)
 * [Common Artifacts function](#markdown-header-common_artifacts)
 * [Common Pieces function](#markdown-header-common_pieces)
 * [Show commonality range](#markdown-header-range)
@@ -67,6 +68,11 @@ Quick links to examples (not working in BitBucket...):
 * [Extract all unique entries](#markdown-header-extract_all)
 
 ### [+] CHANGE LOG [+]
+
+v1.0.8 - 27APR2016
+* Changed "hash_lookup" to "hash_scrape" and created a new function around it to support multiple hashes instead of one.
+* Added query output to Yara rule generation.
+* Cleaned up code for final release to public.
 
 v1.0.7 - 21APR2016
 * Fixed scrape functions not being parsed correctly for Yara rule generation.
@@ -100,7 +106,7 @@ v1.0.0 - 17MAR2016
 ### [+] FUTURE TO-DOs [+]
 
 In no particular order...
-* Corporate review/blog release
+* None
 
 ### [+] NOTES [+]
 
@@ -112,19 +118,16 @@ Analyzing activity of malware can be very noisy and AutoFocus provides a good wa
 
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
 
-##### hash_lookup
+##### hash_scrape
 
 ```
-python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup
+python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_scrape
 
 {"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d"}]}
 
 [+] hashes [+]
 
 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
-
-[+] service [+]
-
 
 [+] registry [+]
 
@@ -172,7 +175,6 @@ ntsystem.exe , CreateMutexW , <NULL>
 [+] http [+]
 
 markovqwesta.com , GET , /que.php , pb
-markovqwesta.com , GET , /que.php , pb
 93.189.40.225 , GET , /wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW ,
 
 [+] dns [+]
@@ -181,22 +183,6 @@ markovqwesta.com , 193.235.147.11 , A
 iholpforyou4.com ,  , NXDOMAIN
 markovqwesta.com , ns4.cnmsn.com , NS
 markovqwesta.com , ns3.cnmsn.com , NS
-iholpforyou4.com ,  , NXDOMAIN
-markovqwesta.com , ns4.cnmsn.com , NS
-markovqwesta.com , 193.235.147.11 , A
-markovqwesta.com , ns3.cnmsn.com , NS
-
-[+] behavior_type [+]
-
-process
-unknown_traffic
-nx_domain
-registry
-    <TRUNCATED>
-copy_itself
-sus_ua
-unpack_write_section
-malware_url
 
 [+] connection [+]
 
@@ -226,7 +212,7 @@ You can also use the *-o* flag to specify only the sections of output you're int
 ##### section_output
 
 ```
-python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_lookup -o http,dns,connection
+python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d -r hash_scrape -o http,dns,connection
 
 {"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d"}]}
 
@@ -237,7 +223,6 @@ python af_lenz.py -i hash -q 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac
 [+] http [+]
 
 markovqwesta.com , GET , /que.php , pb
-markovqwesta.com , GET , /que.php , pb
 93.189.40.225 , GET , /wp-trackback.php?proxy=46.165.222.212%3A9506&secret=BER5w4evtjszw4MBRW ,
 
 [+] dns [+]
@@ -245,10 +230,6 @@ markovqwesta.com , GET , /que.php , pb
 markovqwesta.com , 193.235.147.11 , A
 iholpforyou4.com ,  , NXDOMAIN
 markovqwesta.com , ns4.cnmsn.com , NS
-markovqwesta.com , ns3.cnmsn.com , NS
-iholpforyou4.com ,  , NXDOMAIN
-markovqwesta.com , ns4.cnmsn.com , NS
-markovqwesta.com , 193.235.147.11 , A
 markovqwesta.com , ns3.cnmsn.com , NS
 
 [+] connection [+]
@@ -630,7 +611,7 @@ There are also a few special ways you can take the data returned from the functi
 ##### yara_rule
 
 ```
-python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_lookup -s yara_rule
+python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_scrape -s yara_rule
 
 {"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03"}]}
 
@@ -655,9 +636,6 @@ iholpforyou4.com , 46.36.221.85 , A
 markovqwesta.com , 193.235.147.11 , A
 markovqwesta.com , ns4.cnmsn.com , NS
 iholpforyou4.com , ns4.cnmsn.com , NS
-    <TRUNCATED>
-markovqwesta.com , ns4.cnmsn.com , NS
-iholpforyou4.com , ns4.cnmsn.com , NS
 iholpforyou4.com , ns3.cnmsn.com , NS
 markovqwesta.com , ns3.cnmsn.com , NS
 
@@ -665,9 +643,7 @@ markovqwesta.com , ns3.cnmsn.com , NS
 
 markovqwesta.com , GET , /que.php , pb
 iholpforyou4.com , GET , /d_index.php , pb
-iholpforyou4.com , GET , /d_index.php , pb
 80.78.242.47 , GET , /pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW ,
-markovqwesta.com , GET , /que.php , pb
 
 [+] mutex [+]
 
@@ -681,10 +657,12 @@ smss-mon.exe , CreateMutexW , <NULL>
 
 [+] processed 1 hashes with a BGM filter of 10000 [+]
 
-[+] yara sig [+]
+[+] yara rule [+]
 
-rule generated_by_afIR
+rule autogen_afLenz
 {
+	// Namespace(commonality=100, filter=10000, ident='hash', limit=200, output='connection,dns,http,mutex', query=u'cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03', run='hash_scrape', special='yara_rule')
+
 	strings:
 		$connection_0 = "91.185.215.141"
 		$connection_1 = "193.235.147.11"
@@ -694,13 +672,13 @@ rule generated_by_afIR
 		$connection_5 = "217.172.179.88"
 		$connection_6 = "217.172.179.88"
 		$connection_7 = "80.78.242.47"
-		$dns_0 = "iholpforyou4.com"
-		$dns_2 = "markovqwesta.com"
-		$dns_5 = "ns4.cnmsn.com"
-		$dns_9 = "ns3.cnmsn.com"
-		$http_1 = "/que.php"
-		$http_4 = "/d_index.php"
-		$http_10 = "/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW"
+		$dns_0 = "iholpforyou4.com" wide ascii
+		$dns_2 = "markovqwesta.com" wide ascii
+		$dns_5 = "ns4.cnmsn.com" wide ascii
+		$dns_9 = "ns3.cnmsn.com" wide ascii
+		$http_1 = "/que.php" wide ascii
+		$http_4 = "/d_index.php" wide ascii
+		$http_7 = "/pointer.php?proxy=217.172.179.88%3A14452&secret=BER5w4evtjszw4MBRW" wide ascii
 
 	condition:
 		1 of ($connection*, $http*, $dns*) /* Adjust as needed for accuracy */
@@ -712,7 +690,7 @@ You can also build an AutoFocus query based on the output.
 ##### af_import
 
 ```
-python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_lookup -s af_import
+python af_lenz.py -i hash -q cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03 -o connection,dns,http,mutex -r hash_scrape -s af_import
 
 {"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03"}]}
 
@@ -917,7 +895,7 @@ The next function is more for quick meta-data analysis, but "sample_info" will r
 ##### meta_data
 
 ```
-python af_lenz.py -i file -q "VAULT.KEY" -r sample_meta -l 10
+python af_lenz.py -i file -q "VAULT.KEY" -r meta_scrape -l 10
 
 {"operator":"all","children":[{"field":"sample.tasks.file","operator":"contains","value":"VAULT.KEY"}]}
 
@@ -939,7 +917,7 @@ dae88a5dac46e9e15a1ed71be06613c1d6f98d532063e13414f4fb8795c87de8 | PE         | 
 
 ##### extract_all
 
-You can also use the "common_artifacts" function to pull back ALL data if you set a commonality to 0. For example, if you want to know every unique Process entry across a sample set for further analysis, along with wanting to know how common the items were, you can run the below.
+You can also use the "hash_scrape" function to pull back ALL data across a set of samples or leverage the "common_artifacts" function, with a commonality of 0% (meaning everything is a match), to take advantage of outputs like "range". For example, if you want to know every unique Process entry across a sample set for further analysis and know how common each one is.
 
 ```
 python af_lenz.py -i dns -q markovqwesta.com -r common_artifacts -c 0 -o process -s range

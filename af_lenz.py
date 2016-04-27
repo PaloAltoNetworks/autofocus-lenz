@@ -8,7 +8,7 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -402,13 +402,14 @@ def common_pieces(args):
 
 def uniq_sessions(args):
     session_data = {
-        "email_subject" :[],
-        "filename"      :[],
-        "application"   :[],
-        "country"       :[],
-        "industry"      :[],
-        "email_sender"  :[],
-        "fileurl"       :[]
+        "email_subject"     :[],
+        "filename"          :[],
+        "application"       :[],
+        "country"           :[],
+        "industry"          :[],
+        "email_sender"      :[],
+        "fileurl"           :[],
+        "email_recipient"   :[]
     }
     count = 0
     if args.ident == "query":
@@ -423,6 +424,7 @@ def uniq_sessions(args):
         industry    = session.industry
         sender      = session.email_sender
         fileurl     = session.file_url
+        recipient   = session.email_recipient
         if subject not in session_data['email_subject'] and subject:
             session_data['email_subject'].append(subject)
         if filename not in session_data['filename'] and filename:
@@ -437,13 +439,56 @@ def uniq_sessions(args):
             session_data['email_sender'].append(sender)
         if fileurl not in session_data['fileurl'] and fileurl:
             session_data['fileurl'].append(fileurl)
+        if recipient not in session_data['email_recipient'] and recipient:
+            session_data['email_recipient'].append(recipient)
         count += 1
     session_data['count'] = count
     return session_data
 
+# Hash Scraper Function
+# Extracts all data from each section of the identified samples
+# BGM filtering is done on the entire line
+
+def hash_scrape(args):
+    hash_data = {
+        "service"           :[],
+        "registry"          :[],
+        "process"           :[],
+        "misc"		        :[],
+        "user_agent"	    :[],
+        "mutex"		        :[],
+        "http"		        :[],
+        "dns"		        :[],
+        "behavior_type"	    :[],
+        "connection"	    :[],
+        "file"		        :[],
+        "apk_misc"          :[],
+        "apk_filter"        :[],
+        "apk_receiver"      :[],
+        "apk_sensor"        :[],
+        "apk_service"       :[],
+        "apk_embedurl"      :[],
+        "apk_permission"    :[],
+        "apk_sensitiveapi"  :[],
+        "apk_suspiciousapi" :[],
+        "apk_file"          :[],
+        "apk_string"        :[],
+        "default"   	    :[]
+    }
+    count = 0
+    hashes = hash_library(args)
+    for hash in hashes:
+        for section in hashes[hash]:
+            for value in hashes[hash][section]:
+                if value not in hash_data[section]:
+                    hash_data[section].append(value)
+        count += 1
+    hash_data['count'] = count # Keep track of how many samples processed
+    return hash_data
+
 # HTTP Scraper Function
 # Extracts all HTTP requests made from the identified samples
-# BGM filtering is done on the entire line and not just the URL, so it won't be as precise
+# BGM filtering is done on the entire line
 
 def http_scrape(args):
     http_data = {"http":[]}
@@ -462,7 +507,7 @@ def http_scrape(args):
 
 # DNS Scraper Function
 # Extracts all DNS queries made from the identified samples
-# BGM filtering is done on the entire line and not just the URL, so it won't be as precise
+# BGM filtering is done on the entire line
 
 def dns_scrape(args):
     dns_data = {"dns":[]}
@@ -481,7 +526,7 @@ def dns_scrape(args):
 
 # Mutex Scraper Function
 # Extracts all mutexes created within the identified samples
-# BGM filtering is done on the entire line and not just the URL, so it won't be as precise
+# BGM filtering is done on the entire line
 
 def mutex_scrape(args):
     mutex_data = {"mutex":[]}
@@ -519,6 +564,7 @@ def output_analysis(args, sample_data, funct_type):
         "industry",
         "email_sender",
         "fileurl",
+        "email_recipient",
         "service",
         "registry",
         "process",
@@ -642,12 +688,12 @@ def yara_rule(args, sample_data):
         output = []
         for key in sample_data.keys():
             output.append(key)
-    print "[+] yara sig [+]\n"
+    print "[+] yara rule [+]\n"
     min_len = 4 # Minimum string length
     contained_list = []
     entry_list = []
     # Build yara rule
-    yara_sig = "rule generated_by_afLenz\n{\n\tstrings:\n"
+    yara_sig = "rule autogen_afLenz\n{\n\t// %s\n\n\tstrings:\n" % args
     for entry in output:
         if entry in sample_data.keys() and entry == "dns":
             count = 0
@@ -656,7 +702,7 @@ def yara_rule(args, sample_data):
                     if value not in contained_list and value != "" and len(value) > min_len:
                         entry_list.append("dns")
                         contained_list.append(value)
-                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + value + "\"\n" # Just grab the domain
+                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + value + "\" wide ascii\n" # Just grab the domain
                         count += 1
             else:
                 for value in sample_data[entry]:
@@ -665,11 +711,11 @@ def yara_rule(args, sample_data):
                     if dns_entry not in contained_list and dns_entry != "" and len(dns_entry) > min_len:
                         entry_list.append("dns")
                         contained_list.append(dns_entry)
-                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + dns_entry + "\"\n" # Just grab the domain
+                        yara_sig += "\t\t$dns_" + str(count) + " = \"" + dns_entry + "\" wide ascii\n" # Just grab the domain
                     if dns_resolve not in contained_list and dns_resolve != "" and len(dns_resolve) > min_len:
                         entry_list.append("dns")
                         contained_list.append(dns_resolve)
-                        yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\"\n" # Just grab the resolved IP
+                        yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\" wide ascii\n" # Just grab the resolved IP
                     count += 2
         if entry in sample_data.keys() and entry == "http":
             count = 0
@@ -679,7 +725,7 @@ def yara_rule(args, sample_data):
                     if value not in contained_list and value != "" and len(value) > min_len:
                         entry_list.append("http")
                         contained_list.append(value)
-                        yara_sig += "\t\t$http_" + str(count) + " = \"" + value + "\"\n" # Just grab the domain
+                        yara_sig += "\t\t$http_" + str(count) + " = \"" + value + "\" wide ascii\n" # Just grab the domain
                         count += 1
             else:
                 for value in sample_data[entry]:
@@ -695,15 +741,15 @@ def yara_rule(args, sample_data):
                     if domain_name not in contained_list and domain_name != "" and len(domain_name) > min_len:
                         entry_list.append("http")
                         contained_list.append(domain_name)
-                        yara_sig += "\t\t$http_" + str(count) + " = \"" + domain_name + "\"\n" # Just grab the domain
+                        yara_sig += "\t\t$http_" + str(count) + " = \"" + domain_name + "\" wide ascii\n" # Just grab the domain
                     if url_path not in contained_list and url_path != "" and len(url_path) > min_len:
                         entry_list.append("http")
                         contained_list.append(url_path)
-                        yara_sig += "\t\t$http_" + str(count+1) + " = \"" + url_path + "\"\n" # Just grab the URL path
+                        yara_sig += "\t\t$http_" + str(count+1) + " = \"" + url_path + "\" wide ascii\n" # Just grab the URL path
                     if full_ua not in contained_list and full_ua != "" and len(full_ua) > min_len:
                         entry_list.append("http")
                         contained_list.append(full_ua)
-                        yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\"\n" # Just grab the full user-agent
+                        yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\" wide ascii\n" # Just grab the full user-agent
                     count += 3
         if entry in sample_data.keys() and entry == "connection":
             count = 0
@@ -747,6 +793,9 @@ def yara_rule(args, sample_data):
                         contained_list.append(mutex)
                         yara_sig += "\t\t$mutex_" + str(count) + " = \"" + mutex + "\"\n"
                     count += 1
+        #
+        # The below are commented out simply because they generate a LOT of data and noise. Uncomment if necessary.
+        #
         #if entry in sample_data.keys() and entry == "process":
         #    count = 0
         #    for value in sample_data[entry]:
@@ -787,13 +836,13 @@ def main():
     # Set initial values
     functions = [
         "uniq_sessions",
-        "hash_lookup",
         "common_artifacts",
         "common_pieces",
+        "hash_scrape",
         "http_scrape",
         "dns_scrape",
         "mutex_scrape",
-        "sample_meta"
+        "meta_scrape"
     ]
     sections = [
         "email_subject",
@@ -803,6 +852,7 @@ def main():
         "industry",
         "email_sender",
         "fileurl",
+        "email_recipient",
         "service",
         "registry",
         "process",
@@ -868,8 +918,8 @@ def main():
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
-    elif args.run == "hash_lookup":
-        out_data = hash_library(args)[args.query] # Pull itself out of the hash library
+    elif args.run == "hash_scrape":
+        out_data = hash_scrape(args)
     elif args.run == "common_artifacts":
         out_data = common_artifacts(args)
     elif args.run == "common_pieces":
@@ -880,13 +930,13 @@ def main():
         out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
         out_data = mutex_scrape(args)
-    elif args.run == "sample_meta":
+    elif args.run == "meta_scrape":
         out_data = {}
         funct_type = "list"
     # Output results to console
     if "count" not in out_data:
         out_data['count'] = 1
-    if args.run == "sample_meta":
+    if args.run == "meta_scrape":
         output_list(args)
     else:
         output_analysis(args, out_data, funct_type)

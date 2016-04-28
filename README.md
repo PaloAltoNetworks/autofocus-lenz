@@ -49,68 +49,28 @@ optional arguments:
 ```
 
 Quick links to examples (not working in BitBucket...):
-* [Hash Scrape function](#markdown-header-hash_scrape)
-* [Common Artifacts function](#markdown-header-common_artifacts)
-* [Common Pieces function](#markdown-header-common_pieces)
-* [Show commonality range](#markdown-header-range)
-* [HTTP Scrape function](#markdown-header-http_scrape)
-* [DNS Scrape function](#markdown-header-dns_scrape)
-* [Mutex Scrape function](#markdown-header-mutex_scrape)
-* [Unique Sessions function](#markdown-header-uniq_sessions)
-* [Generate Yara rule](#markdown-header-yara_rule)
-* [Generate AutoFocus query](#markdown-header-af_import)
-* [Control output](#markdown-header-section_output)
-* [Set commonality percent](#markdown-header-commonality)
-* [Submit complex AutoFocus queries](#markdown-header-complex_query)
-* [Analyze non-PE files](#markdown-header-apk_analyzer)
-* [Limit analyzed samples](#markdown-header-limit_result)
-* [Collect bulk sample meta data](#markdown-header-meta_data)
-* [Extract all unique entries](#markdown-header-extract_all)
+* [Hash Scrape function](#hash_scrape)
+* [Common Artifacts function](#common_artifacts)
+* [Common Pieces function](#common_pieces)
+* [Show commonality range](#range)
+* [HTTP Scrape function](#http_scrape)
+* [DNS Scrape function](#dns_scrape)
+* [Mutex Scrape function](#mutex_scrape)
+* [Unique Sessions function](#uniq_sessions)
+* [Generate Yara rule](#yara_rule)
+* [Generate AutoFocus query](#af_import)
+* [Control output](#section_output)
+* [Set commonality percent](#commonality)
+* [Submit complex AutoFocus queries](#complex_query)
+* [Analyze non-PE files](#apk_analyzer)
+* [Limit analyzed samples](#limit_result)
+* [Collect bulk sample meta data](#meta_data)
+* [Extract all unique entries](#extract_all)
 
 ### [+] CHANGE LOG [+]
 
 v1.0.8 - 27APR2016
-* Changed "hash_lookup" to "hash_scrape" and created a new function around it to support multiple hashes instead of one.
-* Added query output to Yara rule generation.
-* Cleaned up code for final release to public.
-
-v1.0.7 - 21APR2016
-* Fixed scrape functions not being parsed correctly for Yara rule generation.
-
-v1.0.6 - 18APR2016
-* Added output "range" to print commonality match percents next to artifacts.
-
-v1.0.5 - 06APR2016
-* Added function "sample_meta" to return meta data about identified samples.
-
-v1.0.4 - 04APR2016
-* Added *-l* flag to limit the number of samples for analysis.
-* Added APK sample sections for output.
-* Fixed a number of logic issues.
-* Cleaned up code significantly.
-
-v1.0.3 - 31MAR2016
-* Moved to BitBucket.
-* Merged updates into code.
-
-v1.0.2 - 22MAR2016
-* Converted over to using _raw_line for everything.
-
-v1.0.1 - 19MAR2016
-* Added "query" identifier so you can pass AF queries directly on CLI.
-* Added escaping to file/registry supplied queries.
-
-v1.0.0 - 17MAR2016
-* Initial release of af_lenz.py.
-
-### [+] FUTURE TO-DOs [+]
-
-In no particular order...
-* None
-
-### [+] NOTES [+]
-
-If you find any issues or have requests for functionality, please contact Jeff White.
+* Initial public release of AutoFocus Lenz.
 
 ### [+] EXAMPLES [+]
 

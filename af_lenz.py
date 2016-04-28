@@ -8,6 +8,8 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue
 
+__author__ = "Jeff White [karttoon]"
+__email__ = "jwhite@paloaltonetworks.com"
 __version__ = "1.0.8"
 
 ##########################

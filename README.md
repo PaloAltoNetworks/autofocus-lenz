@@ -48,7 +48,7 @@ optional arguments:
                         default is 100
 ```
 
-Quick links to examples (not working in BitBucket...):
+Quick links to examples:
 * [Hash Scrape function](#hash_scrape)
 * [Common Artifacts function](#common_artifacts)
 * [Common Pieces function](#common_pieces)

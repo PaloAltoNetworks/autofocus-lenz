@@ -16,6 +16,8 @@ __version__ = "1.0.9"
 # Check research mode #
 #######################
 
+research_mode = "False"
+
 try:
     import ConfigParser
     parser = ConfigParser.ConfigParser()

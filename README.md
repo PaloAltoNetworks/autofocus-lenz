@@ -908,6 +908,10 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 
 ### [+] CHANGE LOG [+]
 
+v1.0.9 - 18MAY2016
+* Switched from "scan" to "search" for non-research enabled API keys. Add "[researcher] enabled=True" to your client library configuration file, or environment variable, to enable scan.
+* Added company to session output as an option.
+
 v1.0.8 - 27APR2016
 * Changed "hash_lookup" to "hash_scrape" and created a new function around it to support multiple hashes instead of one.
 * Added query output to Yara rule generation.

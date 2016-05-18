@@ -6,11 +6,24 @@ from autofocus import AFSession, AFSample
 from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
 # APK Specific
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
-import sys, argparse, threading, Queue
+import sys, argparse, threading, Queue, os
 
 __author__ = "Jeff White [karttoon]"
 __email__ = "jwhite@paloaltonetworks.com"
-__version__ = "1.0.8"
+__version__ = "1.0.9"
+
+#######################
+# Check research mode #
+#######################
+
+try:
+    import ConfigParser
+    parser = ConfigParser.ConfigParser()
+    conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
+    parser.read(os.path.expanduser(conf_path))
+    research_mode = parser.get("researcher", "enabled")
+except:
+    pass
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -92,15 +105,27 @@ def hash_library(args):
     print "\n[+] hashes [+]\n"
     count = 0
     if args.ident == "query":
-        for sample in AFSample.scan(args.query):
-            if count < args.limit:
-                hashes[sample.sha256] = {}
-                count += 1
+        if research_mode == "True":
+            for sample in AFSample.scan(args.query):
+                if count < args.limit:
+                    hashes[sample.sha256] = {}
+                    count += 1
+        else:
+            for sample in AFSample.search(args.query):
+                if count < args.limit:
+                    hashes[sample.sha256] = {}
+                    count += 1
     else:
-        for sample in AFSample.scan(af_query(args)):
-            if count < args.limit:
-                hashes[sample.sha256] = {}
-                count += 1
+        if research_mode == "True":
+            for sample in AFSample.scan(af_query(args)):
+                if count < args.limit:
+                    hashes[sample.sha256] = {}
+                    count += 1
+        else:
+            for sample in AFSample.search(af_query(args)):
+                if count < args.limit:
+                    hashes[sample.sha256] = {}
+                    count += 1
     thread_queue = Queue.Queue()
     count = 0
     for hash in hashes.keys():
@@ -411,7 +436,8 @@ def uniq_sessions(args):
         "industry"          :[],
         "email_sender"      :[],
         "fileurl"           :[],
-        "email_recipient"   :[]
+        "email_recipient"   :[],
+        "account_name"      :[]
     }
     count = 0
     if args.ident == "query":
@@ -427,6 +453,7 @@ def uniq_sessions(args):
         sender      = session.email_sender
         fileurl     = session.file_url
         recipient   = session.email_recipient
+        company     = session.account_name
         if subject not in session_data['email_subject'] and subject:
             session_data['email_subject'].append(subject)
         if filename not in session_data['filename'] and filename:
@@ -443,6 +470,8 @@ def uniq_sessions(args):
             session_data['fileurl'].append(fileurl)
         if recipient not in session_data['email_recipient'] and recipient:
             session_data['email_recipient'].append(recipient)
+        if company not in session_data['account_name'] and company:
+            session_data['account_name'].append(company)
         count += 1
     session_data['count'] = count
     return session_data
@@ -567,6 +596,7 @@ def output_analysis(args, sample_data, funct_type):
         "email_sender",
         "fileurl",
         "email_recipient",
+        "account_name",
         "service",
         "registry",
         "process",
@@ -618,15 +648,27 @@ def output_list(args):
     count = 0
     print "\n[+] sample_meta [+]\n"
     if args.ident == "query":
-        for sample in AFSample.scan(args.query):
-            if count < args.limit:
-                print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
-                count += 1
+        if research_mode == "True":
+            for sample in AFSample.scan(args.query):
+                if count < args.limit:
+                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    count += 1
+        else:
+            for sample in AFSample.search(args.query):
+                if count < args.limit:
+                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    count += 1
     else:
-        for sample in AFSample.scan(af_query(args)):
-            if count < args.limit:
-                print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
-                count += 1
+        if research_mode == "True":
+            for sample in AFSample.scan(af_query(args)):
+                if count < args.limit:
+                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    count += 1
+        else:
+            for sample in AFSample.scan(af_query(args)):
+                if count < args.limit:
+                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    count += 1
     print "\n[+] processed", str(count), "samples [+]\n"
 
 # AutoFocus Import Function
@@ -679,7 +721,7 @@ def af_import(args, sample_data):
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
     print import_query + "\n"
 
-# Yara Rule Function
+# Yara Rule Function 
 # Attempts to take the likely data you might find from dynamic analysis and build a yara rule for memory process scanning using volatility/other tools
 # Some sections commented out as they generate far too many entries/false positives that haven't been programatically filtered
 
@@ -855,6 +897,7 @@ def main():
         "email_sender",
         "fileurl",
         "email_recipient",
+        "account_name",
         "service",
         "registry",
         "process",

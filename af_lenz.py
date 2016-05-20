@@ -446,35 +446,67 @@ def uniq_sessions(args):
         query = args.query
     else:
         query = af_query(args)
-    for session in AFSession.scan(query):
-        subject     = session.email_subject
-        filename    = session.file_name
-        application = session.application
-        country     = session.dst_country
-        industry    = session.industry
-        sender      = session.email_sender
-        fileurl     = session.file_url
-        recipient   = session.email_recipient
-        company     = session.account_name
-        if subject not in session_data['email_subject'] and subject:
-            session_data['email_subject'].append(subject)
-        if filename not in session_data['filename'] and filename:
-            session_data['filename'].append(filename)
-        if application not in session_data['application'] and application:
-            session_data['application'].append(application)
-        if country not in session_data['country'] and country:
-            session_data['country'].append(country)
-        if industry not in session_data['industry'] and industry:
-            session_data['industry'].append(industry)
-        if sender not in session_data['email_sender'] and sender:
-            session_data['email_sender'].append(sender)
-        if fileurl not in session_data['fileurl'] and fileurl:
-            session_data['fileurl'].append(fileurl)
-        if recipient not in session_data['email_recipient'] and recipient:
-            session_data['email_recipient'].append(recipient)
-        if company not in session_data['account_name'] and company:
-            session_data['account_name'].append(company)
-        count += 1
+
+    if research_mode == True:
+        for session in AFSession.scan(query):
+            subject     = session.email_subject
+            filename    = session.file_name
+            application = session.application
+            country     = session.dst_country
+            industry    = session.industry
+            sender      = session.email_sender
+            fileurl     = session.file_url
+            recipient   = session.email_recipient
+            company     = session.account_name
+            if subject not in session_data['email_subject'] and subject:
+                session_data['email_subject'].append(subject)
+            if filename not in session_data['filename'] and filename:
+                session_data['filename'].append(filename)
+            if application not in session_data['application'] and application:
+                session_data['application'].append(application)
+            if country not in session_data['country'] and country:
+                session_data['country'].append(country)
+            if industry not in session_data['industry'] and industry:
+                session_data['industry'].append(industry)
+            if sender not in session_data['email_sender'] and sender:
+                session_data['email_sender'].append(sender)
+            if fileurl not in session_data['fileurl'] and fileurl:
+                session_data['fileurl'].append(fileurl)
+            if recipient not in session_data['email_recipient'] and recipient:
+                session_data['email_recipient'].append(recipient)
+            if company not in session_data['account_name'] and company:
+                session_data['account_name'].append(company)
+            count += 1
+    else:
+        for session in AFSession.search(query):
+            subject     = session.email_subject
+            filename    = session.file_name
+            application = session.application
+            country     = session.dst_country
+            industry    = session.industry
+            sender      = session.email_sender
+            fileurl     = session.file_url
+            recipient   = session.email_recipient
+            company     = session.account_name
+            if subject not in session_data['email_subject'] and subject:
+                session_data['email_subject'].append(subject)
+            if filename not in session_data['filename'] and filename:
+                session_data['filename'].append(filename)
+            if application not in session_data['application'] and application:
+                session_data['application'].append(application)
+            if country not in session_data['country'] and country:
+                session_data['country'].append(country)
+            if industry not in session_data['industry'] and industry:
+                session_data['industry'].append(industry)
+            if sender not in session_data['email_sender'] and sender:
+                session_data['email_sender'].append(sender)
+            if fileurl not in session_data['fileurl'] and fileurl:
+                session_data['fileurl'].append(fileurl)
+            if recipient not in session_data['email_recipient'] and recipient:
+                session_data['email_recipient'].append(recipient)
+            if company not in session_data['account_name'] and company:
+                session_data['account_name'].append(company)
+            count += 1
     session_data['count'] = count
     return session_data
 
@@ -667,7 +699,7 @@ def output_list(args):
                     print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
                     count += 1
         else:
-            for sample in AFSample.scan(af_query(args)):
+            for sample in AFSample.search(af_query(args)):
                 if count < args.limit:
                     print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
                     count += 1

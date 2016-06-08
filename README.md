@@ -5,7 +5,7 @@
 The AutoFocus API exposes a wealth of dynamic analysis information about malware activities from disk to wire, which is made easily accessible for scripting through the [AutoFocus Python Client Library](https://github.com/PaloAltoNetworks/autofocus-client-library). The goal of *af_lenz.py* is to build ontop of the client library by providing a set of helpful tools to aide incident responders, or analysts, in rapidly extracting information from AutoFocus that can be used for operational intelligence.
 
 ```
-python af_lenz.py -h
+python af_lenz.py --help
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
                   [-s <special_output>] [-c <integer_percent>]
@@ -23,14 +23,16 @@ optional arguments:
   -o <section_output>, --output <section_output>
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
-                        default. [email_subject, filename, application,
-                        country, industry, email_sender, fileurl,
-                        email_recipient, service, registry, process, misc,
-                        user_agent, mutex, http, dns, behavior_type,
+                        default. Sample Sections [service, registry, process,
+                        misc, user_agent, mutex, http, dns, behavior_type,
                         connection, file, apk_misc, apk_filter, apk_receiver,
                         apk_sensor, apk_service, apk_embedurl, apk_permission,
                         apk_sensitiveapi, apk_suspiciousapi, apk_file,
-                        apk_string]
+                        apk_string, digital_signer, imphash]. Session Sections
+                        [email_subject, file_name, application, country,
+                        industry, email_sender, file_url, email_recipient,
+                        account_name]. Meta Sections [hash, file_type,
+                        create_date, verdict, file_size, tags]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000.
@@ -907,6 +909,10 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 ```
 
 ### [+] CHANGE LOG [+]
+
+v1.1.0 - 08JUN2016
+* Added ability to specify meta_scrape sections "hash", "file_type", "create_date", "verdict", "file_size", "tags". 
+* Added "imphash" and "digital_signer" to existing section lists for all sample functions.
 
 v1.0.9 - 18MAY2016
 * Switched from "scan" to "search" for non-research enabled API keys. Add "[researcher] enabled=True" to your client library configuration file, or environment variable, to enable scan.

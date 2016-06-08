@@ -8,9 +8,10 @@ from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, 
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, threading, Queue, os
 
-__author__ = "Jeff White [karttoon]"
-__email__ = "jwhite@paloaltonetworks.com"
-__version__ = "1.0.9"
+__author__  = "Jeff White [karttoon]"
+__email__   = "jwhite@paloaltonetworks.com"
+__version__ = "1.1.0"
+__date__    = "08JUN2016"
 
 #######################
 # Check research mode #
@@ -20,8 +21,8 @@ research_mode = "False"
 
 try:
     import ConfigParser
-    parser = ConfigParser.ConfigParser()
-    conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
+    parser      = ConfigParser.ConfigParser()
+    conf_path   = os.environ.get("PANW_CONFIG", "~/.config/panw")
     parser.read(os.path.expanduser(conf_path))
     research_mode = parser.get("researcher", "enabled")
 except:
@@ -58,8 +59,8 @@ def af_query(args):
         "user_agent"	: "sample.tasks.user_agent",
         "tag"		    : "sample.tag",
         "hash_list"	    : "sample.sha256",
-        "fileurl"       : "session.fileurl",
-        "filename"      : "alias.filename"
+        "file_url"      : "session.fileurl",
+        "file_name"     : "alias.filename"
     }
 
     # Create a map of input_type to operator
@@ -168,6 +169,8 @@ def hash_lookup(args, thread_queue):
         "apk_suspiciousapi" :[],
         "apk_file"          :[],
         "apk_string"        :[],
+        "digital_signer"    :[],
+        "imphash"           :[],
         "default"   	    :[]
     }
 
@@ -206,6 +209,10 @@ def hash_lookup(args, thread_queue):
                     analysis_data[analysis_data_section].append(analysis._raw_line)
             except:
                 pass
+        if sample.imphash:
+            analysis_data["imphash"].append(sample.imphash)
+        if sample.digital_signer:
+            analysis_data["digital_signer"].append(sample.digital_signer)
     thread_queue.put(analysis_data)
     return analysis_data
 
@@ -239,6 +246,8 @@ def common_artifacts(args):
         "apk_suspiciousapi" :{},
         "apk_file"          :{},
         "apk_string"        :{},
+        "digital_signer"    :{},
+        "imphash"           :{},
         "default"   	    :{}
     }
     # Final collection of all common artifacts
@@ -265,6 +274,8 @@ def common_artifacts(args):
         "apk_suspiciousapi" :[],
         "apk_file"          :[],
         "apk_string"        :[],
+        "digital_signer"    :[],
+        "imphash"           :[],
         "default"   	    :[]
     }
     count = 0
@@ -294,6 +305,8 @@ def common_artifacts(args):
             "apk_suspiciousapi" :{},
             "apk_file"          :{},
             "apk_string"        :{},
+            "digital_signer"    :{},
+            "imphash"           :{},
             "default"   	    :{}
         }
         for section in hashes[hash]:
@@ -346,6 +359,8 @@ def common_pieces(args):
         "apk_suspiciousapi" :{},
         "apk_file"          :{},
         "apk_string"        :{},
+        "digital_signer"    :{},
+        "imphash"           :{},
         "default"   	    :{}
     }
     # Final collection of all common pieces
@@ -372,6 +387,8 @@ def common_pieces(args):
         "apk_suspiciousapi" :[],
         "apk_file"          :[],
         "apk_string"        :[],
+        "digital_signer"    :[],
+        "imphash"           :[],
         "default"   	    :[]
     }
     count = 0
@@ -401,6 +418,8 @@ def common_pieces(args):
             "apk_suspiciousapi" :{},
             "apk_file"          :{},
             "apk_string"        :{},
+            "digital_signer"    :{},
+            "imphash"           :{},
             "default"   	    :{}
         }
         for section in hashes[hash]:
@@ -432,12 +451,12 @@ def common_pieces(args):
 def uniq_sessions(args):
     session_data = {
         "email_subject"     :[],
-        "filename"          :[],
+        "file_name"          :[],
         "application"       :[],
         "country"           :[],
         "industry"          :[],
         "email_sender"      :[],
-        "fileurl"           :[],
+        "file_url"           :[],
         "email_recipient"   :[],
         "account_name"      :[]
     }
@@ -450,18 +469,18 @@ def uniq_sessions(args):
     if research_mode == True:
         for session in AFSession.scan(query):
             subject     = session.email_subject
-            filename    = session.file_name
+            file_name   = session.file_name
             application = session.application
             country     = session.dst_country
             industry    = session.industry
             sender      = session.email_sender
-            fileurl     = session.file_url
+            file_url    = session.file_url
             recipient   = session.email_recipient
             company     = session.account_name
             if subject not in session_data['email_subject'] and subject:
                 session_data['email_subject'].append(subject)
-            if filename not in session_data['filename'] and filename:
-                session_data['filename'].append(filename)
+            if file_name not in session_data['file_name'] and file_name:
+                session_data['file_name'].append(file_name)
             if application not in session_data['application'] and application:
                 session_data['application'].append(application)
             if country not in session_data['country'] and country:
@@ -470,8 +489,8 @@ def uniq_sessions(args):
                 session_data['industry'].append(industry)
             if sender not in session_data['email_sender'] and sender:
                 session_data['email_sender'].append(sender)
-            if fileurl not in session_data['fileurl'] and fileurl:
-                session_data['fileurl'].append(fileurl)
+            if file_url not in session_data['file_url'] and file_url:
+                session_data['file_url'].append(file_url)
             if recipient not in session_data['email_recipient'] and recipient:
                 session_data['email_recipient'].append(recipient)
             if company not in session_data['account_name'] and company:
@@ -480,18 +499,18 @@ def uniq_sessions(args):
     else:
         for session in AFSession.search(query):
             subject     = session.email_subject
-            filename    = session.file_name
+            file_name   = session.file_name
             application = session.application
             country     = session.dst_country
             industry    = session.industry
             sender      = session.email_sender
-            fileurl     = session.file_url
+            file_url    = session.file_url
             recipient   = session.email_recipient
             company     = session.account_name
             if subject not in session_data['email_subject'] and subject:
                 session_data['email_subject'].append(subject)
-            if filename not in session_data['filename'] and filename:
-                session_data['filename'].append(filename)
+            if file_name not in session_data['file_name'] and file_name:
+                session_data['file_name'].append(file_name)
             if application not in session_data['application'] and application:
                 session_data['application'].append(application)
             if country not in session_data['country'] and country:
@@ -500,8 +519,8 @@ def uniq_sessions(args):
                 session_data['industry'].append(industry)
             if sender not in session_data['email_sender'] and sender:
                 session_data['email_sender'].append(sender)
-            if fileurl not in session_data['fileurl'] and fileurl:
-                session_data['fileurl'].append(fileurl)
+            if file_url not in session_data['file_url'] and file_url:
+                session_data['file_url'].append(file_url)
             if recipient not in session_data['email_recipient'] and recipient:
                 session_data['email_recipient'].append(recipient)
             if company not in session_data['account_name'] and company:
@@ -538,6 +557,8 @@ def hash_scrape(args):
         "apk_suspiciousapi" :[],
         "apk_file"          :[],
         "apk_string"        :[],
+        "digital_signer"    :[],
+        "imphash"           :[],
         "default"   	    :[]
     }
     count = 0
@@ -565,7 +586,7 @@ def http_scrape(args):
             http_list = entry.split(" , ")
             url_value = "hxxp://" + http_list[0] + http_list[2]
             if url_value not in http_data['http']:
-                        http_data['http'].append(url_value)
+                http_data['http'].append(url_value)
         count += 1
     http_data['count'] = count # Keep track of how many samples processed
     return http_data
@@ -584,7 +605,7 @@ def dns_scrape(args):
             dns_list = entry.split(" , ")
             dns_query = dns_list[0]
             if dns_query not in dns_data['dns']:
-                        dns_data['dns'].append(dns_query)
+                dns_data['dns'].append(dns_query)
         count += 1
     dns_data['count'] = count # Keep track of how many samples processed
     return dns_data
@@ -603,7 +624,7 @@ def mutex_scrape(args):
             mutex_list = entry.split(" , ")
             mutex_value = mutex_list[2]
             if mutex_value not in mutex_data['mutex']:
-                        mutex_data['mutex'].append(mutex_value)
+                mutex_data['mutex'].append(mutex_value)
         count += 1
     mutex_data['count'] = count # Keep track of how many samples processed
     return mutex_data
@@ -618,17 +639,17 @@ def mutex_scrape(args):
 
 def output_analysis(args, sample_data, funct_type):
     output = args.output.split(",")
-    # SESSIONS: email_subject, filename, application, country, industry, email_sender, fileurl
+    # SESSIONS: email_subject, file_name, application, country, industry, email_sender, file_url
     # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter, apk_receiver, apk_sensor, apk_service, apk_embedurl,
-    #           apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file, apk_string
+    #           apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file, apk_string. digital_signer, imphash
     section_list = [
         "email_subject",
-        "filename",
+        "file_name",
         "application",
         "country",
         "industry",
         "email_sender",
-        "fileurl",
+        "file_url",
         "email_recipient",
         "account_name",
         "service",
@@ -653,6 +674,8 @@ def output_analysis(args, sample_data, funct_type):
         "apk_suspiciousapi",
         "apk_file",
         "apk_string",
+        "digital_signer",
+        "imphash",
         "default"
     ]
     if "all" in output:
@@ -664,7 +687,7 @@ def output_analysis(args, sample_data, funct_type):
                         print value
     else:
         for entry in output:
-            if sample_data[entry] != []:
+            if entry in sample_data.keys() and sample_data[entry] != []:
                 print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
                     if value != "":
@@ -678,30 +701,55 @@ def output_analysis(args, sample_data, funct_type):
 # This just returns sample based meta-data based on the query provided
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
 
+def build_output_string(output, sample):
+    meta_sections   = {"hash": sample.sha256, "file_type": sample.file_type,
+                       "create_date": sample.create_date, "verdict": sample.verdict,
+                       "file_size": str(sample.size), "tags": ",".join(sample._tags)}
+    print_line      = ""
+    print_list      = []
+    if "all" in output:
+        print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["hash"],
+                                                               meta_sections["file_type"],
+                                                               meta_sections["create_date"],
+                                                               meta_sections["verdict"],
+                                                               meta_sections["file_size"],
+                                                               meta_sections["tags"])
+    else:
+        for entry in output:
+            if entry in meta_sections:
+                print_list.append("%-10s" % meta_sections[entry])
+        print_line = " | ".join(print_list)
+    return print_line
+
 def output_list(args):
+    output          = args.output.split(",")
     count = 0
     print "\n[+] sample_meta [+]\n"
     if args.ident == "query":
         if research_mode == "True":
             for sample in AFSample.scan(args.query):
+                print_line = build_output_string(output, sample)
                 if count < args.limit:
-                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    print print_line
                     count += 1
         else:
             for sample in AFSample.search(args.query):
+                print_line = build_output_string(output, sample)
                 if count < args.limit:
-                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    print print_line
                     count += 1
     else:
         if research_mode == "True":
             for sample in AFSample.scan(af_query(args)):
+                print_line = build_output_string(output, sample)
                 if count < args.limit:
-                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    print print_line
                     count += 1
         else:
             for sample in AFSample.search(af_query(args)):
+                print_line = build_output_string(output, sample)
                 if count < args.limit:
-                    print "%s | %-10s | %s | %-10s | %-10s | %s" % (sample.sha256, sample.file_type, sample.create_date, sample.verdict, sample.size, sample._tags)
+                    print print_line
                     count += 1
     print "\n[+] processed", str(count), "samples [+]\n"
 
@@ -755,7 +803,7 @@ def af_import(args, sample_data):
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
     print import_query + "\n"
 
-# Yara Rule Function 
+# Yara Rule Function
 # Attempts to take the likely data you might find from dynamic analysis and build a yara rule for memory process scanning using volatility/other tools
 # Some sections commented out as they generate far too many entries/false positives that haven't been programatically filtered
 
@@ -871,33 +919,33 @@ def yara_rule(args, sample_data):
                         contained_list.append(mutex)
                         yara_sig += "\t\t$mutex_" + str(count) + " = \"" + mutex + "\"\n"
                     count += 1
-        #
-        # The below are commented out simply because they generate a LOT of data and noise. Uncomment if necessary.
-        #
-        #if entry in sample_data.keys() and entry == "process":
-        #    count = 0
-        #    for value in sample_data[entry]:
-        #        entry_list.append("process")
-        #        yara_sig += "\t\t$process_" + str(count) + " = \"" + value + "\"\n" # A bit too noisy and FP prone
-        #        count += 1
-        #if entry in sample_data.keys() and entry == "file":
-        #    count = 0
-        #    for value in sample_data[entry]:
-        #        file_name = value.split(" , ")[2].strip("C:\\")
-        #        if file_name not in contained_list and file_name != "" and len(file_name) > min_len:
-        #            entry_list.append("file")
-        #            contained_list.append(file_name)
-        #            yara_sig += "\t\t$file_" + str(count) + " = \"" + file_name + "\"\n" # Just grab file path/name
-        #        count += 1
-        #if entry in sample_data.keys() and entry == "registry":
-        #    count = 0
-        #    for value in sample_data[entry]:
-        #        registry_key = value.split(" , ")[2].split(",")[0]
-        #        if registry_key not in contained_list and registry_key != "" and "\\" in registry_key and len(registry_key) > min_len:
-        #            entry_list.append("registry")
-        #            contained_list.append(registry_key)
-        #            yara_sig += "\t\t$registry_" + str(count) + " = \"" + registry_key + "\"\n"
-        #        count += 1
+                    #
+                    # The below are commented out simply because they generate a LOT of data and noise. Uncomment if necessary.
+                    #
+                    #if entry in sample_data.keys() and entry == "process":
+                    #    count = 0
+                    #    for value in sample_data[entry]:
+                    #        entry_list.append("process")
+                    #        yara_sig += "\t\t$process_" + str(count) + " = \"" + value + "\"\n" # A bit too noisy and FP prone
+                    #        count += 1
+                    #if entry in sample_data.keys() and entry == "file":
+                    #    count = 0
+                    #    for value in sample_data[entry]:
+                    #        file_name = value.split(" , ")[2].strip("C:\\")
+                    #        if file_name not in contained_list and file_name != "" and len(file_name) > min_len:
+                    #            entry_list.append("file")
+                    #            contained_list.append(file_name)
+                    #            yara_sig += "\t\t$file_" + str(count) + " = \"" + file_name + "\"\n" # Just grab file path/name
+                    #        count += 1
+                    #if entry in sample_data.keys() and entry == "registry":
+                    #    count = 0
+                    #    for value in sample_data[entry]:
+                    #        registry_key = value.split(" , ")[2].split(",")[0]
+                    #        if registry_key not in contained_list and registry_key != "" and "\\" in registry_key and len(registry_key) > min_len:
+                    #            entry_list.append("registry")
+                    #            contained_list.append(registry_key)
+                    #            yara_sig += "\t\t$registry_" + str(count) + " = \"" + registry_key + "\"\n"
+                    #        count += 1
     entry_list = list(set(entry_list))
     yara_sig += "\n\tcondition:\n\t\t1 of (" + ", ".join(["$" + value + "*" for value in entry_list]) + ") /* Adjust as needed for accuracy */\n}"
     yara_sig = str(yara_sig.replace("\\", "\\\\")) # Double escape for yara
@@ -922,16 +970,18 @@ def main():
         "mutex_scrape",
         "meta_scrape"
     ]
-    sections = [
+    session_sections = [
         "email_subject",
-        "filename",
+        "file_name",
         "application",
         "country",
         "industry",
         "email_sender",
-        "fileurl",
+        "file_url",
         "email_recipient",
-        "account_name",
+        "account_name"
+    ]
+    sample_sections = [
         "service",
         "registry",
         "process",
@@ -953,7 +1003,17 @@ def main():
         "apk_sensitiveapi",
         "apk_suspiciousapi",
         "apk_file",
-        "apk_string"
+        "apk_string",
+        "digital_signer",
+        "imphash"
+    ]
+    meta_sections = [
+        "hash",
+        "file_type",
+        "create_date",
+        "verdict",
+        "file_size",
+        "tags"
     ]
     identifiers = [
         "hash",
@@ -980,7 +1040,10 @@ def main():
     parser = argparse.ArgumentParser(description="Run functions to retrieve information from AutoFocus.")
     parser.add_argument("-i", "--ident", help="Query identifier type for AutoFocus search. [" + ", ".join(identifiers) + "]", metavar='<query_type>', required=True)
     parser.add_argument("-q", "--query", help="Value to query Autofocus for.", metavar='<query>', required=True)
-    parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. [" + ", ".join(sections) + "]", metavar='<section_output>', default="all")
+    parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. "
+                                               "Sample Sections [" + ", ".join(sample_sections) + "]. "
+                                                                                                  "Session Sections [" + ", ".join(session_sections) + "]. "
+                                                                                                                                                       "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000.", metavar="<number>", type=int, default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)

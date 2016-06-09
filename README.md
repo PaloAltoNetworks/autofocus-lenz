@@ -911,7 +911,7 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 ### [+] CHANGE LOG [+]
 
 v1.1.0 - 08JUN2016
-* Added ability to specify meta_scrape sections "hash", "file_type", "create_date", "verdict", "file_size", "tags". 
+* Added ability to specify meta_scrape sections "sha256", "sha1", "md5" "file_type", "create_date", "verdict", "file_size", "tags", "ssdeep", "imphash", and "digital_signer". 
 * Added "imphash" and "digital_signer" to existing section lists for all sample functions.
 
 v1.0.9 - 18MAY2016

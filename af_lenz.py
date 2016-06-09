@@ -702,13 +702,15 @@ def output_analysis(args, sample_data, funct_type):
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
 
 def build_output_string(output, sample):
-    meta_sections   = {"hash": sample.sha256, "file_type": sample.file_type,
+    meta_sections   = {"sha256": sample.sha256, "file_type": sample.file_type,
                        "create_date": sample.create_date, "verdict": sample.verdict,
-                       "file_size": str(sample.size), "tags": ",".join(sample._tags)}
-    print_line      = ""
+                       "file_size": str(sample.size), "tags": ",".join(sample._tags),
+                       "digital_signer": sample.digital_signer, "sha1": sample.sha1,
+                       "md5": sample.md5, "ssdeep": sample.ssdeep,
+                       "imphash": sample.imphash}
     print_list      = []
-    if "all" in output:
-        print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["hash"],
+    if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
+        print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["sha256"],
                                                                meta_sections["file_type"],
                                                                meta_sections["create_date"],
                                                                meta_sections["verdict"],
@@ -722,8 +724,8 @@ def build_output_string(output, sample):
     return print_line
 
 def output_list(args):
-    output          = args.output.split(",")
-    count = 0
+    output  = args.output.split(",")
+    count   = 0
     print "\n[+] sample_meta [+]\n"
     if args.ident == "query":
         if research_mode == "True":
@@ -1008,12 +1010,17 @@ def main():
         "imphash"
     ]
     meta_sections = [
-        "hash",
+        "sha256",
         "file_type",
         "create_date",
         "verdict",
         "file_size",
-        "tags"
+        "tags",
+        "sha1",
+        "md5",
+        "ssdeep",
+        "imphash",
+        "digital_signer"
     ]
     identifiers = [
         "hash",

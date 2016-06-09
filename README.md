@@ -31,8 +31,9 @@ optional arguments:
                         apk_string, digital_signer, imphash]. Session Sections
                         [email_subject, file_name, application, country,
                         industry, email_sender, file_url, email_recipient,
-                        account_name]. Meta Sections [hash, file_type,
-                        create_date, verdict, file_size, tags]
+                        account_name]. Meta Sections [sha256, file_type,
+                        create_date, verdict, file_size, tags, sha1, md5,
+                        ssdeep, imphash, digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000.

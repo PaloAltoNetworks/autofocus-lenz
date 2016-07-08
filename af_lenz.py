@@ -139,7 +139,9 @@ def hash_library(args):
                     input_data.append(sample.sha256)
                     count += 1
     
-    # set the number of workers to be twice the number of physical cores.
+    # set the number of workers to be three times the number of cores.
+    # because these operations are not very CPU-intensive, we can get away with
+    # a higher number of processes.
     pool_size = multiprocessing.cpu_count() * 3
 
     pool = multiprocessing.Pool(processes=pool_size)

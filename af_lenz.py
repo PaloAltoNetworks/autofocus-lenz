@@ -6,7 +6,8 @@ from autofocus import AFSession, AFSample
 from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
 # APK Specific
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
-import sys, argparse, threading, Queue, os
+import sys, argparse, multiprocessing, os
+
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
@@ -32,7 +33,13 @@ except:
 # AF QUERY SECTION BELOW #
 ##########################
 
+# use this wrapper function until the rest of the code is modified to use the new syntax.
 def af_query(args):
+    return af_query_new(args.ident,args.query)
+
+# updated function format.  This is currently only used in hash_lookup() method, although it
+# may be adopted by the rest of the script eventually.
+def af_query_new(ident,query):
 
     # A callable to find the proper field_value for the input_type hash, based on the query_value
     def map_hash_value(qv):
@@ -72,15 +79,15 @@ def af_query(args):
     }
 
     # Lookup the operator to use with this input type
-    operator_value = operator_map.get(args.ident, "contains")
+    operator_value = operator_map.get(ident, "contains")
 
     try:
         # Get the field value from the map
-        field_value = field_map[args.ident]
+        field_value = field_map[ident]
 
         # Is the query value callable? Call it with the query_value to get the field value (hashes)
         if isfunction(field_value):
-            field_value = field_value(args.query)
+            field_value = field_value(query)
     except Exception as e:
         # Mimic the original catch all, if we don't know what the field is, just exit
         #sys.exit(1)
@@ -88,10 +95,10 @@ def af_query(args):
 
     # Everything that is a list (including hash_list and tag)
     if operator_value == "is in the list":
-        params = [v.strip() for v in args.query.split(",")]
+        params = [v.strip() for v in query.split(",")]
         af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":[%s]}]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in params]))
     else:
-        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, args.query)
+        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query)
 
     return af_search
 
@@ -104,46 +111,70 @@ def af_query(args):
 # Returns data as dictionary with each key being the hash and a dictionary value with each section featuring a list {hash:{section:[value1,value2]}}
 
 def hash_library(args):
-    hashes = {}
+    result_data = {}
+    input_data = []
+    
     print "\n[+] hashes [+]\n"
     count = 0
     if args.ident == "query":
         if research_mode == "True":
             for sample in AFSample.scan(args.query):
                 if count < args.limit:
-                    hashes[sample.sha256] = {}
+                    input_data.append(sample.sha256)
                     count += 1
         else:
             for sample in AFSample.search(args.query):
                 if count < args.limit:
-                    hashes[sample.sha256] = {}
+                    input_data.append(sample.sha256)
                     count += 1
     else:
         if research_mode == "True":
             for sample in AFSample.scan(af_query(args)):
                 if count < args.limit:
-                    hashes[sample.sha256] = {}
+                    input_data.append(sample.sha256)
                     count += 1
         else:
             for sample in AFSample.search(af_query(args)):
                 if count < args.limit:
-                    hashes[sample.sha256] = {}
+                    input_data.append(sample.sha256)
                     count += 1
-    thread_queue = Queue.Queue()
-    count = 0
-    for hash in hashes.keys():
-        print hash
-        args.query = hash
-        hash_thread = threading.Thread(target=hash_lookup, args=(args, thread_queue))
-        hash_thread.start()
-        hashes[hash] = thread_queue.get()
-    return hashes
+    
+    # set the number of workers to be twice the number of physical cores.
+    pool_size = multiprocessing.cpu_count() * 3
+
+    pool = multiprocessing.Pool(processes=pool_size)
+    # since we have to pass an iterable to pool.map(), and our worker function requires args to be passed
+    # we need to build a dictionary consisting of tuples. e.g:
+    # [ (args, hash_1), (args, hash_2), (args, hash_n) ]
+    pool_output = pool.map(hash_worker,[(args,item) for item in input_data])
+    pool.close()
+    pool.join()
+
+    for item in pool_output:
+        # structure of item is [{'hash' : { analysis data keys/values }}]
+        result_data[item.keys()[0]] = item[item.keys()[0]]
+
+    return result_data
+
+# Hash worker function
+# Designed be be used for parallel processing of samples
+# Takes single tuple as argument from pool.map() and transforms those arguments to be used
+# in hash_lookup()
+
+def hash_worker(args_tuple):
+    args,sample_hash = args_tuple
+
+    # for extra verbosity, this print statement can be used.
+    #print("[+] Info: {} {:^8} {}".format(multiprocessing.current_process().name,'->',sample_hash))
+    print(sample_hash)
+    return { sample_hash : hash_lookup(args,sample_hash) }
+
 
 # Hash Lookup Function
 # Basic hash lookup for a sample
 # Provides raw data for each section requested
 
-def hash_lookup(args, thread_queue):
+def hash_lookup(args, query):
 
     # Dictionary mapping the raw data for each type of sample analysis
     analysis_data = {
@@ -200,8 +231,7 @@ def hash_lookup(args, thread_queue):
         AFApkSuspiciousStringAnalysis       : "apl_string"
     }
     # If there are no counts for the activity, ignore them for the filter
-    args.ident = "hash"
-    for sample in AFSample.search(af_query(args)):
+    for sample in AFSample.search(af_query_new("hash",query)):
         for analysis in sample.get_analyses():
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
             try:
@@ -213,7 +243,7 @@ def hash_lookup(args, thread_queue):
             analysis_data["imphash"].append(sample.imphash)
         if sample.digital_signer:
             analysis_data["digital_signer"].append(sample.digital_signer)
-    thread_queue.put(analysis_data)
+
     return analysis_data
 
 # Common Artifacts Function
@@ -719,7 +749,7 @@ def build_output_string(output, sample):
     else:
         for entry in output:
             if entry in meta_sections:
-                print_list.append("%-10s" % meta_sections[entry])
+                print_list.append("%-10s" % meta_sections[entry])   
         print_line = " | ".join(print_list)
     return print_line
 

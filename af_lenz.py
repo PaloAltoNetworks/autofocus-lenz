@@ -33,13 +33,11 @@ except:
 # AF QUERY SECTION BELOW #
 ##########################
 
-# use this wrapper function until the rest of the code is modified to use the new syntax.
-def af_query(args):
-    return af_query_new(args.ident,args.query)
+# Af Query Function
+# Takes a type of query and the query itself as input.  Example: af_query("hash",<sha256 hash>)
+# Returns a properly formatted autofocus query to be passed to the autofocus API
 
-# updated function format.  This is currently only used in hash_lookup() method, although it
-# may be adopted by the rest of the script eventually.
-def af_query_new(ident,query):
+def af_query(ident,query):
 
     # A callable to find the proper field_value for the input_type hash, based on the query_value
     def map_hash_value(qv):
@@ -129,12 +127,12 @@ def hash_library(args):
                     count += 1
     else:
         if research_mode == "True":
-            for sample in AFSample.scan(af_query(args)):
+            for sample in AFSample.scan(af_query(args.ident,args.query)):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
         else:
-            for sample in AFSample.search(af_query(args)):
+            for sample in AFSample.search(af_query(args.ident,args.query)):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
@@ -233,7 +231,7 @@ def hash_lookup(args, query):
         AFApkSuspiciousStringAnalysis       : "apl_string"
     }
     # If there are no counts for the activity, ignore them for the filter
-    for sample in AFSample.search(af_query_new("hash",query)):
+    for sample in AFSample.search(af_query("hash",query)):
         for analysis in sample.get_analyses():
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
             try:
@@ -496,7 +494,7 @@ def uniq_sessions(args):
     if args.ident == "query":
         query = args.query
     else:
-        query = af_query(args)
+        query = af_query(args.ident,args.query)
 
     if research_mode == True:
         for session in AFSession.scan(query):
@@ -774,13 +772,13 @@ def output_list(args):
                     count += 1
     else:
         if research_mode == "True":
-            for sample in AFSample.scan(af_query(args)):
+            for sample in AFSample.scan(af_query(args.ident,args.query)):
                 print_line = build_output_string(output, sample)
                 if count < args.limit:
                     print print_line
                     count += 1
         else:
-            for sample in AFSample.search(af_query(args)):
+            for sample in AFSample.search(af_query(args.ident,args.query)):
                 print_line = build_output_string(output, sample)
                 if count < args.limit:
                     print print_line
@@ -1095,7 +1093,7 @@ def main():
     if args.ident == "query":
         print "\n", args.query
     else:
-        print "\n" + af_query(args).strip()
+        print "\n" + af_query(args.ident,args.query).strip()
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"

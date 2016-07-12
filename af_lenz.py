@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.0"
-__date__    = "08JUN2016"
+__version__ = "1.1.1"
+__date__    = "12JUL2016"
 
 #######################
 # Check research mode #
@@ -481,12 +481,12 @@ def common_pieces(args):
 def uniq_sessions(args):
     session_data = {
         "email_subject"     :[],
-        "file_name"          :[],
+        "file_name"         :[],
         "application"       :[],
         "country"           :[],
         "industry"          :[],
         "email_sender"      :[],
-        "file_url"           :[],
+        "file_url"          :[],
         "email_recipient"   :[],
         "account_name"      :[]
     }

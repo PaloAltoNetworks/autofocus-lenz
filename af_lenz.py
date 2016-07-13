@@ -496,7 +496,7 @@ def uniq_sessions(args):
     else:
         query = af_query(args.ident,args.query)
 
-    if research_mode == True:
+    if research_mode == "True":
         for session in AFSession.scan(query):
             subject     = session.email_subject
             file_name   = session.file_name
@@ -526,6 +526,8 @@ def uniq_sessions(args):
             if company not in session_data['account_name'] and company:
                 session_data['account_name'].append(company)
             count += 1
+            if count >= args.limit:
+                break
     else:
         for session in AFSession.search(query):
             subject     = session.email_subject
@@ -556,6 +558,8 @@ def uniq_sessions(args):
             if company not in session_data['account_name'] and company:
                 session_data['account_name'].append(company)
             count += 1
+            if count >= args.limit:
+                break
     session_data['count'] = count
     return session_data
 

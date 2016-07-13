@@ -911,6 +911,9 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 
 ### [+] CHANGE LOG [+]
 
+v1.1.2 - 13JUL2016
+* Added new function, "session_scrape", which acts similar to meta_scrape except for session data.
+
 v1.1.1 - 12JUL2016
 * Switched from threading to multiprocessing to improve speed.
 * Switched from using passed arguments directly to allow for more flexibility in future updates.

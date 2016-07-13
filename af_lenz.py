@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.1"
-__date__    = "12JUL2016"
+__version__ = "1.1.2"
+__date__    = "13JUL2016"
 
 #######################
 # Check research mode #
@@ -735,59 +735,148 @@ def output_analysis(args, sample_data, funct_type):
 # This just returns sample based meta-data based on the query provided
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
 
-def build_output_string(output, sample):
-    meta_sections   = {"sha256": sample.sha256, "file_type": sample.file_type,
-                       "create_date": sample.create_date, "verdict": sample.verdict,
-                       "file_size": str(sample.size), "tags": ",".join(sample._tags),
-                       "digital_signer": sample.digital_signer, "sha1": sample.sha1,
-                       "md5": sample.md5, "ssdeep": sample.ssdeep,
-                       "imphash": sample.imphash}
-    print_list      = []
-    if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
-        print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["sha256"],
-                                                               meta_sections["file_type"],
-                                                               meta_sections["create_date"],
-                                                               meta_sections["verdict"],
-                                                               meta_sections["file_size"],
-                                                               meta_sections["tags"])
-    else:
-        for entry in output:
-            if entry in meta_sections:
-                print_list.append("%-10s" % meta_sections[entry])   
-        print_line = " | ".join(print_list)
+def build_output_string(output, item, type):
+    #
+    # Meta
+    #
+    if type == "meta":
+        meta_sections = {"tags": ",".join(item._tags),
+                         "sha256": item.sha256,
+                         "file_type": item.file_type,
+                         "create_date": item.create_date,
+                         "verdict": item.verdict,
+                         "file_size": str(item.size),
+                         "digital_signer": item.digital_signer,
+                         "sha1": item.sha1,
+                         "md5": item.md5,
+                         "ssdeep": item.ssdeep,
+                         "imphash": item.imphash
+                         }
+        print_list = []
+        if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
+            print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["sha256"],
+                                                                   meta_sections["file_type"],
+                                                                   meta_sections["create_date"],
+                                                                   meta_sections["verdict"],
+                                                                   meta_sections["file_size"],
+                                                                   meta_sections["tags"])
+        else:
+            for entry in output:
+                if entry in meta_sections:
+                    print_list.append("%-10s" % meta_sections[entry])
+            print_line = " | ".join(print_list)
+    #
+    # Session
+    #
+    elif type == "session":
+        meta_sections = {"email_subject": item.email_subject,
+                         "file_name": item.file_name,
+                         "application": item.application,
+                         "country": item.dst_country,
+                         "industry": item.industry,
+                         "email_sender": item.email_sender,
+                         "file_url": item.file_url,
+                         "email_recipient": item.email_recipient,
+                         "account_name": item.account_name
+                         }
+        print_list = []
+        if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
+            print_line = "%-20s | %-30s | %-30s | %-30s | %-30s | %s" % (meta_sections["application"],
+                                                                   meta_sections["account_name"],
+                                                                   meta_sections["email_sender"],
+                                                                   meta_sections["email_subject"],
+                                                                   meta_sections["file_name"],
+                                                                   meta_sections["file_url"])
+        else:
+            for entry in output:
+                if entry in meta_sections:
+                    print_list.append("%-20s" % meta_sections[entry])
+            print_line = " | ".join(print_list)
     return print_line
 
 def output_list(args):
     output  = args.output.split(",")
     count   = 0
-    print "\n[+] sample_meta [+]\n"
-    if args.ident == "query":
-        if research_mode == "True":
-            for sample in AFSample.scan(args.query):
-                print_line = build_output_string(output, sample)
-                if count < args.limit:
-                    print print_line
-                    count += 1
+    #
+    # Meta Scrape
+    #
+    if args.run == "meta_scrape":
+        print "\n[+] sample_meta [+]\n"
+        if args.ident == "query":
+            if research_mode == "True":
+                for sample in AFSample.scan(args.query):
+                    print_line = build_output_string(output, sample, "meta")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+            else:
+                for sample in AFSample.search(args.query):
+                    print_line = build_output_string(output, sample, "meta")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
         else:
-            for sample in AFSample.search(args.query):
-                print_line = build_output_string(output, sample)
-                if count < args.limit:
-                    print print_line
-                    count += 1
-    else:
-        if research_mode == "True":
-            for sample in AFSample.scan(af_query(args.ident,args.query)):
-                print_line = build_output_string(output, sample)
-                if count < args.limit:
-                    print print_line
-                    count += 1
+            if research_mode == "True":
+                for sample in AFSample.scan(af_query(args.ident,args.query)):
+                    print_line = build_output_string(output, sample, "meta")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+            else:
+                for sample in AFSample.search(af_query(args.ident,args.query)):
+                    print_line = build_output_string(output, sample, "meta")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+        print "\n[+] processed", str(count), "samples [+]\n"
+    #
+    # Session scrape
+    #
+    if args.run == "session_scrape":
+        print "\n[+] session_meta [+]\n"
+        if args.ident == "query":
+            if research_mode == "True":
+                for session in AFSession.scan(args.query):
+                    print_line = build_output_string(output, session, "session")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+            else:
+                for session in AFSession.search(args.query):
+                    print_line = build_output_string(output, session, "session")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
         else:
-            for sample in AFSample.search(af_query(args.ident,args.query)):
-                print_line = build_output_string(output, sample)
-                if count < args.limit:
-                    print print_line
-                    count += 1
-    print "\n[+] processed", str(count), "samples [+]\n"
+            if research_mode == "True":
+                for session in AFSession.scan(af_query(args.ident,args.query)):
+                    print_line = build_output_string(output, session, "session")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+            else:
+                for session in AFSession.search(af_query(args.ident,args.query)):
+                    print_line = build_output_string(output, session, "session")
+                    if count < args.limit:
+                        print print_line
+                        count += 1
+                    else:
+                        break
+        print "\n[+] processed", str(count), "sessions [+]\n"
 
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results
@@ -1004,7 +1093,8 @@ def main():
         "http_scrape",
         "dns_scrape",
         "mutex_scrape",
-        "meta_scrape"
+        "meta_scrape",
+        "session_scrape"
     ]
     session_sections = [
         "email_subject",
@@ -1113,13 +1203,13 @@ def main():
         out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
         out_data = mutex_scrape(args)
-    elif args.run == "meta_scrape":
+    elif args.run == "meta_scrape" or "session_scrape":
         out_data = {}
         funct_type = "list"
     # Output results to console
     if "count" not in out_data:
         out_data['count'] = 1
-    if args.run == "meta_scrape":
+    if args.run == "meta_scrape" or "session_scrape":
         output_list(args)
     else:
         output_analysis(args, out_data, funct_type)

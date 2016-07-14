@@ -120,22 +120,30 @@ def hash_library(args):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
+                else:
+                    break
         else:
             for sample in AFSample.search(args.query):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
+                else:
+                    break
     else:
         if research_mode == "True":
             for sample in AFSample.scan(af_query(args.ident,args.query)):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
+                else:
+                    break
         else:
             for sample in AFSample.search(af_query(args.ident,args.query)):
                 if count < args.limit:
                     input_data.append(sample.sha256)
                     count += 1
+                else:
+                    break
     
     # set the number of workers to be three times the number of cores.
     # because these operations are not very CPU-intensive, we can get away with
@@ -243,7 +251,6 @@ def hash_lookup(args, query):
             analysis_data["imphash"].append(sample.imphash)
         if sample.digital_signer:
             analysis_data["digital_signer"].append(sample.digital_signer)
-
     return analysis_data
 
 # Common Artifacts Function
@@ -720,7 +727,10 @@ def output_analysis(args, sample_data, funct_type):
                     if value != "":
                         print value
     else:
+        print sample_data.keys()
         for entry in output:
+            print entry
+
             if entry in sample_data.keys() and sample_data[entry] != []:
                 print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
@@ -1203,13 +1213,13 @@ def main():
         out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
         out_data = mutex_scrape(args)
-    elif args.run == "meta_scrape" or "session_scrape":
+    elif args.run == "meta_scrape" or args.run == "session_scrape":
         out_data = {}
         funct_type = "list"
     # Output results to console
     if "count" not in out_data:
         out_data['count'] = 1
-    if args.run == "meta_scrape" or "session_scrape":
+    if args.run == "meta_scrape" or args.run == "session_scrape":
         output_list(args)
     else:
         output_analysis(args, out_data, funct_type)

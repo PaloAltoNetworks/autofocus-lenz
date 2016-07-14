@@ -727,10 +727,7 @@ def output_analysis(args, sample_data, funct_type):
                     if value != "":
                         print value
     else:
-        print sample_data.keys()
         for entry in output:
-            print entry
-
             if entry in sample_data.keys() and sample_data[entry] != []:
                 print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:

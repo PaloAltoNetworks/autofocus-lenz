@@ -911,6 +911,9 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 
 ### [+] CHANGE LOG [+]
 
+v1.1.3 - 20JUL2016
+* Flushed out the session scrape outputs to now include src_country, dst_country, src_ip, dst_ip, src_port, dst_port.
+
 v1.1.2 - 13JUL2016
 * Added new function, "session_scrape", which acts similar to meta_scrape except for session data.
 

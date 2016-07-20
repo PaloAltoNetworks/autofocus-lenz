@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.2"
-__date__    = "13JUL2016"
+__version__ = "1.1.3"
+__date__    = "20JUL2016"
 
 #######################
 # Check research mode #
@@ -490,7 +490,7 @@ def uniq_sessions(args):
         "email_subject"     :[],
         "file_name"         :[],
         "application"       :[],
-        "country"           :[],
+        "dst_country"       :[],
         "industry"          :[],
         "email_sender"      :[],
         "file_url"          :[],
@@ -520,8 +520,8 @@ def uniq_sessions(args):
                 session_data['file_name'].append(file_name)
             if application not in session_data['application'] and application:
                 session_data['application'].append(application)
-            if country not in session_data['country'] and country:
-                session_data['country'].append(country)
+            if country not in session_data['dst_country'] and country:
+                session_data['dst_country'].append(country)
             if industry not in session_data['industry'] and industry:
                 session_data['industry'].append(industry)
             if sender not in session_data['email_sender'] and sender:
@@ -680,14 +680,21 @@ def mutex_scrape(args):
 
 def output_analysis(args, sample_data, funct_type):
     output = args.output.split(",")
-    # SESSIONS: email_subject, file_name, application, country, industry, email_sender, file_url
-    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter, apk_receiver, apk_sensor, apk_service, apk_embedurl,
-    #           apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file, apk_string. digital_signer, imphash
+    # SESSIONS: email_subject, file_name, application, dst_country, src_country industry, email_sender, email_recipient, account_name,
+    #           file_url, dst_port, src_port, dst_ip, src_ip
+    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter,
+    #           apk_receiver, apk_sensor, apk_service, apk_embedurl,apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file,
+    #           apk_string. digital_signer, imphash
     section_list = [
         "email_subject",
         "file_name",
         "application",
-        "country",
+        "dst_country",
+        "src_country",
+        "dst_ip",
+        "src_ip",
+        "dst_port",
+        "src_port",
         "industry",
         "email_sender",
         "file_url",
@@ -747,17 +754,17 @@ def build_output_string(output, item, type):
     # Meta
     #
     if type == "meta":
-        meta_sections = {"tags": ",".join(item._tags),
-                         "sha256": item.sha256,
-                         "file_type": item.file_type,
-                         "create_date": item.create_date,
-                         "verdict": item.verdict,
-                         "file_size": str(item.size),
-                         "digital_signer": item.digital_signer,
-                         "sha1": item.sha1,
-                         "md5": item.md5,
-                         "ssdeep": item.ssdeep,
-                         "imphash": item.imphash
+        meta_sections = {"tags"             : ",".join(item._tags),
+                         "sha256"           : item.sha256,
+                         "file_type"        : item.file_type,
+                         "create_date"      : item.create_date,
+                         "verdict"          : item.verdict,
+                         "file_size"        : str(item.size),
+                         "digital_signer"   : item.digital_signer,
+                         "sha1"             : item.sha1,
+                         "md5"              : item.md5,
+                         "ssdeep"           : item.ssdeep,
+                         "imphash"          : item.imphash
                          }
         print_list = []
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
@@ -776,15 +783,20 @@ def build_output_string(output, item, type):
     # Session
     #
     elif type == "session":
-        meta_sections = {"email_subject": item.email_subject,
-                         "file_name": item.file_name,
-                         "application": item.application,
-                         "country": item.dst_country,
-                         "industry": item.industry,
-                         "email_sender": item.email_sender,
-                         "file_url": item.file_url,
-                         "email_recipient": item.email_recipient,
-                         "account_name": item.account_name
+        meta_sections = {"email_subject"    : item.email_subject,
+                         "file_name"        : item.file_name,
+                         "application"      : item.application,
+                         "dst_country"      : item.dst_country,
+                         "src_country"      : item.src_country,
+                         "dst_ip"           : item.dst_ip,
+                         "src_ip"           : item.src_ip,
+                         "dst_port"         : item.dst_port,
+                         "src_port"         : item.src_port,
+                         "industry"         : item.industry,
+                         "email_sender"     : item.email_sender,
+                         "file_url"         : item.file_url,
+                         "email_recipient"  : item.email_recipient,
+                         "account_name"     : item.account_name
                          }
         print_list = []
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
@@ -1107,7 +1119,12 @@ def main():
         "email_subject",
         "file_name",
         "application",
-        "country",
+        "dst_country",
+        "src_country",
+        "dst_ip",
+        "src_ip",
+        "dst_port",
+        "src_port",
         "industry",
         "email_sender",
         "file_url",

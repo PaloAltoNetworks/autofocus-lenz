@@ -552,8 +552,8 @@ def uniq_sessions(args):
                 session_data['file_name'].append(file_name)
             if application not in session_data['application'] and application:
                 session_data['application'].append(application)
-            if country not in session_data['country'] and country:
-                session_data['country'].append(country)
+            if country not in session_data['dst_country'] and country:
+                session_data['dst_country'].append(country)
             if industry not in session_data['industry'] and industry:
                 session_data['industry'].append(industry)
             if sender not in session_data['email_sender'] and sender:

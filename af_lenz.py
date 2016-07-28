@@ -112,7 +112,9 @@ def hash_library(args):
     result_data = {}
     input_data = []
     
-    print "\n[+] hashes [+]\n"
+    if not args.quiet:
+        print "\n[+] hashes [+]\n"
+
     count = 0
     if args.ident == "query":
         if research_mode == "True":
@@ -172,9 +174,8 @@ def hash_library(args):
 def hash_worker(args_tuple):
     args,sample_hash = args_tuple
 
-    # for extra verbosity, this print statement can be used.
-    #print("[+] Info: {} {:^8} {}".format(multiprocessing.current_process().name,'->',sample_hash))
-    print(sample_hash)
+    if not args.quiet:
+        print(sample_hash)
     return { sample_hash : hash_lookup(args,sample_hash) }
 
 
@@ -359,7 +360,7 @@ def common_artifacts(args):
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
                 match_percent = int(float(compare_data[section][value])/float(count) * 100)
-                if args.special == "range":
+                if "range" in args.special:
                     common_data[section].append(str(match_percent) + " |" + value)
                 else:
                     common_data[section].append(value)
@@ -474,7 +475,7 @@ def common_pieces(args):
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
                 match_percent = int(float(compare_data[section][value])/float(count) * 100)
-                if args.special == "range":
+                if "range" in args.special:
                     common_pieces[section].append(str(match_percent) + " |" + value)
                 else:
                     common_pieces[section].append(value)
@@ -729,21 +730,24 @@ def output_analysis(args, sample_data, funct_type):
     if "all" in output:
         for entry in section_list:
             if entry in sample_data.keys() and sample_data[entry] != []:
-                print "\n[+]", entry, "[+]\n"
+                if not args.quiet:
+                    print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
                     if value != "":
                         print value
     else:
         for entry in output:
             if entry in sample_data.keys() and sample_data[entry] != []:
-                print "\n[+]", entry, "[+]\n"
+                if not args.quiet:
+                    print "\n[+]", entry, "[+]\n"
                 for value in sample_data[entry]:
                     if value != "":
                         print value
-    if funct_type == "sample":
-        print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(args.filter), "[+]\n"
-    elif funct_type == "session":
-        print "\n[+] processed", sample_data['count'], "sessions [+]\n"
+    if not args.quiet:
+        if funct_type == "sample":
+            print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(args.filter), "[+]\n"
+        elif funct_type == "session":
+            print "\n[+] processed", sample_data['count'], "sessions [+]\n"
 
 # Output List Function
 # This just returns sample based meta-data based on the query provided
@@ -820,7 +824,8 @@ def output_list(args):
     # Meta Scrape
     #
     if args.run == "meta_scrape":
-        print "\n[+] sample_meta [+]\n"
+        if not args.quiet:
+            print "\n[+] sample_meta [+]\n"
         if args.ident == "query":
             if research_mode == "True":
                 for sample in AFSample.scan(args.query):
@@ -855,12 +860,14 @@ def output_list(args):
                         count += 1
                     else:
                         break
-        print "\n[+] processed", str(count), "samples [+]\n"
+        if not args.quiet:
+            print "\n[+] processed", str(count), "samples [+]\n"
     #
     # Session scrape
     #
     if args.run == "session_scrape":
-        print "\n[+] session_meta [+]\n"
+        if not args.quiet:
+            print "\n[+] session_meta [+]\n"
         if args.ident == "query":
             if research_mode == "True":
                 for session in AFSession.scan(args.query):
@@ -895,7 +902,8 @@ def output_list(args):
                         count += 1
                     else:
                         break
-        print "\n[+] processed", str(count), "sessions [+]\n"
+        if not args.quiet:
+            print "\n[+] processed", str(count), "sessions [+]\n"
 
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results
@@ -909,7 +917,9 @@ def af_import(args, sample_data):
         for key in sample_data.keys():
             output.append(key)
     # Build AutoFocus query
-    print "[+] af import query [+]\n"
+    if not args.quiet:
+        print "[+] af import query [+]\n"
+
     import_query = '{"operator":"all","children":['
     for entry in output:
         if entry in sample_data.keys() and entry == "dns":
@@ -958,7 +968,9 @@ def yara_rule(args, sample_data):
         output = []
         for key in sample_data.keys():
             output.append(key)
-    print "[+] yara rule [+]\n"
+ 
+    if not args.quiet:
+        print "[+] yara rule [+]\n"
     min_len = 4 # Minimum string length
     contained_list = []
     entry_list = []
@@ -1095,7 +1107,7 @@ def yara_rule(args, sample_data):
     yara_sig = str(yara_sig.replace("\\", "\\\\")) # Double escape for yara
     if "$" in yara_sig:
         print yara_sig + "\n"
-    else:
+    elif not args.quiet:
         print "No yara rule could be generated.\n"
 
 ################
@@ -1202,16 +1214,18 @@ def main():
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000.", metavar="<number>", type=int, default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
-    parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>")
+    parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
+    parser.add_argument("-Q", "--quiet",help="Suppress any informational output and only return data.",action="store_true",default=False)
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
     # Gather results from functions
     funct_type = "sample"
-    if args.ident == "query":
-        print "\n", args.query
-    else:
-        print "\n" + af_query(args.ident,args.query).strip()
+    if not args.quiet:
+        if args.ident == "query":
+            print "\n", args.query
+        else:
+            print "\n" + af_query(args.ident,args.query).strip()
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
@@ -1230,17 +1244,29 @@ def main():
     elif args.run == "meta_scrape" or args.run == "session_scrape":
         out_data = {}
         funct_type = "list"
-    # Output results to console
+
     if "count" not in out_data:
         out_data['count'] = 1
-    if args.run == "meta_scrape" or args.run == "session_scrape":
-        output_list(args)
+
+    # if we have specified a -s option, do the following
+    if "af_import" in args.special or "yara_rule" in args.special:
+        if not args.quiet:
+            if args.run == "meta_scrape" or args.run == "session_scrape":
+                output_list(args)
+            else:
+                output_analysis(args, out_data, funct_type)
+
+        if "af_import" in args.special:
+            af_import(args, out_data)
+        if "yara_rule" in args.special:
+            yara_rule(args, out_data)
+
     else:
-        output_analysis(args, out_data, funct_type)
-    if args.special == "af_import":
-        af_import(args, out_data)
-    elif args.special == "yara_rule":
-        yara_rule(args, out_data)
+        if args.run == "meta_scrape" or args.run == "session_scrape":
+            output_list(args)
+        else:
+            output_analysis(args, out_data, funct_type)
+
 
 if __name__ == '__main__':
     main()

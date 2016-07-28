@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.3"
-__date__    = "20JUL2016"
+__version__ = "1.1.4"
+__date__    = "28JUL2016"
 
 #######################
 # Check research mode #

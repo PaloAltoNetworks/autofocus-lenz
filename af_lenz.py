@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os, re
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.4"
-__date__    = "28JUL2016"
+__version__ = "1.1.5"
+__date__    = "01AUG2016"
 
 #######################
 # Check research mode #
@@ -1215,7 +1215,7 @@ def main():
         "hash",
         "hash_list",
         "ip",
-        "network",
+        "connection",
         "dns",
         "file",
         "http",

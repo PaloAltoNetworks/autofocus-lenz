@@ -6,7 +6,7 @@ from autofocus import AFSession, AFSample
 from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
 # APK Specific
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
-import sys, argparse, multiprocessing, os
+import sys, argparse, multiprocessing, os, re
 
 
 __author__  = "Jeff White [karttoon]"
@@ -671,6 +671,35 @@ def mutex_scrape(args):
     mutex_data['count'] = count # Keep track of how many samples processed
     return mutex_data
 
+# Flat file reader function
+# Reads lines in from a file while checking for sha256 hashes.
+# Returns a list of hashes.
+def fetch_hashes_from_file(args,input_file):
+
+    hashlist = []
+
+    if not args.quiet:
+        print("[+] Attempting to read files from {}".format(input_file))
+
+    try:
+        with open(input_file,'r') as fh:
+
+            for line in fh.readlines():
+
+                line = line.strip()
+
+                if re.match('^[0-9a-zA-Z]{64}$',line):
+                    hashlist.append(line)
+                else:
+                    # Ignore any malformed hashes or bad lines
+                    pass
+
+    except IOError as e:
+        print("[!] Error. {}: {}".format(e.strerror,e.filename))
+        sys.exit(2)
+
+    return hashlist
+
 ########################
 # OUTPUT SECTION BELOW #
 ########################
@@ -1196,7 +1225,8 @@ def main():
         "service",
         "user_agent",
         "tag",
-        "query"
+        "query",
+        "input_file"
     ]
     specials = [
         "yara_rule",
@@ -1219,6 +1249,13 @@ def main():
     parser.add_argument("-Q", "--quiet",help="Suppress any informational output and only return data.",action="store_true",default=False)
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
+
+    if args.ident == "input_file":
+        hashlist = fetch_hashes_from_file(args,args.query)
+        # join the list into a comma-separated string, because this is what some other functions expect.  This may be changed eventually.
+        args.query = ",".join(item for item in hashlist)
+        args.ident = "hash_list"
+
     # Gather results from functions
     funct_type = "sample"
     if not args.quiet:

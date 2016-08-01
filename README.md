@@ -16,8 +16,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -i <query_type>, --ident <query_type>
                         Query identifier type for AutoFocus search. [hash,
-                        hash_list, ip, network, dns, file, http, mutex,
-                        process, registry, service, user_agent, tag, query]
+                        hash_list, ip, connection, dns, file, http, mutex,
+                        process, registry, service, user_agent, tag, query,
+                        input_file]
   -q <query>, --query <query>
                         Value to query Autofocus for.
   -o <section_output>, --output <section_output>
@@ -54,6 +55,7 @@ optional arguments:
 ```
 
 Quick links to examples:
+* [Query Types](#query_types)
 * [Hash Scrape function](#hash_scrape)
 * [Common Artifacts function](#common_artifacts)
 * [Common Pieces function](#common_pieces)
@@ -71,6 +73,7 @@ Quick links to examples:
 * [Limit analyzed samples](#limit_result)
 * [Collect bulk sample meta data](#meta_data)
 * [Extract all unique entries](#extract_all)
+* [Input from File](#input_file)
 * [Quiet Output](#quiet_flag)
 
 ### [+] EXAMPLES [+]
@@ -78,6 +81,28 @@ Quick links to examples:
 Analyzing activity of malware can be very noisy and AutoFocus provides a good way to identify whether something might be noise through the use of the B/G/M system. For each sample with a matching entry for the activity, whether its file, network, or process based, it will be added to a count for benign, grayware, and malicious samples. In this fashion, if a entry has 5 million matches to benign samples, it's likely just noise; that being said, *af_lenz.py* has a built-in filter of 10,000 matches but can be adjusted with the *-f* flag to override it.
 
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
+
+##### query_types
+
+Below is a table of all values for the `-q` flag. 
+
+Values | Definition | Example? 
+---|---|---
+hash  | A single hash | 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d 
+hash_list | A list of hashes (space delimited)  | e720f917cd8a02b0372b85068844e132c42ea2c97061b81d378b5a73f9344003 a486ff7e775624da2283ede1d3959c784afe476b0a69ce88cd12c7238b15c9e6 
+ip | A single IPv4 Address (/32) | 192.168.1.1 
+connection | Strings from network activity | udp , 13.85.70.43:123 
+dns | A domain name | google.com 
+file | A file name | file.txt 
+http | Strings contained in http activity | /main.php 
+mutex | mutexes created by the malware | WininetConnectionMutex 
+process | Strings from process activity | ntsystem.exe , LoadLibraryExW 
+registry | Strings from registry activity | sample.exe , SetValueKey , HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run\Windows Audio Service 
+service | Strings from windows services |  winlogon.exe , ControlService
+user_agent | User agent strings | Microsoft-CryptoAPI/6.1 
+tag | Autofocus Tag name | Locky 
+query | Autofocus-formatted query | {"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.Locky"]}]} 
+input_file | A file containing sha256 hashes (one per line) to query for | ~/hash_list.txt 
 
 ##### hash_scrape
 
@@ -918,6 +943,9 @@ This flag can be used in combination with any other valid set of arguments to li
 
 
 ### [+] CHANGE LOG [+]
+
+v1.1.5 - 01AUG2016
+* Added support for reading sha256 hashes from a flat file.  
 
 v1.1.4 - 28JUL2016
 * Added support for a quiet flag.  This flag suppresses the extra output of the script so as to make the returned data easier to process with other utilities.

@@ -86,7 +86,7 @@ To lookup the dynamic analysis (DA) information for a particular sample, specify
 
 Below is a table of all values for the `-q` flag. 
 
-Values | Definition | Example? 
+Values | Definition | Example 
 ---|---|---
 hash  | A single hash | 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d 
 hash_list | A list of hashes (space delimited)  | e720f917cd8a02b0372b85068844e132c42ea2c97061b81d378b5a73f9344003 a486ff7e775624da2283ede1d3959c784afe476b0a69ce88cd12c7238b15c9e6 

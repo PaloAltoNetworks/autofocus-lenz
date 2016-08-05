@@ -94,11 +94,24 @@ def af_query(ident,query):
     # Everything that is a list (including hash_list and tag)
     if operator_value == "is in the list":
         params = [v.strip() for v in query.split(",")]
-        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":[%s]}]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in params]))
-    else:
-        af_search = '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query)
 
-    return af_search
+        # if we have less than 100 params, we only need one query field
+        if len(params) <= 100:
+            return '{"operator":"all","children":[{"field":"%s","operator":"%s","value":[%s]}]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in params]))
+
+        else:
+            # split our params into a list of lists so as to create queries with <=100 elements each.
+            chunked_params = [params[index:index + 100] for index in xrange(0, len(params), 100)]
+
+            # Build multiple groups of "in the list" queries
+            groups = ",".join(['{"field":"%s","operator":"%s","value":[%s]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in chunk])) for chunk in chunked_params])
+
+            # compile them into the final query.
+            return '{"operator":"any","children":[%s]}' % groups
+
+
+    else:
+        return '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query)
 
 ###########################
 # FUNCTION SECTIONS BELOW #
@@ -1252,9 +1265,9 @@ def main():
 
     if args.ident == "input_file":
         hashlist = fetch_hashes_from_file(args,args.query)
-        # join the list into a comma-separated string, because this is what some other functions expect.  This may be changed eventually.
-        args.query = ",".join(item for item in hashlist)
-        args.ident = "hash_list"
+        # Build an AF query using the hash list that was just generated join the list into a comma-separated string, because this is what some other functions expect.
+        args.query = af_query("hash_list",",".join(item for item in hashlist))
+        args.ident = "query"
 
     # Gather results from functions
     funct_type = "sample"

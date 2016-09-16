@@ -11,8 +11,8 @@ import sys, argparse, multiprocessing, os, re
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.5"
-__date__    = "01AUG2016"
+__version__ = "1.1.6"
+__date__    = "16SEP2016"
 
 #######################
 # Check research mode #
@@ -51,19 +51,19 @@ def af_query(ident,query):
 
     # Create a map of input_type to field_value
     field_map = {
-        "ip"		    : "alias.ip_address",
-        "dns"		    : "alias.domain",
-        "hash"		    : map_hash_value,
-        "http"		    : "sample.tasks.http",
-        "file"		    : "sample.tasks.file",
-        "process"	    : "sample.tasks.process",
-        "mutex"		    : "sample.tasks.mutex",
-        "registry"	    : "sample.tasks.registry",
-        "service"	    : "sample.tasks.service",
-        "connection"	: "sample.tasks.connection",
-        "user_agent"	: "sample.tasks.user_agent",
-        "tag"		    : "sample.tag",
-        "hash_list"	    : "sample.sha256",
+        "ip"            : "alias.ip_address",
+        "dns"           : "alias.domain",
+        "hash"          : map_hash_value,
+        "http"          : "sample.tasks.http",
+        "file"          : "sample.tasks.file",
+        "process"       : "sample.tasks.process",
+        "mutex"         : "sample.tasks.mutex",
+        "registry"      : "sample.tasks.registry",
+        "service"       : "sample.tasks.service",
+        "connection"    : "sample.tasks.connection",
+        "user_agent"    : "sample.tasks.user_agent",
+        "tag"           : "sample.tag",
+        "hash_list"     : "sample.sha256",
         "file_url"      : "session.fileurl",
         "file_name"     : "alias.filename"
     }
@@ -200,17 +200,17 @@ def hash_lookup(args, query):
 
     # Dictionary mapping the raw data for each type of sample analysis
     analysis_data = {
-        "service"	        :[],
-        "registry"	        :[],
-        "process"	        :[],
-        "misc"		        :[],
-        "user_agent"	    :[],
-        "mutex"		        :[],
-        "http"		        :[],
-        "dns"		        :[],
-        "behavior_type"	    :[],
-        "connection"	    :[],
-        "file"		        :[],
+        "service"            :[],
+        "registry"            :[],
+        "process"            :[],
+        "misc"                :[],
+        "user_agent"        :[],
+        "mutex"                :[],
+        "http"                :[],
+        "dns"                :[],
+        "behavior_type"        :[],
+        "connection"        :[],
+        "file"                :[],
         "apk_misc"          :[],
         "apk_filter"        :[],
         "apk_receiver"      :[],
@@ -224,22 +224,22 @@ def hash_lookup(args, query):
         "apk_string"        :[],
         "digital_signer"    :[],
         "imphash"           :[],
-        "default"   	    :[]
+        "default"           :[]
     }
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
-        AFServiceActivity	                : "service",
-        AFRegistryActivity	                : "registry",
-        AFProcessActivity       	        : "process",
-        AFApiActivity		                : "misc",
-        AFUserAgentFragment	                : "user_agent",
-        AFMutexActivity		                : "mutex",
-        AFHttpActivity		                : "http",
-        AFDnsActivity       		        : "dns",
-        AFBehaviorTypeAnalysis      	    : "behavior_type",
-        AFConnectionActivity        	    : "connection",
-        AFFileActivity		                : "file",
+        AFServiceActivity                    : "service",
+        AFRegistryActivity                    : "registry",
+        AFProcessActivity                   : "process",
+        AFApiActivity                        : "misc",
+        AFUserAgentFragment                    : "user_agent",
+        AFMutexActivity                        : "mutex",
+        AFHttpActivity                        : "http",
+        AFDnsActivity                       : "dns",
+        AFBehaviorTypeAnalysis              : "behavior_type",
+        AFConnectionActivity                : "connection",
+        AFFileActivity                        : "file",
         AFApkActivityAnalysis               : "apk_misc",
         AFApkIntentFilterAnalysis           : "apk_filter",
         AFApkReceiverAnalysis               : "apk_receiver",
@@ -299,21 +299,21 @@ def common_artifacts(args):
         "apk_string"        :{},
         "digital_signer"    :{},
         "imphash"           :{},
-        "default"   	    :{}
+        "default"           :{}
     }
     # Final collection of all common artifacts
     common_data = {
-        "service"	        :[],
-        "registry"	        :[],
-        "process"	        :[],
-        "misc"		        :[],
-        "user_agent"	    :[],
-        "mutex"		        :[],
-        "http"		        :[],
-        "dns"		        :[],
-        "behavior_type"	    :[],
-        "connection"	    :[],
-        "file"		        :[],
+        "service"            :[],
+        "registry"            :[],
+        "process"            :[],
+        "misc"                :[],
+        "user_agent"        :[],
+        "mutex"                :[],
+        "http"                :[],
+        "dns"                :[],
+        "behavior_type"        :[],
+        "connection"        :[],
+        "file"                :[],
         "apk_misc"          :[],
         "apk_filter"        :[],
         "apk_receiver"      :[],
@@ -327,7 +327,7 @@ def common_artifacts(args):
         "apk_string"        :[],
         "digital_signer"    :[],
         "imphash"           :[],
-        "default"   	    :[]
+        "default"           :[]
     }
     count = 0
     hashes = hash_library(args)
@@ -358,7 +358,7 @@ def common_artifacts(args):
             "apk_string"        :{},
             "digital_signer"    :{},
             "imphash"           :{},
-            "default"   	    :{}
+            "default"           :{}
         }
         for section in hashes[hash]:
             for value in hashes[hash][section]:
@@ -412,21 +412,21 @@ def common_pieces(args):
         "apk_string"        :{},
         "digital_signer"    :{},
         "imphash"           :{},
-        "default"   	    :{}
+        "default"           :{}
     }
     # Final collection of all common pieces
     common_pieces = {
-        "service"	        :[],
-        "registry"	        :[],
-        "process"	        :[],
-        "misc"		        :[],
-        "user_agent"	    :[],
-        "mutex"		        :[],
-        "http"		        :[],
-        "dns"		        :[],
-        "behavior_type"	    :[],
-        "connection"	    :[],
-        "file"		        :[],
+        "service"            :[],
+        "registry"            :[],
+        "process"            :[],
+        "misc"                :[],
+        "user_agent"        :[],
+        "mutex"                :[],
+        "http"                :[],
+        "dns"                :[],
+        "behavior_type"        :[],
+        "connection"        :[],
+        "file"                :[],
         "apk_misc"          :[],
         "apk_filter"        :[],
         "apk_receiver"      :[],
@@ -440,7 +440,7 @@ def common_pieces(args):
         "apk_string"        :[],
         "digital_signer"    :[],
         "imphash"           :[],
-        "default"   	    :[]
+        "default"           :[]
     }
     count = 0
     hashes = hash_library(args)
@@ -471,7 +471,7 @@ def common_pieces(args):
             "apk_string"        :{},
             "digital_signer"    :{},
             "imphash"           :{},
-            "default"   	    :{}
+            "default"           :{}
         }
         for section in hashes[hash]:
             for value in hashes[hash][section]:
@@ -593,14 +593,14 @@ def hash_scrape(args):
         "service"           :[],
         "registry"          :[],
         "process"           :[],
-        "misc"		        :[],
-        "user_agent"	    :[],
-        "mutex"		        :[],
-        "http"		        :[],
-        "dns"		        :[],
-        "behavior_type"	    :[],
-        "connection"	    :[],
-        "file"		        :[],
+        "misc"                :[],
+        "user_agent"        :[],
+        "mutex"                :[],
+        "http"                :[],
+        "dns"                :[],
+        "behavior_type"        :[],
+        "connection"        :[],
+        "file"                :[],
         "apk_misc"          :[],
         "apk_filter"        :[],
         "apk_receiver"      :[],
@@ -614,7 +614,7 @@ def hash_scrape(args):
         "apk_string"        :[],
         "digital_signer"    :[],
         "imphash"           :[],
-        "default"   	    :[]
+        "default"           :[]
     }
     count = 0
     hashes = hash_library(args)
@@ -724,7 +724,7 @@ def fetch_hashes_from_file(args,input_file):
 def output_analysis(args, sample_data, funct_type):
     output = args.output.split(",")
     # SESSIONS: email_subject, file_name, application, dst_country, src_country industry, email_sender, email_recipient, account_name,
-    #           file_url, dst_port, src_port, dst_ip, src_ip
+    #           file_url, dst_port, src_port, dst_ip, src_ip, timestamp
     # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter,
     #           apk_receiver, apk_sensor, apk_service, apk_embedurl,apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file,
     #           apk_string. digital_signer, imphash
@@ -743,6 +743,7 @@ def output_analysis(args, sample_data, funct_type):
         "file_url",
         "email_recipient",
         "account_name",
+        "timestamp",
         "service",
         "registry",
         "process",
@@ -803,7 +804,7 @@ def build_output_string(output, item, type):
         meta_sections = {"tags"             : ",".join(item._tags),
                          "sha256"           : item.sha256,
                          "file_type"        : item.file_type,
-                         "create_date"      : item.create_date,
+                         "create_date"      : str(item.create_date),
                          "verdict"          : item.verdict,
                          "file_size"        : str(item.size),
                          "digital_signer"   : item.digital_signer,
@@ -814,17 +815,22 @@ def build_output_string(output, item, type):
                          }
         print_list = []
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
-            print_line = "%s | %-10s | %s | %-10s | %-10s | %s" % (meta_sections["sha256"],
-                                                                   meta_sections["file_type"],
-                                                                   meta_sections["create_date"],
-                                                                   meta_sections["verdict"],
-                                                                   meta_sections["file_size"],
-                                                                   meta_sections["tags"])
+
+            all_sections = ["sha256",
+                            "file_type",
+                            "create_date",
+                            "verdict",
+                            "file_size",
+                            "tags"]
+            for entry in all_sections:
+                if meta_sections[entry] == None:
+                    print_list.append("None")
+                else:
+                    print_list.append(meta_sections[entry])
         else:
             for entry in output:
                 if entry in meta_sections:
-                    print_list.append("%-10s" % meta_sections[entry])
-            print_line = " | ".join(print_list)
+                    print_list.append("%s" % meta_sections[entry])
     #
     # Session
     #
@@ -842,26 +848,34 @@ def build_output_string(output, item, type):
                          "email_sender"     : item.email_sender,
                          "file_url"         : item.file_url,
                          "email_recipient"  : item.email_recipient,
-                         "account_name"     : item.account_name
+                         "account_name"     : item.account_name,
+                         "timestamp"        : str(item.timestamp)
                          }
         print_list = []
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
-            print_line = "%-20s | %-30s | %-30s | %-30s | %-30s | %s" % (meta_sections["application"],
-                                                                   meta_sections["account_name"],
-                                                                   meta_sections["email_sender"],
-                                                                   meta_sections["email_subject"],
-                                                                   meta_sections["file_name"],
-                                                                   meta_sections["file_url"])
+
+            all_sections = ["timestamp",
+                            "account_name",
+                            "email_sender",
+                            "email_subject",
+                            "file_name",
+                            "file_url"]
+            for entry in all_sections:
+                if meta_sections[entry] == None:
+                    print_list.append("None")
+                else:
+                    print_list.append(meta_sections[entry])
         else:
             for entry in output:
                 if entry in meta_sections:
-                    print_list.append("%-20s" % meta_sections[entry])
-            print_line = " | ".join(print_list)
-    return print_line
+                    print_list.append("%s" % meta_sections[entry])
+
+    return print_list
 
 def output_list(args):
     output  = args.output.split(",")
     count   = 0
+    results = []
     #
     # Meta Scrape
     #
@@ -873,7 +887,7 @@ def output_list(args):
                 for sample in AFSample.scan(args.query):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -881,7 +895,7 @@ def output_list(args):
                 for sample in AFSample.search(args.query):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -890,7 +904,7 @@ def output_list(args):
                 for sample in AFSample.scan(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -898,10 +912,16 @@ def output_list(args):
                 for sample in AFSample.search(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
+
+        # Auto-adjust column widths
+        widths = [max(map(len,col)) for col in zip(*results)]
+        for row in results:
+            print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
+
         if not args.quiet:
             print "\n[+] processed", str(count), "samples [+]\n"
     #
@@ -915,7 +935,7 @@ def output_list(args):
                 for session in AFSession.scan(args.query):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -923,7 +943,7 @@ def output_list(args):
                 for session in AFSession.search(args.query):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -932,7 +952,7 @@ def output_list(args):
                 for session in AFSession.scan(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
@@ -940,10 +960,16 @@ def output_list(args):
                 for session in AFSession.search(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
-                        print print_line
+                        results.append(print_line)
                         count += 1
                     else:
                         break
+
+        # Auto-adjust column widths
+        widths = [max(map(len,col)) for col in zip(*results)]
+        for row in results:
+            print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
+
         if not args.quiet:
             print "\n[+] processed", str(count), "sessions [+]\n"
 
@@ -1183,7 +1209,8 @@ def main():
         "email_sender",
         "file_url",
         "email_recipient",
-        "account_name"
+        "account_name",
+        "timestamp"
     ]
     sample_sections = [
         "service",

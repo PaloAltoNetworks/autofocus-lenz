@@ -30,11 +30,12 @@ optional arguments:
                         apk_sensor, apk_service, apk_embedurl, apk_permission,
                         apk_sensitiveapi, apk_suspiciousapi, apk_file,
                         apk_string, digital_signer, imphash]. Session Sections
-                        [email_subject, file_name, application, country,
+                        [email_subject, file_name, application, dst_country,
+                        src_country, dst_ip, src_ip, dst_port, src_port,
                         industry, email_sender, file_url, email_recipient,
-                        account_name]. Meta Sections [sha256, file_type,
-                        create_date, verdict, file_size, tags, sha1, md5,
-                        ssdeep, imphash, digital_signer]
+                        account_name, timestamp]. Meta Sections [sha256,
+                        file_type, create_date, verdict, file_size, tags,
+                        sha1, md5, ssdeep, imphash, digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000.
@@ -43,7 +44,7 @@ optional arguments:
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
-                        mutex_scrape, meta_scrape]
+                        mutex_scrape, meta_scrape, session_scrape]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import, range]
@@ -55,7 +56,6 @@ optional arguments:
 ```
 
 Quick links to examples:
-* [Query Types](#query_types)
 * [Hash Scrape function](#hash_scrape)
 * [Common Artifacts function](#common_artifacts)
 * [Common Pieces function](#common_pieces)
@@ -73,7 +73,6 @@ Quick links to examples:
 * [Limit analyzed samples](#limit_result)
 * [Collect bulk sample meta data](#meta_data)
 * [Extract all unique entries](#extract_all)
-* [Input from File](#input_file)
 * [Quiet Output](#quiet_flag)
 
 ### [+] EXAMPLES [+]
@@ -81,28 +80,6 @@ Quick links to examples:
 Analyzing activity of malware can be very noisy and AutoFocus provides a good way to identify whether something might be noise through the use of the B/G/M system. For each sample with a matching entry for the activity, whether its file, network, or process based, it will be added to a count for benign, grayware, and malicious samples. In this fashion, if a entry has 5 million matches to benign samples, it's likely just noise; that being said, *af_lenz.py* has a built-in filter of 10,000 matches but can be adjusted with the *-f* flag to override it.
 
 To lookup the dynamic analysis (DA) information for a particular sample, specify the identifier for the query as hash, pass the SHA256 hash, and run the "hash_lookup" function. As you'll see, it can be a large amount of data, pipe delimeted, but gives you a quick way to automate or hone in on specifics.
-
-##### query_types
-
-Below is a table of all values for the `-q` flag. 
-
-Values | Definition | Example 
----|---|---
-hash  | A single hash | 232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d 
-hash_list | A list of hashes (space delimited)  | e720f917cd8a02b0372b85068844e132c42ea2c97061b81d378b5a73f9344003 a486ff7e775624da2283ede1d3959c784afe476b0a69ce88cd12c7238b15c9e6 
-ip | A single IPv4 Address (/32) | 192.168.1.1 
-connection | Strings from network activity | udp , 13.85.70.43:123 
-dns | A domain name | google.com 
-file | A file name | file.txt 
-http | Strings contained in http activity | /main.php 
-mutex | mutexes created by the malware | WininetConnectionMutex 
-process | Strings from process activity | ntsystem.exe , LoadLibraryExW 
-registry | Strings from registry activity | sample.exe , SetValueKey , HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run\Windows Audio Service 
-service | Strings from windows services |  winlogon.exe , ControlService
-user_agent | User agent strings | Microsoft-CryptoAPI/6.1 
-tag | Autofocus Tag name | Locky 
-query | Autofocus-formatted query | {"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.Locky"]}]} 
-input_file | A file containing sha256 hashes (one per line) to query for | ~/hash_list.txt 
 
 ##### hash_scrape
 
@@ -887,16 +864,16 @@ python af_lenz.py -i file -q "VAULT.KEY" -r meta_scrape -l 10
 
 [+] sample_meta [+]
 
-8633e5fafb733bcfdaf6e8d236c6ef6c9352afd4708dd6b239e28dbf76581437 | PE         | 2016-04-03 21:00:49 | malware    | 172032     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'Commodity.Pony']
-99d6e828adcda3207b5ee7f2850fbb6c9e73c0c3e4d302bb94094acaf1a973f3 | PE         | 2016-03-15 21:00:25 | malware    | 151552     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'1504.TorHiddenService', u'Commodity.Pony']
-dd34c090ddac627ed38df222df013f720be2480e65e5ac7f134f45569c267522 | PE         | 2016-03-14 22:37:01 | malware    | 200704     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots', u'1504.TorHiddenService', u'Commodity.Pony']
-5769d7a68cea66a0972ce657ecca8006bbbb68b15254fce2f721ef7705f86110 | PE         | 2016-03-14 10:58:29 | malware    | 187289     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
-678dda0327f46c03912693b8092b068b6ee59a8503fd2be322be92735aa469a7 | PE         | 2016-02-23 18:57:28 | malware    | 79965      | [u'Unit42.RansomCrypt', u'1504.Delete_VolumeSnapshots']
-f2a1abba968355c1e4a37e9a3cb4ff91a080f8720bdafc533d6023e26dfa120c | PE         | 2016-02-21 09:23:23 | malware    | 110807     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
-a996ce853783a92927856b8559e157c20c7a950b68da4bc214568d32e9246352 | PE         | 2016-02-18 17:05:04 | malware    | 186882     | [u'Unit42.RansomCrypt', u'1504.BCDEdit', u'1504.Delete_VolumeSnapshots']
-b20d67bab9c75b02c5894299f332fff9d34ace41e1a9042f39f1799d0f457df6 | PE         | 2016-01-29 18:15:49 | malware    | 112642     | [u'Unit42.RansomCrypt']
-69d023ca57f4e3fdf7280ca4e5a5a7b547797f467315eaf462d6cf3cbf8696cc | PE         | 2016-01-22 19:42:54 | malware    | 135682     | [u'Unit42.RansomCrypt']
-dae88a5dac46e9e15a1ed71be06613c1d6f98d532063e13414f4fb8795c87de8 | PE         | 2016-01-27 17:13:32 | malware    | 168450     | [u'Unit42.RansomCrypt']
+97e0dd5032bd0dc4877ed62ba01135644f867029aa23de71cec0eb8cd91a3ad1 | PE | 2016-09-09 09:24:02 | malware | 220992 | Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+ab2773c8ca1de56de2c2cb15801a6de57217194a4443d3538bd7bb3434e9f380 | PE | 2016-09-16 00:36:32 | malware | 204800 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ProcessHollowing,Unit42.ModifyBootConfig,Commodity.Pony
+da3ebf8fd9f992e8edce27bdbe370e77e7c2981028762696058c6d4db8a5439d | PE | 2016-09-09 09:24:01 | malware | 180224 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Unit42.ProcessHollowing,Commodity.Pony
+52aeb37b72aae57c23f5e007af56c32ee26ae814a2507440c6c805c948643fcc | PE | 2016-09-12 23:54:57 | malware | 224150 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+28208e03c4a1d9bb71bc4fc97fe78c7eeee11bc74be18bbb69d6f13b6f74ea20 | PE | 2016-09-13 00:18:07 | malware | 222921 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+58c834338eee25fc44f1c4178feb446c1a1dd433094d4bad211d6d255de25993 | PE | 2016-09-14 01:04:36 | malware | 122918 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ProcessHollowing,Unit42.ModifyBootConfig,Commodity.Pony
+395eec01a2a71c36d461c2e84b3707b3c03375bfbea3618bc50c540fd5323884 | PE | 2016-09-15 09:23:41 | malware | 224152 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+0c7167d0ea4a6e997f92d43ecdbbb8063f12f906b0fcb71801182df18629d2ea | PE | 2016-09-12 09:39:34 | malware | 220638 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+330877e342fe05bc7c6260315c1e812d19242bf523df1c6528fe7148f42ca991 | PE | 2016-09-13 00:13:02 | malware | 221492 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
+13f2864d4ab5cdc900f6cca9d031bdc2cfa91b764920b722d60d54462e61d4da | PE | 2016-09-15 17:30:15 | malware | 222921 | Unit42.RansomCrypt,Unit42.DeleteVolumeSnapshots,Unit42.ModifyBootConfig,Commodity.Pony
 
 [+] processed 10 samples [+]
 ```
@@ -941,11 +918,14 @@ f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
 
 This flag can be used in combination with any other valid set of arguments to limit the output of the script.  When invoked, this flag suppresses any informational output that is normally generated by the script.  As a result, the only output returned by the script is returned data.  This can then be manipulated easily with other tools.
 
-
 ### [+] CHANGE LOG [+]
 
+v1.1.6 - 16SEP2016
+* Added auto-adjusting columns for meta and session scraped output.
+* Added "timestamp" to session output modifiers.
+
 v1.1.5 - 01AUG2016
-* Added support for reading sha256 hashes from a flat file.  
+* Added support for reading SHA256 hashes from a flat file.
 
 v1.1.4 - 28JUL2016
 * Added support for a quiet flag.  This flag suppresses the extra output of the script so as to make the returned data easier to process with other utilities.

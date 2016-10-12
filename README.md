@@ -8,7 +8,7 @@ The AutoFocus API exposes a wealth of dynamic analysis information about malware
 python af_lenz.py --help
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
-                  [-s <special_output>] [-c <integer_percent>]
+                  [-s <special_output>] [-c <integer_percent>] [-Q]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -25,9 +25,10 @@ optional arguments:
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
                         default. Sample Sections [service, registry, process,
-                        misc, user_agent, mutex, http, dns, behavior_type,
-                        connection, file, apk_misc, apk_filter, apk_receiver,
-                        apk_sensor, apk_service, apk_embedurl, apk_permission,
+                        misc, japi, user_agent, mutex, http, dns,
+                        behavior_desc, behavior_type, connection, file,
+                        apk_misc, apk_filter, apk_receiver, apk_sensor,
+                        apk_service, apk_embedurl, apk_permission,
                         apk_sensitiveapi, apk_suspiciousapi, apk_file,
                         apk_string, digital_signer, imphash]. Session Sections
                         [email_subject, file_name, application, dst_country,
@@ -44,7 +45,7 @@ optional arguments:
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
-                        mutex_scrape, meta_scrape, session_scrape]
+                        mutex_scrape, meta_scrape, session_scrape, diff]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import, range]
@@ -74,6 +75,7 @@ Quick links to examples:
 * [Collect bulk sample meta data](#meta_data)
 * [Extract all unique entries](#extract_all)
 * [Quiet Output](#quiet_flag)
+* [Diff function](#diff)
 
 ### [+] EXAMPLES [+]
 
@@ -122,10 +124,6 @@ svchost_update.exe , SetWindowLong , SystemProcess , GWL_WNDPROC
 svchost_update.exe , IsDebuggerPresent
 ntsystem.exe , SetWindowLong , SystemProcess , GWL_WNDPROC
 
-[+] user_agent [+]
-
-pb
-
 [+] mutex [+]
 
 svchost_update.exe , CreateMutexW , Local\!IETld!Mutex
@@ -146,6 +144,30 @@ markovqwesta.com , 193.235.147.11 , A
 iholpforyou4.com ,  , NXDOMAIN
 markovqwesta.com , ns4.cnmsn.com , NS
 markovqwesta.com , ns3.cnmsn.com , NS
+
+[+] behavior_desc [+]
+
+informational , 0.1 , A process running on the system may start additional processes to perform actions in the background. This behavior is common to legitimate software as well as malware. , process , 6 , Started a process
+medium , 0.4 , Legitimate software typically uses well-known application protocols to communicate over a network. In some cases, however, legitimate software may use proprietary protocols. Malware commonly uses custom protocols to avoid detection, and a sample that generates unknown TCP or UDP traffic in this way is often malicious. , unknown_traffic , 7 , Generated unknown TCP or UDP traffic
+high , 0.45 , Malware typically communicates back to an attacker via a command-and-control server. This command-and-control server is usually addressed in the malware as a domain name. To avoid easy identification of malicious domain names, the attacker may use a domain generation algorithm (DGA) to address a large number of dynamically generated domains, most of which are not registered. , nx_domain , 8 , Connected to an unregistered domain name
+informational , 0.1 , The Windows Registry houses system configuration settings and options, including information about installed applications, services, and drivers. Malware often modifies registry data to establish persistence on the system and avoid detection. , registry , 13 , Modified the Windows Registry
+    <TRUNCATED>
+high , 0.45 , The Windows system folder contains configuration files and executables that control the underlying functions of the system. Malware often places executables in this folder to avoid detection. , sys_exe , 34 , Created an executable file in the Windows system folder
+low , 0.3 , User folders are storage locations for music, pictures, downloads, and other user-specific files. Legitimate applications rarely place executable content in these folders, while malware often does so to avoid detection. , create_doc_exe , 35 , Created an executable file in a user folder
+medium , 0.4 , Windows services are background applications that are typically invisible to users. Unlike processes, services can run when no user is logged on. Malware often installs services to establish persistence on the system, or as a precursor to loading malicious device drivers. , install_service , 37 , Installed a Windows service
+medium , 0.45 , Most legitimate HTTP connections are established using a hostname, which is ultimately resolved to an IP address. Malware often connects directly to an IP address to avoid hostname-based blocking. , http_direct_ip , 86 , Connected directly to an IP address over HTTP
+
+[+] behavior_type [+]
+
+process
+unknown_traffic
+nx_domain
+registry
+    <TRUNCATED>
+sys_exe
+create_doc_exe
+install_service
+http_direct_ip
 
 [+] connection [+]
 
@@ -370,57 +392,80 @@ python af_lenz.py -i dns -q markovqwesta.com -r common_artifacts -c 30 -s range
 
 [+] hashes [+]
 
-232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
-cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+639d03fb6465a94189fb5b29887afe0965a95c9a7778fb624b92eef6ed22b7bb
 c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
-c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
-    <TRUNCATED>
-234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
-f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
+    <TRUNCATED>
+cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
 23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
+ffe9fb1f9ef7465c99edfe17ccce496172cba47357b2caff6720900a0f6426b2
+c97bd3d159222bfe650647aefb92fd13b2e590f8d5dd5781110a0cf61958fc33
 
 [+] registry [+]
 
-33 |sample.exe , SetValueKey , HKCU\Software\kg\cat ,
-33 |sample.exe , DeleteValueKey , HKCU\Software\kg\chk ,
-33 |sample.exe , DeleteValueKey , HKCU\Software\kg\main ,
-33 |sample.exe , SetValueKey , HKCU\Software\kg\chk ,
+33  | sample.exe , SetValueKey , HKCU\Software\kg\cat ,
+33  | sample.exe , DeleteValueKey , HKCU\Software\kg\chk ,
+33  | sample.exe , DeleteValueKey , HKCU\Software\kg\main ,
+33  | sample.exe , SetValueKey , HKCU\Software\kg\chk ,
     <TRUNCATED>
-33 |sample.exe , DeleteValueKey , HKCU\Software\kg\main
-33 |sample.exe , RegCreateKeyEx , HKCU , SOFTWARE\kg
-33 |sample.exe , DeleteValueKey , HKCU\Software\kg\name
-33 |sample.exe , DeleteValueKey , HKCU\Software\kg\chk
+33  | sample.exe , DeleteValueKey , HKCU\Software\kg\main
+33  | sample.exe , RegCreateKeyEx , HKCU , SOFTWARE\kg
+33  | sample.exe , DeleteValueKey , HKCU\Software\kg\name
+33  | sample.exe , DeleteValueKey , HKCU\Software\kg\chk
 
 [+] user_agent [+]
 
-75 |pb
+66  | pb
 
 [+] mutex [+]
 
-33 |sample.exe , CreateMutexW , PB_SN_MUTEX_GL_F348B3A2387
+33  | sample.exe , CreateMutexW , PB_SN_MUTEX_GL_F348B3A2387
 
 [+] http [+]
 
-75 |markovqwesta.com , GET , /que.php , pb
+75  | markovqwesta.com , GET , /que.php , pb
 
 [+] dns [+]
 
-75 |markovqwesta.com , 193.235.147.11 , A
-83 |markovqwesta.com , ns4.cnmsn.com , NS
-83 |markovqwesta.com , ns3.cnmsn.com , NS
+75  | markovqwesta.com , 193.235.147.11 , A
+83  | markovqwesta.com , ns4.cnmsn.com , NS
+83  | markovqwesta.com , ns3.cnmsn.com , NS
+
+[+] behavior_desc [+]
+
+100 | informational , 0.1 , The Windows Registry houses system configuration settings and options, including information about installed applications, services, and drivers. Malware often modifies registry data to establish persistence on the system and avoid detection. , registry , 13 , Modified the Windows Registry
+100 | informational , 0.1 , Legitimate software creates or modifies files to preserve data across system restarts. Malware may create or modify files to deliver malicious payloads or maintain persistence on a system. , file , 3 , Created or modified a file
+75  | medium , 0.4 , Windows services are background applications that are typically invisible to users. Unlike processes, services can run when no user is logged on. Malware often installs services to establish persistence on the system, or as a precursor to loading malicious device drivers. , install_service , 37 , Installed a Windows service
+58  | high , 0.8 , The Windows Registry Run keys allow an application to specify that it should be launched during system startup. Malware often leverages this mechanism to ensure that it will be run each time the system boots up, and may run content out of a user folder to avoid detection. , autostart_from_local_dir , 77 , Modified the Windows Registry to enable auto-start for a file in a user folder
+    <TRUNCATED>
+100 | medium , 0.4 , The Windows Registry Run keys allow an application to specify that it should be launched during system startup. Malware often leverages this mechanism to establish persistence on the system and ensure that it will be run each time the system boots up. , autostart , 14 , Modified the Windows Registry to enable auto-start
+66  | medium , 0.4 , Legitimate software typically uses well-known application protocols to communicate over a network. In some cases, however, legitimate software may use proprietary protocols. Malware commonly uses custom protocols to avoid detection, and a sample that generates unknown TCP or UDP traffic in this way is often malicious. , unknown_traffic , 7 , Generated unknown TCP or UDP traffic
+91  | low , 0.2 , Rather than communicate directly with a server, a client may route requests through a proxy. If the proxy is malicious, it may modify what a user sees when accessing web pages or even execute a man-in-the-middle (MITM) attack, potentially gaining access to sensitive user information. , browser_proxy , 49 , Modified proxy settings for Internet Explorer
+58  | medium , 0.45 , Malware analysis environments have a limited amount of time in which to execute code and deliver a verdict. To subvert this process, malware often delays execution, or "sleeps," for a long period, allowing it to avoid detection. , long_sleep , 84 , Attempted to sleep for a long period
+
+[+] behavior_type [+]
+
+50  | external_netsh
+33  | http_short_headers
+50  | process
+50  | file
+    <TRUNCATED>
+41  | delete_itself
+41  | ie_security
+50  | create_doc_exe
+50  | unpack_write_section
 
 [+] connection [+]
 
-66 |unknown , tcp , 193.235.147.11:80 , SE
+66  | unknown , tcp , 193.235.147.11:80 , SE
 
 [+] file [+]
 
-33 |unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[2].htm
-33 |sample.exe , Write , Windows\SysWOW64\9125y5yta.dat
-33 |netsh.exe , CreateFileFail , Users\Administrator\sample.exe , 00000080 , 00200000 , c0000034
-33 |unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[1].htm , md5=46788efce76ebf3e09fc844af99c5309 , sha1=d25ec96232263c0eb834d9c7b437dbe97029a809 , sha256=3376bb271f1e1e7b2e0eb28475f8bab01ed69627861682ac809a732cb023d230
-33 |sample.exe , Write , WINDOWS\system32\9125y5yta.dat ,
+33  | unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[2].htm
+33  | sample.exe , Write , Windows\SysWOW64\9125y5yta.dat
+33  | unknown , create , C:\Documents and Settings\Administrator\Local Settings\Temporary Internet Files\Content.IE5\VPKKM73P\book[1].htm , md5=46788efce76ebf3e09fc844af99c5309 , sha1=d25ec96232263c0eb834d9c7b437dbe97029a809 , sha256=3376bb271f1e1e7b2e0eb28475f8bab01ed69627861682ac809a732cb023d230
+33  | sample.exe , Write , WINDOWS\system32\9125y5yta.dat ,
 
 [+] processed 12 hashes with a BGM filter of 10000 [+]
 ```
@@ -889,36 +934,99 @@ python af_lenz.py -i dns -q markovqwesta.com -r common_artifacts -c 0 -o process
 
 [+] hashes [+]
 
-232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
-cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+639d03fb6465a94189fb5b29887afe0965a95c9a7778fb624b92eef6ed22b7bb
 c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
-c550a0730c9cf10751a3236ef57fafb5af844bef3874855a215519a9ffcec348
-    <TRUNCATED>
-234203c3e40184c430331c266b4108db94b3f68258410b7592da81d6abc88b7d
+232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
 1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
-f1485e53403de8c654783ce3e0adf754639542e41c2a89b92843ce8ecdeb4646
+    <TRUNCATED>
+cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
 23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
+ffe9fb1f9ef7465c99edfe17ccce496172cba47357b2caff6720900a0f6426b2
+c97bd3d159222bfe650647aefb92fd13b2e590f8d5dd5781110a0cf61958fc33
 
 [+] process [+]
 
-16 |ntsystem.exe , LoadLibraryExW , hnetcfg.dll ,  , 0
-8 |mswinlogon.exe , LoadLibraryExW , USER32.dll ,  , 0
-8 |ntreader_sl.exe , LoadLibraryExW , ADVAPI32.dll ,  , 0
-8 |wincsrss.exe , ZwTerminateProcess , ntwinlogon.exe ,
+16  | ntsystem.exe , LoadLibraryExW , hnetcfg.dll ,  , 0
+8   | mswinlogon.exe , LoadLibraryExW , USER32.dll ,  , 0
+8   | ntreader_sl.exe , LoadLibraryExW , ADVAPI32.dll ,  , 0
+8   | wincsrss.exe , ZwTerminateProcess , ntwinlogon.exe ,
     <TRUNCATED>
-8 |wincsrss.exe , LoadLibraryExW , Windows\SysWOW64\ieframe.dll ,  , 8
-8 |winlogonsvc.exe , LoadLibraryExW , WININET.dll ,  , 0
-8 |ntcsrss.exe , GetModuleHandle , documents and settings\administrator\sample.exe
-8 |system-updater.exe , LoadLibraryExW , SHELL32.dll ,  , 0
+8   | wincsrss.exe , LoadLibraryExW , Windows\SysWOW64\ieframe.dll ,  , 8
+8   | winlogonsvc.exe , LoadLibraryExW , WININET.dll ,  , 0
+8   | ntcsrss.exe , GetModuleHandle , documents and settings\administrator\sample.exe
+8   | system-updater.exe , LoadLibraryExW , SHELL32.dll ,  , 0
 
 [+] processed 12 hashes with a BGM filter of 10000 [+]
 ```
 
 ##### quiet_flag
 
-This flag can be used in combination with any other valid set of arguments to limit the output of the script.  When invoked, this flag suppresses any informational output that is normally generated by the script.  As a result, the only output returned by the script is returned data.  This can then be manipulated easily with other tools.
+The 'Q' flag can be used in combination with any other valid set of arguments to limit the output of the script.  When invoked, this flag suppresses any informational output that is normally generated by the script.  As a result, the only output returned by the script is returned data.  This can then be manipulated easily with other tools.
+
+```
+python af_lenz.py -i dns -q 'www.otrfmbluvrde.com' -r meta_scrape -o sha256,file_size,file_type -Q
+
+04b770027efe3259f6ed6bba5e91fd3309ab44f74f4022efc3321576fc969da0 | 11208 | Adobe Flash File
+7ddb1610dc730cbd76786d834236a24b3b5f51fe5d14755b65b7ff8531b6806f | 11208 | Adobe Flash File
+4dfb5da4aa0e5e58d811392ea902a40d4cdecc9f1a267656d5564c341226488f | 11208 | Adobe Flash File
+80d04c67ec1699b370ddd8d9a6dacab51fa5ebcefbfb992b329cef404827da5e | 11208 | Adobe Flash File
+5562ac2ef1fa431ac34cd4c332fc269c3fbca789a8417ee6f27d5433f88a0bbd | 11208 | Adobe Flash File
+ad9264b8e777ad84343633d0b972b6fecef9a7e46a151caf84019ef49ff64427 | 4304  | Adobe Flash File
+```
+
+##### diff
+
+```
+python af_lenz.py -i dns -q 'www.otrfmbluvrde.com' -r diff -o process,mutex,dns
+
+{"operator":"all","children":[{"field":"alias.domain","operator":"contains","value":"www.otrfmbluvrde.com"}]}
+
+[+] hashes [+]
+
+04b770027efe3259f6ed6bba5e91fd3309ab44f74f4022efc3321576fc969da0
+7ddb1610dc730cbd76786d834236a24b3b5f51fe5d14755b65b7ff8531b6806f
+
+[+] diff [+]
+
+< | 04b770027efe3259f6ed6bba5e91fd3309ab44f74f4022efc3321576fc969da0
+> | 7ddb1610dc730cbd76786d834236a24b3b5f51fe5d14755b65b7ff8531b6806f
+
+[+] process [+]
+
+< | svchost.exe , created ,  , Windows\System32\taskeng.exe , taskeng.exe {F03FAC4A-6277-42B8-8C74-F5AA3E77F347} S-1-5-18:NT AUTHORITY\System:Service:
+< | iexplore.exe , SetTimer , 00000001 , 00001388(original:00001388) , 726D4756
+< | iexplore.exe , SetTimer , 00007feb , 00001388(original:00001388) , 726D4756
+< | iexplore.exe , SetTimer , 00000000 , 00001388(original:000088b8) , 73586B52
+---
+> | svchost.exe , created ,  , Windows\System32\taskeng.exe , taskeng.exe {CD585D04-948B-4287-9C53-FC33C8D8F4D7} S-1-5-18:NT AUTHORITY\System:Service:
+> | iexplore.exe , SetTimer , 00000001 , 00001388(original:00001388) , 72AD4756
+> | iexplore.exe , SetTimer , 00007feb , 00001388(original:00001388) , 72AD4756
+> | iexplore.exe , SetTimer , 00000000 , 00001388(original:000088b8) , 73B06B52
+
+[+] mutex [+]
+
+< | iexplore.exe , CreateMutexW , Groove:PathMutex:wEfok5Qw0IjiXFzS91XPfTjqjes=
+< | iexplore.exe , CreateMutexW , Groove:PathMutex:gWNhnwLaz/1PBZUWP+4N4Zd81LY=
+---
+> | iexplore.exe , CreateMutexW , Groove:PathMutex:MFJQHMsconMFS29BQOwAYulej6k=
+> | iexplore.exe , CreateMutexW , Groove:PathMutex:5/aBAYZWYsoJ3j53zcvNAGvCHSo=
+
+[+] dns [+]
+
+< | wpad.XKTMLKA99660986.local ,  , NXDOMAIN
+---
+> | wpad.ZPCTGVR49286334.local ,  , NXDOMAIN
+
+[+] processed 2 hashes with a BGM filter of 10000 [+]
+```
 
 ### [+] CHANGE LOG [+]
+
+v1.1.7 - 11OCT2016
+* Added "diff" function to identify differences between two samples.
+* Added Java API ("japi") and Behavior Description ("behavior_desc") sections.
+* Cleaned up code to make adding new sections straight-forward (1 location vs multiple) and fixed logic issue for "behavior_type" section.
+* Modified print functions to use auto-adjusting columns.
 
 v1.1.6 - 16SEP2016
 * Added auto-adjusting columns for meta and session scraped output.

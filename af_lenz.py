@@ -3,16 +3,15 @@ from inspect import isfunction
 from autofocus import AutoFocusAPI
 AutoFocusAPI.api_key = ""
 from autofocus import AFSession, AFSample
-from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFConnectionActivity, AFFileActivity
+from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFJavaApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFBehaviorAnalysis, AFConnectionActivity, AFFileActivity
 # APK Specific
 from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
 import sys, argparse, multiprocessing, os, re
 
-
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.6"
-__date__    = "16SEP2016"
+__version__ = "1.1.7"
+__date__    = "11OCT2016"
 
 #######################
 # Check research mode #
@@ -28,6 +27,78 @@ try:
     research_mode = parser.get("researcher", "enabled")
 except:
     pass
+
+####################
+# Build structures #
+####################
+
+def build_field_list():
+
+    field_list = {
+        "service"           : [],
+        "registry"          : [],
+        "process"           : [],
+        "japi"              : [],
+        "misc"              : [],
+        "user_agent"        : [],
+        "mutex"             : [],
+        "http"              : [],
+        "dns"               : [],
+        "behavior_desc"     : [],
+        "behavior_type"     : [],
+        "connection"        : [],
+        "file"              : [],
+        "apk_misc"          : [],
+        "apk_filter"        : [],
+        "apk_receiver"      : [],
+        "apk_sensor"        : [],
+        "apk_service"       : [],
+        "apk_embedurl"      : [],
+        "apk_permission"    : [],
+        "apk_sensitiveapi"  : [],
+        "apk_suspiciousapi" : [],
+        "apk_file"          : [],
+        "apk_string"        : [],
+        "digital_signer"    : [],
+        "imphash"           : [],
+        "default"           : []
+    }
+
+    return field_list
+
+def build_field_dict():
+
+    field_dict = {
+        "service"           :{},
+        "registry"          :{},
+        "process"           :{},
+        "japi"              :{},
+        "misc"              :{},
+        "user_agent"        :{},
+        "mutex"             :{},
+        "http"              :{},
+        "dns"               :{},
+        "behavior_desc"     :{},
+        "behavior_type"     :{},
+        "connection"        :{},
+        "file"              :{},
+        "apk_misc"          :{},
+        "apk_filter"        :{},
+        "apk_receiver"      :{},
+        "apk_sensor"        :{},
+        "apk_service"       :{},
+        "apk_embedurl"      :{},
+        "apk_permission"    :{},
+        "apk_sensitiveapi"  :{},
+        "apk_suspiciousapi" :{},
+        "apk_file"          :{},
+        "apk_string"        :{},
+        "digital_signer"    :{},
+        "imphash"           :{},
+        "default"           :{}
+    }
+
+    return field_dict
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -88,7 +159,6 @@ def af_query(ident,query):
             field_value = field_value(query)
     except Exception as e:
         # Mimic the original catch all, if we don't know what the field is, just exit
-        #sys.exit(1)
         raise e
 
     # Everything that is a list (including hash_list and tag)
@@ -108,9 +178,8 @@ def af_query(ident,query):
 
             # compile them into the final query.
             return '{"operator":"any","children":[%s]}' % groups
-
-
     else:
+
         return '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query)
 
 ###########################
@@ -122,8 +191,9 @@ def af_query(ident,query):
 # Returns data as dictionary with each key being the hash and a dictionary value with each section featuring a list {hash:{section:[value1,value2]}}
 
 def hash_library(args):
+
     result_data = {}
-    input_data = []
+    input_data  = []
     
     if not args.quiet:
         print "\n[+] hashes [+]\n"
@@ -160,14 +230,12 @@ def hash_library(args):
                 else:
                     break
     
-    # set the number of workers to be three times the number of cores.
-    # because these operations are not very CPU-intensive, we can get away with
-    # a higher number of processes.
+    # Set the number of workers to be three times the number of cores.
+    # These operations are not very CPU-intensive, we can get away with a higher number of processes.
     pool_size = multiprocessing.cpu_count() * 3
 
     pool = multiprocessing.Pool(processes=pool_size)
-    # since we have to pass an iterable to pool.map(), and our worker function requires args to be passed
-    # we need to build a dictionary consisting of tuples. e.g:
+    # Since we have to pass an iterable to pool.map(), and our worker function requires args to be passed we need to build a dictionary consisting of tuples. e.g:
     # [ (args, hash_1), (args, hash_2), (args, hash_n) ]
     pool_output = pool.map(hash_worker,[(args,item) for item in input_data])
     pool.close()
@@ -185,10 +253,12 @@ def hash_library(args):
 # in hash_lookup()
 
 def hash_worker(args_tuple):
+
     args,sample_hash = args_tuple
 
     if not args.quiet:
         print(sample_hash)
+
     return { sample_hash : hash_lookup(args,sample_hash) }
 
 
@@ -199,47 +269,23 @@ def hash_worker(args_tuple):
 def hash_lookup(args, query):
 
     # Dictionary mapping the raw data for each type of sample analysis
-    analysis_data = {
-        "service"            :[],
-        "registry"            :[],
-        "process"            :[],
-        "misc"                :[],
-        "user_agent"        :[],
-        "mutex"                :[],
-        "http"                :[],
-        "dns"                :[],
-        "behavior_type"        :[],
-        "connection"        :[],
-        "file"                :[],
-        "apk_misc"          :[],
-        "apk_filter"        :[],
-        "apk_receiver"      :[],
-        "apk_sensor"        :[],
-        "apk_service"       :[],
-        "apk_embedurl"      :[],
-        "apk_permission"    :[],
-        "apk_sensitiveapi"  :[],
-        "apk_suspiciousapi" :[],
-        "apk_file"          :[],
-        "apk_string"        :[],
-        "digital_signer"    :[],
-        "imphash"           :[],
-        "default"           :[]
-    }
+    analysis_data = build_field_list()
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
-        AFServiceActivity                    : "service",
-        AFRegistryActivity                    : "registry",
+        AFServiceActivity                   : "service",
+        AFRegistryActivity                  : "registry",
         AFProcessActivity                   : "process",
-        AFApiActivity                        : "misc",
-        AFUserAgentFragment                    : "user_agent",
-        AFMutexActivity                        : "mutex",
-        AFHttpActivity                        : "http",
+        AFJavaApiActivity                   : "japi",
+        AFApiActivity                       : "misc",
+        AFUserAgentFragment                 : "user_agent",
+        AFMutexActivity                     : "mutex",
+        AFHttpActivity                      : "http",
         AFDnsActivity                       : "dns",
+        AFBehaviorAnalysis                  : "behavior_desc",
         AFBehaviorTypeAnalysis              : "behavior_type",
         AFConnectionActivity                : "connection",
-        AFFileActivity                        : "file",
+        AFFileActivity                      : "file",
         AFApkActivityAnalysis               : "apk_misc",
         AFApkIntentFilterAnalysis           : "apk_filter",
         AFApkReceiverAnalysis               : "apk_receiver",
@@ -252,19 +298,29 @@ def hash_lookup(args, query):
         AFApkSuspiciousFileAnalysis         : "apk_file",
         AFApkSuspiciousStringAnalysis       : "apl_string"
     }
+
     # If there are no counts for the activity, ignore them for the filter
     for sample in AFSample.search(af_query("hash",query)):
         for analysis in sample.get_analyses():
+
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
+
             try:
                 if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
                     analysis_data[analysis_data_section].append(analysis._raw_line)
             except:
                 pass
+
+            # Handle Behaviors which have no BGM values
+            if type(analysis) == AFBehaviorTypeAnalysis or type(analysis) == AFBehaviorAnalysis:
+                analysis_data[analysis_data_section].append(analysis._raw_line)
+
         if sample.imphash:
             analysis_data["imphash"].append(sample.imphash)
+
         if sample.digital_signer:
             analysis_data["digital_signer"].append(sample.digital_signer)
+
     return analysis_data
 
 # Common Artifacts Function
@@ -272,112 +328,48 @@ def hash_lookup(args, query):
 # Must be a 100% match, unless adjusted by -c flag, across all samples to be reported, thus samples that unique every install may not have certain entries appear
 
 def common_artifacts(args):
+
     commonality = float(args.commonality)/float(100)
+
     # Used for collecting all of the artifacts and counts
-    compare_data = {
-        "service"           :{},
-        "registry"          :{},
-        "process"           :{},
-        "misc"              :{},
-        "user_agent"        :{},
-        "mutex"             :{},
-        "http"              :{},
-        "dns"               :{},
-        "behavior_type"     :{},
-        "connection"        :{},
-        "file"              :{},
-        "apk_misc"          :{},
-        "apk_filter"        :{},
-        "apk_receiver"      :{},
-        "apk_sensor"        :{},
-        "apk_service"       :{},
-        "apk_embedurl"      :{},
-        "apk_permission"    :{},
-        "apk_sensitiveapi"  :{},
-        "apk_suspiciousapi" :{},
-        "apk_file"          :{},
-        "apk_string"        :{},
-        "digital_signer"    :{},
-        "imphash"           :{},
-        "default"           :{}
-    }
+    compare_data = build_field_dict()
+
     # Final collection of all common artifacts
-    common_data = {
-        "service"            :[],
-        "registry"            :[],
-        "process"            :[],
-        "misc"                :[],
-        "user_agent"        :[],
-        "mutex"                :[],
-        "http"                :[],
-        "dns"                :[],
-        "behavior_type"        :[],
-        "connection"        :[],
-        "file"                :[],
-        "apk_misc"          :[],
-        "apk_filter"        :[],
-        "apk_receiver"      :[],
-        "apk_sensor"        :[],
-        "apk_service"       :[],
-        "apk_embedurl"      :[],
-        "apk_permission"    :[],
-        "apk_sensitiveapi"  :[],
-        "apk_suspiciousapi" :[],
-        "apk_file"          :[],
-        "apk_string"        :[],
-        "digital_signer"    :[],
-        "imphash"           :[],
-        "default"           :[]
-    }
-    count = 0
-    hashes = hash_library(args)
+    common_data = build_field_list()
+
+    count   = 0
+    hashes  = hash_library(args)
+
     for hash in hashes.keys():
+
         # Sample data
-        hash_data = {
-            "service"           :{},
-            "registry"          :{},
-            "process"           :{},
-            "misc"              :{},
-            "user_agent"        :{},
-            "mutex"             :{},
-            "http"              :{},
-            "dns"               :{},
-            "behavior_type"     :{},
-            "connection"        :{},
-            "file"              :{},
-            "apk_misc"          :{},
-            "apk_filter"        :{},
-            "apk_receiver"      :{},
-            "apk_sensor"        :{},
-            "apk_service"       :{},
-            "apk_embedurl"      :{},
-            "apk_permission"    :{},
-            "apk_sensitiveapi"  :{},
-            "apk_suspiciousapi" :{},
-            "apk_file"          :{},
-            "apk_string"        :{},
-            "digital_signer"    :{},
-            "imphash"           :{},
-            "default"           :{}
-        }
+        hash_data = build_field_dict()
+
         for section in hashes[hash]:
             for value in hashes[hash][section]:
+
                 if value in compare_data[section] and value not in hash_data[section]:
                     compare_data[section][value] += 1
                     hash_data[section][value] = 1
+
                 if value not in compare_data[section] and value not in hash_data[section]:
                     hash_data[section][value] = 1
                     compare_data[section][value] = 1
         count += 1
+
     for section in compare_data:
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
+
                 match_percent = int(float(compare_data[section][value])/float(count) * 100)
+
                 if "range" in args.special:
-                    common_data[section].append(str(match_percent) + " |" + value)
+                    common_data[section].append("%-3s | " % (match_percent) + value)
                 else:
                     common_data[section].append(value)
+
     common_data['count'] = count # Keep track of how many samples processed
+
     return common_data
 
 # Common Pieces Function
@@ -385,114 +377,55 @@ def common_artifacts(args):
 # Will have more hits but likely less accurate
 
 def common_pieces(args):
+
     commonality = float(args.commonality)/float(100)
+
     # Used for collecting all of the artifacts and counts
-    compare_data = {
-        "service"           :{},
-        "registry"          :{},
-        "process"           :{},
-        "misc"              :{},
-        "user_agent"        :{},
-        "mutex"             :{},
-        "http"              :{},
-        "dns"               :{},
-        "behavior_type"     :{},
-        "connection"        :{},
-        "file"              :{},
-        "apk_misc"          :{},
-        "apk_filter"        :{},
-        "apk_receiver"      :{},
-        "apk_sensor"        :{},
-        "apk_service"       :{},
-        "apk_embedurl"      :{},
-        "apk_permission"    :{},
-        "apk_sensitiveapi"  :{},
-        "apk_suspiciousapi" :{},
-        "apk_file"          :{},
-        "apk_string"        :{},
-        "digital_signer"    :{},
-        "imphash"           :{},
-        "default"           :{}
-    }
+    compare_data = build_field_dict()
+
     # Final collection of all common pieces
-    common_pieces = {
-        "service"            :[],
-        "registry"            :[],
-        "process"            :[],
-        "misc"                :[],
-        "user_agent"        :[],
-        "mutex"                :[],
-        "http"                :[],
-        "dns"                :[],
-        "behavior_type"        :[],
-        "connection"        :[],
-        "file"                :[],
-        "apk_misc"          :[],
-        "apk_filter"        :[],
-        "apk_receiver"      :[],
-        "apk_sensor"        :[],
-        "apk_service"       :[],
-        "apk_embedurl"      :[],
-        "apk_permission"    :[],
-        "apk_sensitiveapi"  :[],
-        "apk_suspiciousapi" :[],
-        "apk_file"          :[],
-        "apk_string"        :[],
-        "digital_signer"    :[],
-        "imphash"           :[],
-        "default"           :[]
-    }
-    count = 0
-    hashes = hash_library(args)
+    common_pieces = build_field_list()
+
+    count   = 0
+    hashes  = hash_library(args)
+
     for hash in hashes.keys():
+
         # Sample data
-        hash_data = {
-            "service"           :{},
-            "registry"          :{},
-            "process"           :{},
-            "misc"              :{},
-            "user_agent"        :{},
-            "mutex"             :{},
-            "http"              :{},
-            "dns"               :{},
-            "behavior_type"     :{},
-            "connection"        :{},
-            "file"              :{},
-            "apk_misc"          :{},
-            "apk_filter"        :{},
-            "apk_receiver"      :{},
-            "apk_sensor"        :{},
-            "apk_service"       :{},
-            "apk_embedurl"      :{},
-            "apk_permission"    :{},
-            "apk_sensitiveapi"  :{},
-            "apk_suspiciousapi" :{},
-            "apk_file"          :{},
-            "apk_string"        :{},
-            "digital_signer"    :{},
-            "imphash"           :{},
-            "default"           :{}
-        }
+        hash_data = build_field_dict()
         for section in hashes[hash]:
             for value in hashes[hash][section]:
+
                 section_data = value.split(" , ")
+
                 for piece in section_data:
+
                     if piece in compare_data[section] and piece not in hash_data[section]:
                         compare_data[section][piece] += 1
                         hash_data[section][piece] = 1
+
                     if piece not in compare_data[section] and piece not in hash_data[section]:
                         hash_data[section][piece] = 1
                         compare_data[section][piece] = 1
         count += 1
+
     for section in compare_data:
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
+
                 match_percent = int(float(compare_data[section][value])/float(count) * 100)
+
                 if "range" in args.special:
-                    common_pieces[section].append(str(match_percent) + " |" + value)
+                    common_pieces[section].append("%-3s | " % (match_percent) + value)
                 else:
                     common_pieces[section].append(value)
+
     common_pieces['count'] = count # Keep track of how many samples processed
+
+    # Clear out behavior descriptions so it doesn't print - doesn't really make sense for this context
+    # Comment out to add them back in
+    common_pieces['behavior_desc'] = []
+
     return common_pieces
 
 # Unique Sessions Function
@@ -500,6 +433,7 @@ def common_pieces(args):
 # Session data isn't normalized quite the same as sample data so this may be more error-prone
 
 def uniq_sessions(args):
+
     session_data = {
         "email_subject"     :[],
         "file_name"         :[],
@@ -511,6 +445,7 @@ def uniq_sessions(args):
         "email_recipient"   :[],
         "account_name"      :[]
     }
+
     count = 0
     if args.ident == "query":
         query = args.query
@@ -519,6 +454,7 @@ def uniq_sessions(args):
 
     if research_mode == "True":
         for session in AFSession.scan(query):
+
             subject     = session.email_subject
             file_name   = session.file_name
             application = session.application
@@ -546,11 +482,14 @@ def uniq_sessions(args):
                 session_data['email_recipient'].append(recipient)
             if company not in session_data['account_name'] and company:
                 session_data['account_name'].append(company)
+
             count += 1
+
             if count >= args.limit:
                 break
     else:
         for session in AFSession.search(query):
+
             subject     = session.email_subject
             file_name   = session.file_name
             application = session.application
@@ -560,6 +499,7 @@ def uniq_sessions(args):
             file_url    = session.file_url
             recipient   = session.email_recipient
             company     = session.account_name
+
             if subject not in session_data['email_subject'] and subject:
                 session_data['email_subject'].append(subject)
             if file_name not in session_data['file_name'] and file_name:
@@ -578,10 +518,14 @@ def uniq_sessions(args):
                 session_data['email_recipient'].append(recipient)
             if company not in session_data['account_name'] and company:
                 session_data['account_name'].append(company)
+
             count += 1
+
             if count >= args.limit:
                 break
+
     session_data['count'] = count
+
     return session_data
 
 # Hash Scraper Function
@@ -589,42 +533,21 @@ def uniq_sessions(args):
 # BGM filtering is done on the entire line
 
 def hash_scrape(args):
-    hash_data = {
-        "service"           :[],
-        "registry"          :[],
-        "process"           :[],
-        "misc"                :[],
-        "user_agent"        :[],
-        "mutex"                :[],
-        "http"                :[],
-        "dns"                :[],
-        "behavior_type"        :[],
-        "connection"        :[],
-        "file"                :[],
-        "apk_misc"          :[],
-        "apk_filter"        :[],
-        "apk_receiver"      :[],
-        "apk_sensor"        :[],
-        "apk_service"       :[],
-        "apk_embedurl"      :[],
-        "apk_permission"    :[],
-        "apk_sensitiveapi"  :[],
-        "apk_suspiciousapi" :[],
-        "apk_file"          :[],
-        "apk_string"        :[],
-        "digital_signer"    :[],
-        "imphash"           :[],
-        "default"           :[]
-    }
-    count = 0
-    hashes = hash_library(args)
+
+    hash_data = build_field_list()
+
+    count   = 0
+    hashes  = hash_library(args)
+
     for hash in hashes:
         for section in hashes[hash]:
             for value in hashes[hash][section]:
                 if value not in hash_data[section]:
                     hash_data[section].append(value)
         count += 1
+
     hash_data['count'] = count # Keep track of how many samples processed
+
     return hash_data
 
 # HTTP Scraper Function
@@ -632,9 +555,11 @@ def hash_scrape(args):
 # BGM filtering is done on the entire line
 
 def http_scrape(args):
-    http_data = {"http":[]}
-    count = 0
-    hashes = hash_library(args)
+
+    http_data   = {"http":[]}
+    count       = 0
+    hashes      = hash_library(args)
+
     for hash in hashes.keys():
         sample_data = hashes[hash]
         for entry in sample_data['http']:
@@ -643,7 +568,9 @@ def http_scrape(args):
             if url_value not in http_data['http']:
                 http_data['http'].append(url_value)
         count += 1
+
     http_data['count'] = count # Keep track of how many samples processed
+
     return http_data
 
 # DNS Scraper Function
@@ -651,18 +578,26 @@ def http_scrape(args):
 # BGM filtering is done on the entire line
 
 def dns_scrape(args):
-    dns_data = {"dns":[]}
-    count = 0
-    hashes = hash_library(args)
+
+    dns_data    = {"dns":[]}
+    count       = 0
+    hashes      = hash_library(args)
+
     for hash in hashes.keys():
+
         sample_data = hashes[hash]
+
         for entry in sample_data['dns']:
-            dns_list = entry.split(" , ")
-            dns_query = dns_list[0]
+
+            dns_list    = entry.split(" , ")
+            dns_query   = dns_list[0]
+
             if dns_query not in dns_data['dns']:
                 dns_data['dns'].append(dns_query)
         count += 1
+
     dns_data['count'] = count # Keep track of how many samples processed
+
     return dns_data
 
 # Mutex Scraper Function
@@ -670,18 +605,26 @@ def dns_scrape(args):
 # BGM filtering is done on the entire line
 
 def mutex_scrape(args):
-    mutex_data = {"mutex":[]}
-    count = 0
-    hashes = hash_library(args)
+
+    mutex_data  = {"mutex":[]}
+    count       = 0
+    hashes      = hash_library(args)
+
     for hash in hashes.keys():
+
         sample_data = hashes[hash]
+
         for entry in sample_data['mutex']:
-            mutex_list = entry.split(" , ")
+
+            mutex_list  = entry.split(" , ")
             mutex_value = mutex_list[2]
+
             if mutex_value not in mutex_data['mutex']:
                 mutex_data['mutex'].append(mutex_value)
         count += 1
+
     mutex_data['count'] = count # Keep track of how many samples processed
+
     return mutex_data
 
 # Flat file reader function
@@ -713,6 +656,49 @@ def fetch_hashes_from_file(args,input_file):
 
     return hashlist
 
+# Diff Function
+# Extracts all data from each section of the identified samples and finds differences
+# BGM filtering is done on the entire line
+
+def diff(args):
+
+    hash_data = build_field_list()
+
+    # Only compare two hashes for diff
+    args.limit  = 2
+
+    hashes      = hash_library(args)
+    hash_list   = []
+
+    for hash in hashes:
+        hash_list.append(hash)
+
+    print "\n[+] diff [+]\n\n< | %s\n> | %s" % (hash_list[0], hash_list[1])
+
+    count = 0
+
+    for hash in hash_list:
+        for section in hashes[hash]:
+
+            if count == 1 and hash_data[section] != []:
+                hash_data[section].append("---")
+
+            for value in hashes[hash][section]:
+                if count == 0:
+                    if value not in hashes[hash_list[1]][section]:
+                        hash_data[section].append("< | " + value)
+                    #else:
+                        #hash_data[section].append(value) # Prints matching line, uncomment to add in
+                else:
+                    if value not in hashes[hash_list[0]][section]:
+                        hash_data[section].append("> | " + value)
+        count += 1
+
+    hash_data['count'] = count
+
+    return hash_data
+
+
 ########################
 # OUTPUT SECTION BELOW #
 ########################
@@ -722,12 +708,15 @@ def fetch_hashes_from_file(args,input_file):
 # Takes a normalized input of sections and returns the sections requested by the user
 
 def output_analysis(args, sample_data, funct_type):
+
     output = args.output.split(",")
+
     # SESSIONS: email_subject, file_name, application, dst_country, src_country industry, email_sender, email_recipient, account_name,
     #           file_url, dst_port, src_port, dst_ip, src_ip, timestamp
-    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_type, connection, file, apk_misc, apk_filter,
+    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_desc, behavior_type, connection, file, apk_misc, apk_filter,
     #           apk_receiver, apk_sensor, apk_service, apk_embedurl,apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file,
     #           apk_string. digital_signer, imphash
+
     section_list = [
         "email_subject",
         "file_name",
@@ -752,6 +741,7 @@ def output_analysis(args, sample_data, funct_type):
         "mutex",
         "http",
         "dns",
+        "behavior_desc",
         "behavior_type",
         "connection",
         "file",
@@ -770,6 +760,7 @@ def output_analysis(args, sample_data, funct_type):
         "imphash",
         "default"
     ]
+
     if "all" in output:
         for entry in section_list:
             if entry in sample_data.keys() and sample_data[entry] != []:
@@ -786,6 +777,7 @@ def output_analysis(args, sample_data, funct_type):
                 for value in sample_data[entry]:
                     if value != "":
                         print value
+
     if not args.quiet:
         if funct_type == "sample":
             print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(args.filter), "[+]\n"
@@ -797,6 +789,7 @@ def output_analysis(args, sample_data, funct_type):
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
 
 def build_output_string(output, item, type):
+
     #
     # Meta
     #
@@ -814,6 +807,7 @@ def build_output_string(output, item, type):
                          "imphash"          : item.imphash
                          }
         print_list = []
+
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
 
             all_sections = ["sha256",
@@ -831,6 +825,7 @@ def build_output_string(output, item, type):
             for entry in output:
                 if entry in meta_sections:
                     print_list.append("%s" % meta_sections[entry])
+
     #
     # Session
     #
@@ -852,6 +847,7 @@ def build_output_string(output, item, type):
                          "timestamp"        : str(item.timestamp)
                          }
         print_list = []
+
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
 
             all_sections = ["timestamp",
@@ -873,9 +869,11 @@ def build_output_string(output, item, type):
     return print_list
 
 def output_list(args):
+
     output  = args.output.split(",")
     count   = 0
     results = []
+
     #
     # Meta Scrape
     #
@@ -924,6 +922,7 @@ def output_list(args):
 
         if not args.quiet:
             print "\n[+] processed", str(count), "samples [+]\n"
+
     #
     # Session scrape
     #
@@ -978,12 +977,15 @@ def output_list(args):
 # AutoFocus API has a limit on the lines allowed and too many results will make it more challenging to manage in the portal
 
 def af_import(args, sample_data):
+
     # Initialize some values
     output = args.output.split(",")
+
     if "all" in output:
         output = []
         for key in sample_data.keys():
             output.append(key)
+
     # Build AutoFocus query
     if not args.quiet:
         print "[+] af import query [+]\n"
@@ -1023,6 +1025,7 @@ def af_import(args, sample_data):
     import_query += ']}'
     import_query = import_query[:len(import_query) - 3] + import_query[-2:]
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
+
     print import_query + "\n"
 
 # Yara Rule Function
@@ -1030,23 +1033,29 @@ def af_import(args, sample_data):
 # Some sections commented out as they generate far too many entries/false positives that haven't been programatically filtered
 
 def yara_rule(args, sample_data):
+
     # Initialize some values
     output = args.output.split(",")
+
     if "all" in output:
         output = []
         for key in sample_data.keys():
             output.append(key)
- 
+
     if not args.quiet:
         print "[+] yara rule [+]\n"
-    min_len = 4 # Minimum string length
-    contained_list = []
-    entry_list = []
+
+    min_len         = 4 # Minimum string length
+    contained_list  = []
+    entry_list      = []
+
     # Build yara rule
     yara_sig = "rule autogen_afLenz\n{\n\t// %s\n\n\tstrings:\n" % args
+
     for entry in output:
         if entry in sample_data.keys() and entry == "dns":
             count = 0
+
             if args.run == "dns_scrape":
                 for value in sample_data[entry]:
                     if value not in contained_list and value != "" and len(value) > min_len:
@@ -1067,6 +1076,7 @@ def yara_rule(args, sample_data):
                         contained_list.append(dns_resolve)
                         yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\" wide ascii\n" # Just grab the resolved IP
                     count += 2
+
         if entry in sample_data.keys() and entry == "http":
             count = 0
             if args.run == "http_scrape":
@@ -1101,6 +1111,7 @@ def yara_rule(args, sample_data):
                         contained_list.append(full_ua)
                         yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\" wide ascii\n" # Just grab the full user-agent
                     count += 3
+
         if entry in sample_data.keys() and entry == "connection":
             count = 0
             for value in sample_data[entry]:
@@ -1111,6 +1122,7 @@ def yara_rule(args, sample_data):
                         contained_list.append(subvalue.split(":")[0])
                         yara_sig += "\t\t$connection_" + str(count) + " = \"" + subvalue.split(":")[0] + "\"\n" # Just grab IP
                 count += 1
+
         if entry in sample_data.keys() and entry == "user_agent":
             count = 0
             for value in sample_data[entry]:
@@ -1119,6 +1131,7 @@ def yara_rule(args, sample_data):
                     contained_list.append(value)
                     yara_sig += "\t\t$user_agent_" + str(count) + " = \"" + value + "\"\n" # Just grab the UA fragment
                 count += 1
+
         if entry in sample_data.keys() and entry == "mutex":
             mutex_blacklist = ["Local\!IETld!Mutex",
                                "IESQMMUTEX_0_208",
@@ -1170,9 +1183,12 @@ def yara_rule(args, sample_data):
                     #            contained_list.append(registry_key)
                     #            yara_sig += "\t\t$registry_" + str(count) + " = \"" + registry_key + "\"\n"
                     #        count += 1
+
     entry_list = list(set(entry_list))
+
     yara_sig += "\n\tcondition:\n\t\t1 of (" + ", ".join(["$" + value + "*" for value in entry_list]) + ") /* Adjust as needed for accuracy */\n}"
     yara_sig = str(yara_sig.replace("\\", "\\\\")) # Double escape for yara
+
     if "$" in yara_sig:
         print yara_sig + "\n"
     elif not args.quiet:
@@ -1183,6 +1199,7 @@ def yara_rule(args, sample_data):
 ################
 
 def main():
+
     # Set initial values
     functions = [
         "uniq_sessions",
@@ -1193,7 +1210,8 @@ def main():
         "dns_scrape",
         "mutex_scrape",
         "meta_scrape",
-        "session_scrape"
+        "session_scrape",
+        "diff"
     ]
     session_sections = [
         "email_subject",
@@ -1217,10 +1235,12 @@ def main():
         "registry",
         "process",
         "misc",
+        "japi",
         "user_agent",
         "mutex",
         "http",
         "dns",
+        "behavior_desc",
         "behavior_type",
         "connection",
         "file",
@@ -1273,6 +1293,7 @@ def main():
         "af_import",
         "range"
     ]
+
     # Grab initial arguments from CLI
     parser = argparse.ArgumentParser(description="Run functions to retrieve information from AutoFocus.")
     parser.add_argument("-i", "--ident", help="Query identifier type for AutoFocus search. [" + ", ".join(identifiers) + "]", metavar='<query_type>', required=True)
@@ -1303,6 +1324,7 @@ def main():
             print "\n", args.query
         else:
             print "\n" + af_query(args.ident,args.query).strip()
+
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
@@ -1321,11 +1343,13 @@ def main():
     elif args.run == "meta_scrape" or args.run == "session_scrape":
         out_data = {}
         funct_type = "list"
+    elif args.run == "diff":
+        out_data = diff(args)
 
     if "count" not in out_data:
         out_data['count'] = 1
 
-    # if we have specified a -s option, do the following
+    # If we have specified a -s option, do the following
     if "af_import" in args.special or "yara_rule" in args.special:
         if not args.quiet:
             if args.run == "meta_scrape" or args.run == "session_scrape":
@@ -1343,7 +1367,6 @@ def main():
             output_list(args)
         else:
             output_analysis(args, out_data, funct_type)
-
 
 if __name__ == '__main__':
     main()

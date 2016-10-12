@@ -976,6 +976,8 @@ ad9264b8e777ad84343633d0b972b6fecef9a7e46a151caf84019ef49ff64427 | 4304  | Adobe
 
 ##### diff
 
+The 'diff' function allows you to compare two hashes and identify the differences between each one. It will not print common-lines.
+
 ```
 python af_lenz.py -i dns -q 'www.otrfmbluvrde.com' -r diff -o process,mutex,dns
 
@@ -1020,10 +1022,50 @@ python af_lenz.py -i dns -q 'www.otrfmbluvrde.com' -r diff -o process,mutex,dns
 [+] processed 2 hashes with a BGM filter of 10000 [+]
 ```
 
+##### count
+
+The 'count' parameter can be passed to the 'special' function and will count the number of unique lines per hash across the sample set. This allows you to see how frequently something occurred.
+
+```
+python af_lenz.py -i dns -q 'markovqwesta.com' -r hash_scrape -o dns -s count -l 15
+
+{"operator":"all","children":[{"field":"alias.domain","operator":"contains","value":"markovqwesta.com"}]}
+
+[+] hashes [+]
+
+639d03fb6465a94189fb5b29887afe0965a95c9a7778fb624b92eef6ed22b7bb
+c19487136ebc82a38e13264ca8bd1b7983039db103d2520c52e49f40ac35b1db
+232c8369c1ac8a66d52df294519298b4bcc772e7bed080c38ac141ad1928894d
+1963a881beefd720648ca9a28c578b4f10f6ea38a8dfab436756fd64dc418bc3
+    <TRUNCATED>
+cda1be0cee01aa74518c4e6eca4a4ecf8fae7ed13fa8f392d88988a5ac76ec03
+23e9815fe25321b0349e8c6fc22473914a306d27a9d8cae2872396cf7a14c099
+ffe9fb1f9ef7465c99edfe17ccce496172cba47357b2caff6720900a0f6426b2
+c97bd3d159222bfe650647aefb92fd13b2e590f8d5dd5781110a0cf61958fc33
+
+[+] dns [+]
+
+9    | markovqwesta.com , 193.235.147.11 , A
+1    | iholpforyou4.com ,  , NXDOMAIN
+10   | markovqwesta.com , ns4.cnmsn.com , NS
+10   | markovqwesta.com , ns3.cnmsn.com , NS
+1    | iholpforyou4.com , 46.36.221.85 , A
+1    | iholpforyou4.com , ns4.cnmsn.com , NS
+1    | iholpforyou4.com , ns3.cnmsn.com , NS
+2    | exseomonstars.com ,  , NXDOMAIN
+2    | markovqwesta.com ,  , NXDOMAIN
+1    | markovqwesta.com , 176.114.3.49 , A
+1    | support.microsoft.com , 157.56.56.139 , A
+1    | www.mozilla.com , 63.245.217.20 , A
+
+[+] processed 12 hashes with a BGM filter of 10000 [+]
+```
+
 ### [+] CHANGE LOG [+]
 
 v1.1.7 - 11OCT2016
 * Added "diff" function to identify differences between two samples.
+* Added "count" value to special parameter. This works on hash_scrape/uniq_sessions functions and returns count of each line across sample sets.
 * Added Java API ("japi") and Behavior Description ("behavior_desc") sections.
 * Cleaned up code to make adding new sections straight-forward (1 location vs multiple) and fixed logic issue for "behavior_type" section.
 * Modified print functions to use auto-adjusting columns.

@@ -100,6 +100,22 @@ def build_field_dict():
 
     return field_dict
 
+def build_session_list():
+
+    session_list = {
+        "email_subject"     :[],
+        "file_name"         :[],
+        "application"       :[],
+        "dst_country"       :[],
+        "industry"          :[],
+        "email_sender"      :[],
+        "file_url"          :[],
+        "email_recipient"   :[],
+        "account_name"      :[]
+    }
+
+    return session_list
+
 ##########################
 # AF QUERY SECTION BELOW #
 ##########################
@@ -198,38 +214,28 @@ def hash_library(args):
     if not args.quiet:
         print "\n[+] hashes [+]\n"
 
+    if research_mode == "True":
+        poll_af = AFSample.scan
+    else:
+        poll_af = AFSample.search
+
     count = 0
     if args.ident == "query":
-        if research_mode == "True":
-            for sample in AFSample.scan(args.query):
-                if count < args.limit:
-                    input_data.append(sample.sha256)
-                    count += 1
-                else:
-                    break
-        else:
-            for sample in AFSample.search(args.query):
-                if count < args.limit:
-                    input_data.append(sample.sha256)
-                    count += 1
-                else:
-                    break
+        for sample in poll_af(args.query):
+            if count < args.limit:
+                input_data.append(sample.sha256)
+                count += 1
+            else:
+                break
+
     else:
-        if research_mode == "True":
-            for sample in AFSample.scan(af_query(args.ident,args.query)):
-                if count < args.limit:
-                    input_data.append(sample.sha256)
-                    count += 1
-                else:
-                    break
-        else:
-            for sample in AFSample.search(af_query(args.ident,args.query)):
-                if count < args.limit:
-                    input_data.append(sample.sha256)
-                    count += 1
-                else:
-                    break
-    
+        for sample in poll_af(af_query(args.ident,args.query)):
+            if count < args.limit:
+                input_data.append(sample.sha256)
+                count += 1
+            else:
+                break
+
     # Set the number of workers to be three times the number of cores.
     # These operations are not very CPU-intensive, we can get away with a higher number of processes.
     pool_size = multiprocessing.cpu_count() * 3
@@ -434,99 +440,63 @@ def common_pieces(args):
 
 def uniq_sessions(args):
 
-    session_data = {
-        "email_subject"     :[],
-        "file_name"         :[],
-        "application"       :[],
-        "dst_country"       :[],
-        "industry"          :[],
-        "email_sender"      :[],
-        "file_url"          :[],
-        "email_recipient"   :[],
-        "account_name"      :[]
-    }
+    session_data = build_session_list()
 
     count = 0
+
     if args.ident == "query":
         query = args.query
     else:
         query = af_query(args.ident,args.query)
 
     if research_mode == "True":
-        for session in AFSession.scan(query):
-
-            subject     = session.email_subject
-            file_name   = session.file_name
-            application = session.application
-            country     = session.dst_country
-            industry    = session.industry
-            sender      = session.email_sender
-            file_url    = session.file_url
-            recipient   = session.email_recipient
-            company     = session.account_name
-            if subject not in session_data['email_subject'] and subject:
-                session_data['email_subject'].append(subject)
-            if file_name not in session_data['file_name'] and file_name:
-                session_data['file_name'].append(file_name)
-            if application not in session_data['application'] and application:
-                session_data['application'].append(application)
-            if country not in session_data['dst_country'] and country:
-                session_data['dst_country'].append(country)
-            if industry not in session_data['industry'] and industry:
-                session_data['industry'].append(industry)
-            if sender not in session_data['email_sender'] and sender:
-                session_data['email_sender'].append(sender)
-            if file_url not in session_data['file_url'] and file_url:
-                session_data['file_url'].append(file_url)
-            if recipient not in session_data['email_recipient'] and recipient:
-                session_data['email_recipient'].append(recipient)
-            if company not in session_data['account_name'] and company:
-                session_data['account_name'].append(company)
-
-            count += 1
-
-            if count >= args.limit:
-                break
+        poll_af = AFSession.scan
     else:
-        for session in AFSession.search(query):
+        poll_af = AFSession.search
 
-            subject     = session.email_subject
-            file_name   = session.file_name
-            application = session.application
-            country     = session.dst_country
-            industry    = session.industry
-            sender      = session.email_sender
-            file_url    = session.file_url
-            recipient   = session.email_recipient
-            company     = session.account_name
+    for session in poll_af(query):
 
-            if subject not in session_data['email_subject'] and subject:
-                session_data['email_subject'].append(subject)
-            if file_name not in session_data['file_name'] and file_name:
-                session_data['file_name'].append(file_name)
-            if application not in session_data['application'] and application:
-                session_data['application'].append(application)
-            if country not in session_data['dst_country'] and country:
-                session_data['dst_country'].append(country)
-            if industry not in session_data['industry'] and industry:
-                session_data['industry'].append(industry)
-            if sender not in session_data['email_sender'] and sender:
-                session_data['email_sender'].append(sender)
-            if file_url not in session_data['file_url'] and file_url:
-                session_data['file_url'].append(file_url)
-            if recipient not in session_data['email_recipient'] and recipient:
-                session_data['email_recipient'].append(recipient)
-            if company not in session_data['account_name'] and company:
-                session_data['account_name'].append(company)
+        unique_list = []
+        for section in session_data:
+            if args.special == "count" and session.__dict__[section] and session.__dict__[section] not in unique_list:
+                session_data[section].append(session.__dict__[section])
+                unique_list.append(session.__dict__[section])
+            else:
+                if session.__dict__[section] not in session_data[section] and session.__dict__[section]:
+                    session_data[section].append(session.__dict__[section])
 
-            count += 1
+        count += 1
 
-            if count >= args.limit:
-                break
+        if count >= args.limit:
+            break
+
+    if args.special == "count":
+        session_data = count_values(session_data)
 
     session_data['count'] = count
 
     return session_data
+
+# Count Values Function
+# Totals up the unique values per section
+# Works with hash and session function
+
+def count_values(count_list):
+
+    for section in count_list:
+
+        unique_values = []
+
+        for value in count_list[section]:
+            unique_values.append("%-4s | %s" % (count_list[section].count(value), value))
+
+        count_list[section] = []
+
+        for value in unique_values:
+            if value not in count_list[section]:
+                count_list[section].append(value)
+
+    return count_list
 
 # Hash Scraper Function
 # Extracts all data from each section of the identified samples
@@ -541,10 +511,18 @@ def hash_scrape(args):
 
     for hash in hashes:
         for section in hashes[hash]:
+            unique_list = []
             for value in hashes[hash][section]:
-                if value not in hash_data[section]:
+                if args.special == "count" and value not in unique_list:
                     hash_data[section].append(value)
+                    unique_list.append(value)
+                else:
+                    if value not in hash_data[section]:
+                        hash_data[section].append(value)
         count += 1
+
+    if args.special == "count":
+        hash_data = count_values(hash_data)
 
     hash_data['count'] = count # Keep track of how many samples processed
 
@@ -561,7 +539,9 @@ def http_scrape(args):
     hashes      = hash_library(args)
 
     for hash in hashes.keys():
+
         sample_data = hashes[hash]
+
         for entry in sample_data['http']:
             http_list = entry.split(" , ")
             url_value = "hxxp://" + http_list[0] + http_list[2]
@@ -630,6 +610,7 @@ def mutex_scrape(args):
 # Flat file reader function
 # Reads lines in from a file while checking for sha256 hashes.
 # Returns a list of hashes.
+
 def fetch_hashes_from_file(args,input_file):
 
     hashlist = []
@@ -878,36 +859,26 @@ def output_list(args):
     # Meta Scrape
     #
     if args.run == "meta_scrape":
+
+        if research_mode == "True":
+            poll_af = AFSample.scan
+        else:
+            poll_af = AFSample.search
+
         if not args.quiet:
             print "\n[+] sample_meta [+]\n"
+
         if args.ident == "query":
-            if research_mode == "True":
-                for sample in AFSample.scan(args.query):
+                for sample in poll_af(args.query):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
                     else:
                         break
-            else:
-                for sample in AFSample.search(args.query):
-                    print_line = build_output_string(output, sample, "meta")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
+
         else:
-            if research_mode == "True":
-                for sample in AFSample.scan(af_query(args.ident,args.query)):
-                    print_line = build_output_string(output, sample, "meta")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
-            else:
-                for sample in AFSample.search(af_query(args.ident,args.query)):
+                for sample in poll_af(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, sample, "meta")
                     if count < args.limit:
                         results.append(print_line)
@@ -927,36 +898,26 @@ def output_list(args):
     # Session scrape
     #
     if args.run == "session_scrape":
+
+        if research_mode == "True":
+            poll_af = AFSession.scan
+        else:
+            poll_af = AFSession.search
+
         if not args.quiet:
             print "\n[+] session_meta [+]\n"
+
         if args.ident == "query":
-            if research_mode == "True":
-                for session in AFSession.scan(args.query):
+                for session in poll_af(args.query):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
                     else:
                         break
-            else:
-                for session in AFSession.search(args.query):
-                    print_line = build_output_string(output, session, "session")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
+
         else:
-            if research_mode == "True":
-                for session in AFSession.scan(af_query(args.ident,args.query)):
-                    print_line = build_output_string(output, session, "session")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
-            else:
-                for session in AFSession.search(af_query(args.ident,args.query)):
+                for session in poll_af(af_query(args.ident,args.query)):
                     print_line = build_output_string(output, session, "session")
                     if count < args.limit:
                         results.append(print_line)
@@ -1291,7 +1252,8 @@ def main():
     specials = [
         "yara_rule",
         "af_import",
-        "range"
+        "range",
+        "count"
     ]
 
     # Grab initial arguments from CLI

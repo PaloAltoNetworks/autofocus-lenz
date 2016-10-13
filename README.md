@@ -76,6 +76,7 @@ Quick links to examples:
 * [Extract all unique entries](#extract_all)
 * [Quiet Output](#quiet_flag)
 * [Diff function](#diff)
+* [Count function](#count)
 
 ### [+] EXAMPLES [+]
 

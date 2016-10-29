@@ -312,14 +312,7 @@ def hash_lookup(args, query):
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
 
             try:
-                # Logic for "highly_suspicious" and "suspicious" indicators filter
-                if args.targetted:
-                    if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count < 500):
-                        analysis_data[analysis_data_section].append(analysis._raw_line)
-                elif args.untargetted:
-                    if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count >= 500):
-                        analysis_data[analysis_data_section].append(analysis._raw_line)
-                elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
+                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
                     analysis_data[analysis_data_section].append(analysis._raw_line)
             except:
                 pass
@@ -1277,8 +1270,6 @@ def main():
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
     parser.add_argument("-Q", "--quiet",help="Suppress any informational output and only return data.",action="store_true",default=False)
-    parser.add_argument("--highly_suspicious", help="Show only highly suspicious indicators", action="store_true", dest="targetted", default=False)
-    parser.add_argument("--suspicious", help="Show only suspicious indicators", action="store_true", dest="untargetted", default=False)    
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
 

@@ -5,10 +5,9 @@
 The AutoFocus API exposes a wealth of dynamic analysis information about malware activities from disk to wire, which is made easily accessible for scripting through the [AutoFocus Python Client Library](https://github.com/PaloAltoNetworks/autofocus-client-library). The goal of *af_lenz.py* is to build ontop of the client library by providing a set of helpful tools to aide incident responders, or analysts, in rapidly extracting information from AutoFocus that can be used for operational intelligence.
 
 ```
-python af_lenz.py --help
-usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
-                  [-f <number>] [-l <number>] -r <function_name>
-                  [-s <special_output>] [-c <integer_percent>] [-Q]
+usage: af_lenz_gs.py [-h] -i <query_type> -q <query> [-o <section_output>]
+                     [-f <number>] [-l <number>] -r <function_name>
+                     [-s <special_output>] [-c <integer_percent>] [-Q]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -18,7 +17,7 @@ optional arguments:
                         Query identifier type for AutoFocus search. [hash,
                         hash_list, ip, connection, dns, file, http, mutex,
                         process, registry, service, user_agent, tag, query,
-                        input_file]
+                        input_file, input_file_query]
   -q <query>, --query <query>
                         Value to query Autofocus for.
   -o <section_output>, --output <section_output>
@@ -39,7 +38,8 @@ optional arguments:
                         sha1, md5, ssdeep, imphash, digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
-                        number, default 10,000.
+                        number, default 10,000. Use "high" and "low" for pre-
+                        built malware filtering.
   -l <number>, --limit <number>
                         Limit the number of analyzed samples, default 200.
   -r <function_name>, --run <function_name>
@@ -48,7 +48,7 @@ optional arguments:
                         mutex_scrape, meta_scrape, session_scrape, diff]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
-                        [yara_rule, af_import, range]
+                        [yara_rule, af_import, range, count]
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
@@ -1063,6 +1063,12 @@ c97bd3d159222bfe650647aefb92fd13b2e590f8d5dd5781110a0cf61958fc33
 ```
 
 ### [+] CHANGE LOG [+]
+
+v1.1.8 - 03NOV2016
+* Added "input_file_query" as input so Windows users can directly load queries from a file and avoid quote escaping from CLI.
+* Added "low" and "high" options to "filter" function that use pre-defined filtering templates for malware artifacts.
+* The "low" filter displays artifacts with a malware count 3 times larger than benign with a total malware count less than 500. These are more unique.
+* The "high" filter displays artifacts with a malware count 3 times larger than benign but has a total malware count over 500. These are more wide-spread.
 
 v1.1.7 - 11OCT2016
 * Added "diff" function to identify differences between two samples.

@@ -10,8 +10,8 @@ import sys, argparse, multiprocessing, os, re
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.7"
-__date__    = "11OCT2016"
+__version__ = "1.1.8"
+__date__    = "03NOV2016"
 
 #######################
 # Check research mode #
@@ -312,7 +312,14 @@ def hash_lookup(args, query):
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
 
             try:
-                if (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
+                # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
+                if args.filter == "low":
+                    if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count < 500):
+                        analysis_data[analysis_data_section].append(analysis._raw_line)
+                elif args.filter == "high":
+                    if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count >= 500):
+                        analysis_data[analysis_data_section].append(analysis._raw_line)
+                elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
                     analysis_data[analysis_data_section].append(analysis._raw_line)
             except:
                 pass
@@ -611,31 +618,48 @@ def mutex_scrape(args):
 # Reads lines in from a file while checking for sha256 hashes.
 # Returns a list of hashes.
 
-def fetch_hashes_from_file(args,input_file):
+def fetch_from_file(args,input_file):
 
-    hashlist = []
+    if args.ident == "input_file":
+        hashlist = []
 
-    if not args.quiet:
-        print("[+] Attempting to read files from {}".format(input_file))
+        if not args.quiet:
+            print "\n[+] Attempting to read hashes from %s" % input_file
 
-    try:
-        with open(input_file,'r') as fh:
+        try:
+            with open(input_file,'r') as fh:
 
-            for line in fh.readlines():
+                for line in fh.readlines():
 
-                line = line.strip()
+                    line = line.strip()
 
-                if re.match('^[0-9a-zA-Z]{64}$',line):
-                    hashlist.append(line)
-                else:
-                    # Ignore any malformed hashes or bad lines
-                    pass
+                    if re.match('^[0-9a-zA-Z]{64}$',line):
+                        hashlist.append(line)
+                    else:
+                        # Ignore any malformed hashes or bad lines
+                        pass
 
-    except IOError as e:
-        print("[!] Error. {}: {}".format(e.strerror,e.filename))
-        sys.exit(2)
+        except IOError as e:
+            print "\n[!] Error: %s - %s" % (e.strerror, e.filename)
+            sys.exit(2)
 
-    return hashlist
+        return hashlist
+
+    elif args.ident == "input_file_query":
+
+        if not args.quiet:
+            print "\n[+] Attempting to read query from %s" % input_file
+
+        try:
+            with open(input_file, 'r') as fh:
+
+                query = (fh.read()).strip()
+
+        except IOError as e:
+            print "\n[!] Error: %s - %s" % (e.strerror, e.filename)
+            sys.exit(2)
+
+        return query
 
 # Diff Function
 # Extracts all data from each section of the identified samples and finds differences
@@ -1247,13 +1271,18 @@ def main():
         "user_agent",
         "tag",
         "query",
-        "input_file"
+        "input_file",
+        "input_file_query"
     ]
     specials = [
         "yara_rule",
         "af_import",
         "range",
         "count"
+    ]
+    filter = [
+        "low",
+        "high"
     ]
 
     # Grab initial arguments from CLI
@@ -1264,7 +1293,7 @@ def main():
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
                                                                                                   "Session Sections [" + ", ".join(session_sections) + "]. "
                                                                                                                                                        "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
-    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000.", metavar="<number>", type=int, default=10000)
+    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"high\" and \"low\" for pre-built malware filtering.", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
@@ -1274,9 +1303,13 @@ def main():
     args.query = args.query.replace("\\", "\\\\")
 
     if args.ident == "input_file":
-        hashlist = fetch_hashes_from_file(args,args.query)
+        hashlist = fetch_from_file(args, args.query)
         # Build an AF query using the hash list that was just generated join the list into a comma-separated string, because this is what some other functions expect.
         args.query = af_query("hash_list",",".join(item for item in hashlist))
+        args.ident = "query"
+    elif args.ident == "input_file_query":
+        # Build an AF query using input from a file - helpful for Windows OS users where quotes on CLI are not escaped the same
+        args.query = fetch_from_file(args, args.query)
         args.ident = "query"
 
     # Gather results from functions
@@ -1285,7 +1318,10 @@ def main():
         if args.ident == "query":
             print "\n", args.query
         else:
-            print "\n" + af_query(args.ident,args.query).strip()
+            print "\n" + af_query(args.ident, args.query).strip()
+
+    if args.filter not in filter:
+        args.filter = int(args.filter)
 
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)

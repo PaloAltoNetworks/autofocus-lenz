@@ -382,7 +382,7 @@ def common_artifacts(args):
                     common_data[section].append(value)
 
     common_data['count'] = count # Keep track of how many samples processed
-    common_data['hashes'] = hashes
+    common_data['hashes'] = hashes.keys()
 
     return common_data
 

@@ -210,7 +210,7 @@ def hash_library(args):
 
     result_data = {}
     input_data  = []
-    
+
     if not args.quiet:
         print "\n[+] hashes [+]\n"
 
@@ -382,6 +382,7 @@ def common_artifacts(args):
                     common_data[section].append(value)
 
     common_data['count'] = count # Keep track of how many samples processed
+    common_data['hashes'] = hashes
 
     return common_data
 

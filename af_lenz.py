@@ -11,7 +11,7 @@ import sys, argparse, multiprocessing, os, re
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.1.8"
-__date__    = "03NOV2016"
+__date__    = "15NOV2016"
 
 #######################
 # Check research mode #
@@ -313,11 +313,11 @@ def hash_lookup(args, query):
 
             try:
                 # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
-                if args.filter == "low":
-                    if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count < 500):
+                if args.filter == "suspicious":
+                    if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
                         analysis_data[analysis_data_section].append(analysis._raw_line)
-                elif args.filter == "high":
-                    if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count >= 500):
+                elif args.filter == "highly_suspicious":
+                    if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
                         analysis_data[analysis_data_section].append(analysis._raw_line)
                 elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
                     analysis_data[analysis_data_section].append(analysis._raw_line)
@@ -794,7 +794,9 @@ def output_analysis(args, sample_data, funct_type):
 # This just returns sample based meta-data based on the query provided
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
 
-def build_output_string(output, item, type):
+def build_output_string(args, item, type):
+
+    output  = args.output.split(",")
 
     #
     # Meta
@@ -813,6 +815,9 @@ def build_output_string(output, item, type):
                          "imphash"          : item.imphash
                          }
         print_list = []
+
+        if args.special == "tag_count":
+            output = ["tags"]
 
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
 
@@ -876,7 +881,6 @@ def build_output_string(output, item, type):
 
 def output_list(args):
 
-    output  = args.output.split(",")
     count   = 0
     results = []
 
@@ -895,7 +899,7 @@ def output_list(args):
 
         if args.ident == "query":
                 for sample in poll_af(args.query):
-                    print_line = build_output_string(output, sample, "meta")
+                    print_line = build_output_string(args, sample, "meta")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
@@ -904,17 +908,36 @@ def output_list(args):
 
         else:
                 for sample in poll_af(af_query(args.ident,args.query)):
-                    print_line = build_output_string(output, sample, "meta")
+                    print_line = build_output_string(args, sample, "meta")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
                     else:
                         break
 
-        # Auto-adjust column widths
-        widths = [max(map(len,col)) for col in zip(*results)]
-        for row in results:
-            print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
+        # Count and print only tags
+        if args.special == "tag_count":
+
+            tag_count = {}
+
+            for row in results:
+                for entry in row:
+                    tags = entry.split(",")
+
+                for tag in tags:
+                    if tag not in tag_count:
+                        tag_count[tag] = 1
+                    else:
+                        tag_count[tag] += 1
+
+            for tag in tag_count:
+                print "%05s | %s" % (tag_count[tag], tag)
+
+        else:
+            # Auto-adjust column widths
+            widths = [max(map(len,col)) for col in zip(*results)]
+            for row in results:
+                print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
 
         if not args.quiet:
             print "\n[+] processed", str(count), "samples [+]\n"
@@ -934,7 +957,7 @@ def output_list(args):
 
         if args.ident == "query":
                 for session in poll_af(args.query):
-                    print_line = build_output_string(output, session, "session")
+                    print_line = build_output_string(args, session, "session")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
@@ -943,7 +966,7 @@ def output_list(args):
 
         else:
                 for session in poll_af(af_query(args.ident,args.query)):
-                    print_line = build_output_string(output, session, "session")
+                    print_line = build_output_string(args, session, "session")
                     if count < args.limit:
                         results.append(print_line)
                         count += 1
@@ -1279,11 +1302,12 @@ def main():
         "yara_rule",
         "af_import",
         "range",
-        "count"
+        "count",
+        "tag_count"
     ]
     filter = [
-        "low",
-        "high"
+        "suspicious",
+        "highly_suspicious"
     ]
 
     # Grab initial arguments from CLI
@@ -1294,7 +1318,7 @@ def main():
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
                                                                                                   "Session Sections [" + ", ".join(session_sections) + "]. "
                                                                                                                                                        "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
-    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"high\" and \"low\" for pre-built malware filtering.", metavar="<number>", default=10000)
+    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering.", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])

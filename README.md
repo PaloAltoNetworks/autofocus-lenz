@@ -5,9 +5,9 @@
 The AutoFocus API exposes a wealth of dynamic analysis information about malware activities from disk to wire, which is made easily accessible for scripting through the [AutoFocus Python Client Library](https://github.com/PaloAltoNetworks/autofocus-client-library). The goal of *af_lenz.py* is to build ontop of the client library by providing a set of helpful tools to aide incident responders, or analysts, in rapidly extracting information from AutoFocus that can be used for operational intelligence.
 
 ```
-usage: af_lenz_gs.py [-h] -i <query_type> -q <query> [-o <section_output>]
-                     [-f <number>] [-l <number>] -r <function_name>
-                     [-s <special_output>] [-c <integer_percent>] [-Q]
+usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
+                  [-f <number>] [-l <number>] -r <function_name>
+                  [-s <special_output>] [-c <integer_percent>] [-Q]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -38,8 +38,8 @@ optional arguments:
                         sha1, md5, ssdeep, imphash, digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
-                        number, default 10,000. Use "high" and "low" for pre-
-                        built malware filtering.
+                        number, default 10,000. Use "suspicious" and
+                        "highly_suspicious" for pre-built malware filtering.
   -l <number>, --limit <number>
                         Limit the number of analyzed samples, default 200.
   -r <function_name>, --run <function_name>
@@ -48,7 +48,7 @@ optional arguments:
                         mutex_scrape, meta_scrape, session_scrape, diff]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
-                        [yara_rule, af_import, range, count]
+                        [yara_rule, af_import, range, count, tag_count]
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
@@ -77,6 +77,8 @@ Quick links to examples:
 * [Quiet Output](#quiet_flag)
 * [Diff function](#diff)
 * [Count function](#count)
+* [Tag Count function](#tag_count)
+* [Suspicious/Highly Suspicious filter](#suspect_artifacts)
 
 ### [+] EXAMPLES [+]
 
@@ -1062,13 +1064,104 @@ c97bd3d159222bfe650647aefb92fd13b2e590f8d5dd5781110a0cf61958fc33
 [+] processed 12 hashes with a BGM filter of 10000 [+]
 ```
 
+##### tag_count
+
+The 'tag_count' parameter can be passed to the special function to count the raw number of tags per sample. This allows you to quickly take a large set of samples and boil up tags with large coverage.
+
+```
+python af_lenz.py -i tag -q 'Unit42.AlphaCrypt' -r meta_scrape -s tag_count
+
+{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.AlphaCrypt"]}]}
+
+[+] sample_meta [+]
+
+   72 | Unit42.IPAddressLookup
+    1 | Unit42.ModifyWindowsFirewall
+   72 | Unit42.TeslaCrypt
+    1 | Commodity.Virut
+   60 | Unit42.ProcessHollowing
+   72 | Unit42.AlphaCrypt
+   72 | Unit42.DeleteVolumeSnapshots
+
+[+] processed 72 samples [+]
+```
+
+##### suspect_artifacts
+
+The 'suspicious' and 'highly_suspicious' paramters can be passed to the filter function to use the AutoFocus definitions to filter artifacts. These are presented in AF as red and yellow excalamation points.
+
+```
+$ python af_lenz.py -i tag -q 'Unit42.AlphaCrypt' -r hash_scrape -l 1 -f highly_suspicious -o dns,mutex
+
+{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.AlphaCrypt"]}]}
+
+[+] hashes [+]
+
+0ca8a7f1c443af649230f95ab18638e0e1238d74d6ab0efe0d14b883ae7bd592
+
+[+] dns [+]
+
+wpad.ZPAN28185489917.local ,  , NXDOMAIN
+dpckd2ftmf7lelsa.tor2web.blutmagie.de.FYRNF5563656069.local ,  , NXDOMAIN
+dpckd2ftmf7lelsa.9isernvur33.com.FYRNF5563656069.local ,  , NXDOMAIN
+dpckd2ftmf7lelsa.9isernvur33.com ,  , NXDOMAIN
+dpckd2ftmf7lelsa.afnwdsy4j32.com.FYRNF5563656069.local ,  , NXDOMAIN
+dpckd2ftmf7lelsa.afnwdsy4j32.com ,  , NXDOMAIN
+dpckd2ftmf7lelsa.tor2web.org , 38.229.70.4 , A
+dpckd2ftmf7lelsa.tor2web.blutmagie.de ,  , NXDOMAIN
+
+[+] mutex [+]
+
+gdgvaux.exe , CreateMutexW , VideoRenderer
+gdgvaux.exe , CreateMutexW , <NULL>
+gdgvaux.exe , CreateMutexW , safsdfasdfwrtqr15
+gdgvaux.exe , CreateMutexW , c:!docume~1!admini~1!locals~1!temp!temporary internet files!content.ie5!
+gdgvaux.exe , CreateMutexW , c:!docume~1!admini~1!locals~1!temp!cookies!
+gdgvaux.exe , CreateMutexW , c:!docume~1!admini~1!locals~1!temp!history!history.ie5!
+
+[+] processed 1 hashes with a BGM filter of highly_suspicious [+]
+```
+
+The same hash with a different filter, resulting in different data.
+
+```
+$ python af_lenz.py -i tag -q 'Unit42.AlphaCrypt' -r hash_scrape -l 1 -f suspicious -o dns,mutex
+
+{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.AlphaCrypt"]}]}
+
+[+] hashes [+]
+
+0ca8a7f1c443af649230f95ab18638e0e1238d74d6ab0efe0d14b883ae7bd592
+
+[+] dns [+]
+
+tor2web.org , ns1.dnsimple.com , NS
+ilo.brenz.pl , 148.81.111.121 , A
+ipinfo.io , ns-595.awsdns-10.net , NS
+
+[+] mutex [+]
+
+winlogon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!
+winlogon.exe , CreateMutexW , c:!documents and settings!administrator!cookies!
+winlogon.exe , CreateMutexW , c:!documents and settings!administrator!local settings!history!history.ie5!
+winlogon.exe , CreateMutexW , WininetConnectionMutex
+winlogon.exe , CreateMutexW , <NULL>
+sample.exe , CreateMutexW , VideoRenderer
+winlogon.exe , CreateMutexW , Global\WindowsUpdateTracingMutex
+
+[+] processed 1 hashes with a BGM filter of suspicious [+]
+```
+
 ### [+] CHANGE LOG [+]
 
-v1.1.8 - 03NOV2016
+v1.1.8 - 15NOV2016
 * Added "input_file_query" as input so Windows users can directly load queries from a file and avoid quote escaping from CLI.
-* Added "low" and "high" options to "filter" function that use pre-defined filtering templates for malware artifacts.
-* The "low" filter displays artifacts with a malware count 3 times larger than benign with a total malware count less than 500. These are more unique.
-* The "high" filter displays artifacts with a malware count 3 times larger than benign but has a total malware count over 500. These are more wide-spread.
+* Added "suspicious" and "highly_suspicious" options to "filter" function that use pre-defined filtering templates for malware artifacts. More information can be found in the AF documentation: https://www.paloaltonetworks.com/documentation/autofocus/autofocus/autofocus_admin_guide/get-started-with-autofocus/autofocus-concepts
+* Suspicious artifacts have been widely-detected across large numbers of samples. Are most frequently detected with malware. Although suspicious artifacts can be detected with grayware and benign samples, they are more often found with malware.
+* The "suspicious" filter displays artifacts with a malware count 3 times larger than benign with a total malware count greater than 500. 
+* Highly Suspicious artifacts have been detected in very few samples. The lack of distribution of these types of artifacts could indicate an attack crafted to target a specific organization. Are most frequently detected with malware. In some cases, these artifacts have been exclusively seen with malware and never with grayware or benign samples.
+* The "highly_suspicious" filter displays artifacts with a malware count 3 times larger than benign but has a total malware less than 500.
+* Added "tag_count" value to special parameter. This will count each individual tag across a set of samples.
 
 v1.1.7 - 11OCT2016
 * Added "diff" function to identify differences between two samples.

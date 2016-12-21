@@ -5,9 +5,11 @@
 The AutoFocus API exposes a wealth of dynamic analysis information about malware activities from disk to wire, which is made easily accessible for scripting through the [AutoFocus Python Client Library](https://github.com/PaloAltoNetworks/autofocus-client-library). The goal of *af_lenz.py* is to build ontop of the client library by providing a set of helpful tools to aide incident responders, or analysts, in rapidly extracting information from AutoFocus that can be used for operational intelligence.
 
 ```
+$ python af_lenz.py --help
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
                   [-s <special_output>] [-c <integer_percent>] [-Q]
+                  [-w <filename>]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -45,7 +47,8 @@ optional arguments:
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
-                        mutex_scrape, meta_scrape, session_scrape, diff]
+                        mutex_scrape, meta_scrape, service_scrape,
+                        session_scrape, diff]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import, range, count, tag_count]
@@ -54,6 +57,8 @@ optional arguments:
                         default is 100
   -Q, --quiet           Suppress any informational output and only return
                         data.
+  -w <filename>, --write <filename>
+                        Write output to a file instead of STDOUT.
 ```
 
 Quick links to examples:
@@ -79,6 +84,8 @@ Quick links to examples:
 * [Count function](#count)
 * [Tag Count function](#tag_count)
 * [Suspicious/Highly Suspicious filter](#suspect_artifacts)
+* [Service Scrape function](#service_scrape)
+* [Write to file](#write_out)
 
 ### [+] EXAMPLES [+]
 
@@ -1088,7 +1095,7 @@ python af_lenz.py -i tag -q 'Unit42.AlphaCrypt' -r meta_scrape -s tag_count
 
 ##### suspect_artifacts
 
-The 'suspicious' and 'highly_suspicious' paramters can be passed to the filter function to use the AutoFocus definitions to filter artifacts. These are presented in AF as red and yellow excalamation points.
+The 'suspicious' and 'highly_suspicious' parameters can be passed to the filter function to use the AutoFocus definitions to filter artifacts. These are presented in AF as red and yellow exclamation points.
 
 ```
 $ python af_lenz.py -i tag -q 'Unit42.AlphaCrypt' -r hash_scrape -l 1 -f highly_suspicious -o dns,mutex
@@ -1152,7 +1159,54 @@ winlogon.exe , CreateMutexW , Global\WindowsUpdateTracingMutex
 [+] processed 1 hashes with a BGM filter of suspicious [+]
 ```
 
+##### service_scrape
+
+Scrape the unique service names out of a set of samples.
+
+```
+$ python af_lenz.py -i query -q '{"operator":"all","children":[{"field":"sample.tasks.service","operator":"has any value","value":""},{"field":"sample.malware","operator":"is","value":1},{"field":"sample.tasks.dns","operator":"has any value","value":""}]}' -r service_scrape -l 10
+
+{"operator":"all","children":[{"field":"sample.tasks.service","operator":"has any value","value":""},{"field":"sample.malware","operator":"is","value":1},{"field":"sample.tasks.dns","operator":"has any value","value":""}]}
+
+[+] hashes [+]
+
+e902f59fedc8b13e87baa33c7ad7a13401653b7340c2501e4a314048333b5215
+51c62ee5e38f111928b45585d7c70ba91f973b664fa74d390661b5007130758d
+4859a2938f3af469274f6b98747f7cbff579eeea754b88d481e7c1a44c320136
+dd7f0b9edadbbda92ab73430536d1d36e8641170a664767fe2316fd7454f6a5e
+    <TRUNCATED>
+ef9e299d56d9ce67d5c4b472d52310cc3a28c3aaf169c60a02c97dd96bd3d323
+66bc9c714e69c54f8757dab13c2924d5257141ae77867d127ba5053ba5f283ef
+5cbea737b5f88e16bbc96952eb1310a3fa0c51f25a81a5212f5b01ebe6c4eb5f
+5fa6d5012d2df74a22536f8a7a4c240bb36464873ff62b4dcaed8bedea2bcb2e
+
+[+] service [+]
+
+SysCPRC
+QMgcIwoT
+
+[+] processed 10 hashes with a BGM filter of 10000 [+]
+```
+
+##### write_out
+
+The "w" flag can be used to specify that STDOUT be redirected to a file.
+
+```
+$ python af_lenz.py -i query -q '{"operator":"all","children":[{"field":"sample.tasks.service","operator":"has any value","value":""},{"field":"sample.malware","operator":"is","value":1},{"field":"sample.tasks.dns","operator":"has any value","value":""}]}' -r service_scrape -l 10 -w aflenz.txt -Q
+
+$ cat aflenz.txt
+SysCPRC
+QMgcIwoT
+```
+
 ### [+] CHANGE LOG [+]
+
+v1.1.9 - 21DEC2016
+* Added "service_scrape" function to extract unique service names from a set of samples.
+* Added "-w" flag so that STDOUT can be redirected to a file.
+* Centralized all print operations into a new function and enabled utf-8 encoding. This should address problems with encoding errors that pop up infrequently with session data.
+* Passing "0" to the "filter" function will now cause no filtering to occur.
 
 v1.1.8 - 15NOV2016
 * Added "input_file_query" as input so Windows users can directly load queries from a file and avoid quote escaping from CLI.

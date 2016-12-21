@@ -10,8 +10,8 @@ import sys, argparse, multiprocessing, os, re
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.8"
-__date__    = "15NOV2016"
+__version__ = "1.1.9"
+__date__    = "21DEC2016"
 
 #######################
 # Check research mode #
@@ -116,6 +116,21 @@ def build_session_list():
 
     return session_list
 
+###############################
+# MESSAGE PROCESSING FUNCTION #
+###############################
+
+def message_proc(message, args):
+
+    if args.write:
+        file_handle = open(args.write, "a")
+        file_handle.write(("%s\n" % message).encode('utf-8'))
+    else:
+        print message.encode('utf-8')
+
+    return
+
+
 ##########################
 # AF QUERY SECTION BELOW #
 ##########################
@@ -212,7 +227,7 @@ def hash_library(args):
     input_data  = []
 
     if not args.quiet:
-        print "\n[+] hashes [+]\n"
+        message_proc("\n[+] hashes [+]\n", args)
 
     if research_mode == "True":
         poll_af = AFSample.scan
@@ -263,7 +278,7 @@ def hash_worker(args_tuple):
     args,sample_hash = args_tuple
 
     if not args.quiet:
-        print(sample_hash)
+        message_proc(sample_hash, args)
 
     return { sample_hash : hash_lookup(args,sample_hash) }
 
@@ -615,6 +630,33 @@ def mutex_scrape(args):
 
     return mutex_data
 
+# Service Scraper Function
+# Extracts all service names from the identified samples
+# BGM filtering is done on the entire line
+
+def service_scrape(args):
+
+    service_data    = {"service":[]}
+    count       = 0
+    hashes      = hash_library(args)
+
+    for hash in hashes.keys():
+
+        sample_data = hashes[hash]
+
+        for entry in sample_data['service']:
+
+            service_list    = entry.split(" , ")
+            service_query   = service_list[2]
+
+            if service_query not in service_data['service']:
+                service_data['service'].append(service_query)
+        count += 1
+
+    service_data['count'] = count # Keep track of how many samples processed
+
+    return service_data
+
 # Flat file reader function
 # Reads lines in from a file while checking for sha256 hashes.
 # Returns a list of hashes.
@@ -625,7 +667,7 @@ def fetch_from_file(args,input_file):
         hashlist = []
 
         if not args.quiet:
-            print "\n[+] Attempting to read hashes from %s" % input_file
+            message_proc("\n[+] Attempting to read hashes from %s" % input_file, args)
 
         try:
             with open(input_file,'r') as fh:
@@ -641,7 +683,7 @@ def fetch_from_file(args,input_file):
                         pass
 
         except IOError as e:
-            print "\n[!] Error: %s - %s" % (e.strerror, e.filename)
+            message_proc("\n[!] Error: %s - %s" % (e.strerror, e.filename), args)
             sys.exit(2)
 
         return hashlist
@@ -649,7 +691,7 @@ def fetch_from_file(args,input_file):
     elif args.ident == "input_file_query":
 
         if not args.quiet:
-            print "\n[+] Attempting to read query from %s" % input_file
+            message_proc("\n[+] Attempting to read query from %s" % input_file, args)
 
         try:
             with open(input_file, 'r') as fh:
@@ -657,7 +699,7 @@ def fetch_from_file(args,input_file):
                 query = (fh.read()).strip()
 
         except IOError as e:
-            print "\n[!] Error: %s - %s" % (e.strerror, e.filename)
+            message_proc("\n[!] Error: %s - %s" % (e.strerror, e.filename), args)
             sys.exit(2)
 
         return query
@@ -679,7 +721,7 @@ def diff(args):
     for hash in hashes:
         hash_list.append(hash)
 
-    print "\n[+] diff [+]\n\n< | %s\n> | %s" % (hash_list[0], hash_list[1])
+    message_proc("\n[+] diff [+]\n\n< | %s\n> | %s" % (hash_list[0], hash_list[1]), args)
 
     count = 0
 
@@ -771,24 +813,25 @@ def output_analysis(args, sample_data, funct_type):
         for entry in section_list:
             if entry in sample_data.keys() and sample_data[entry] != []:
                 if not args.quiet:
-                    print "\n[+]", entry, "[+]\n"
+                    message_proc("\n[+] %s [+]\n" % entry, args)
                 for value in sample_data[entry]:
                     if value != "":
-                        print value
+                        message_proc(value, args)
     else:
         for entry in output:
             if entry in sample_data.keys() and sample_data[entry] != []:
                 if not args.quiet:
-                    print "\n[+]", entry, "[+]\n"
+                    message_proc("\n[+] %s [+]\n" % entry, args)
                 for value in sample_data[entry]:
                     if value != "":
-                        print value
+                        message_proc(value, args)
 
-    if not args.quiet:
-        if funct_type == "sample":
-            print "\n[+] processed", sample_data['count'], "hashes with a BGM filter of", str(args.filter), "[+]\n"
-        elif funct_type == "session":
-            print "\n[+] processed", sample_data['count'], "sessions [+]\n"
+    if funct_type == "sample":
+        if not args.quiet:
+            message_proc("\n[+] processed %s hashes with a BGM filter of %s [+]\n" % (sample_data['count'], str(args.filter)), args)
+    elif funct_type == "session":
+        if not args.quiet:
+            message_proc("\n[+] processed %s sessions [+]\n" % sample_data['count'], args)
 
 # Output List Function
 # This just returns sample based meta-data based on the query provided
@@ -895,7 +938,7 @@ def output_list(args):
             poll_af = AFSample.search
 
         if not args.quiet:
-            print "\n[+] sample_meta [+]\n"
+            message_proc("\n[+] sample_meta [+]\n", args)
 
         if args.ident == "query":
                 for sample in poll_af(args.query):
@@ -931,16 +974,16 @@ def output_list(args):
                         tag_count[tag] += 1
 
             for tag in tag_count:
-                print "%05s | %s" % (tag_count[tag], tag)
+                message_proc("%05s | %s" % (tag_count[tag], tag), args)
 
         else:
             # Auto-adjust column widths
             widths = [max(map(len,col)) for col in zip(*results)]
             for row in results:
-                print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
+                message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
 
         if not args.quiet:
-            print "\n[+] processed", str(count), "samples [+]\n"
+            message_proc("\n[+] processed %s samples [+]\n" % str(count), args)
 
     #
     # Session scrape
@@ -953,7 +996,7 @@ def output_list(args):
             poll_af = AFSession.search
 
         if not args.quiet:
-            print "\n[+] session_meta [+]\n"
+            message_proc("\n[+] session_meta [+]\n", args)
 
         if args.ident == "query":
                 for session in poll_af(args.query):
@@ -976,10 +1019,10 @@ def output_list(args):
         # Auto-adjust column widths
         widths = [max(map(len,col)) for col in zip(*results)]
         for row in results:
-            print " | ".join((val.ljust(width) for val, width in zip(row, widths)))
+            message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
 
         if not args.quiet:
-            print "\n[+] processed", str(count), "sessions [+]\n"
+            message_proc("\n[+] processed %s sessions [+]\n" % str(count), args)
 
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results
@@ -997,7 +1040,7 @@ def af_import(args, sample_data):
 
     # Build AutoFocus query
     if not args.quiet:
-        print "[+] af import query [+]\n"
+        message_proc("[+] af import query [+]\n", args)
 
     import_query = '{"operator":"all","children":['
     for entry in output:
@@ -1035,7 +1078,7 @@ def af_import(args, sample_data):
     import_query = import_query[:len(import_query) - 3] + import_query[-2:]
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
 
-    print import_query + "\n"
+    message_proc("%s\n" % import_query, args)
 
 # Yara Rule Function
 # Attempts to take the likely data you might find from dynamic analysis and build a yara rule for memory process scanning using volatility/other tools
@@ -1052,7 +1095,7 @@ def yara_rule(args, sample_data):
             output.append(key)
 
     if not args.quiet:
-        print "[+] yara rule [+]\n"
+        message_proc("[+] yara rule [+]\n", args)
 
     min_len         = 4 # Minimum string length
     contained_list  = []
@@ -1199,9 +1242,9 @@ def yara_rule(args, sample_data):
     yara_sig = str(yara_sig.replace("\\", "\\\\")) # Double escape for yara
 
     if "$" in yara_sig:
-        print yara_sig + "\n"
-    elif not args.quiet:
-        print "No yara rule could be generated.\n"
+        message_proc("%s\n" % yara_sig, args)
+    else:
+        message_proc("No yara rule could be generated.\n")
 
 ################
 # MAIN PROGRAM #
@@ -1219,6 +1262,7 @@ def main():
         "dns_scrape",
         "mutex_scrape",
         "meta_scrape",
+        "service_scrape",
         "session_scrape",
         "diff"
     ]
@@ -1318,12 +1362,13 @@ def main():
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
                                                                                                   "Session Sections [" + ", ".join(session_sections) + "]. "
                                                                                                                                                        "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
-    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering.", metavar="<number>", default=10000)
+    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filtering.", metavar="<number>", default=10000, type=int)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
     parser.add_argument("-Q", "--quiet",help="Suppress any informational output and only return data.",action="store_true",default=False)
+    parser.add_argument("-w", "--write", help="Write output to a file instead of STDOUT.", metavar='<filename>', default=False)
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
 
@@ -1337,16 +1382,18 @@ def main():
         args.query = fetch_from_file(args, args.query)
         args.ident = "query"
 
+    # No filtering
+    if args.filter == 0:
+        args.filter = 1000000000
+
     # Gather results from functions
     funct_type = "sample"
+
     if not args.quiet:
         if args.ident == "query":
-            print "\n", args.query
+            message_proc("\n%s" % args.query, args)
         else:
-            print "\n" + af_query(args.ident, args.query).strip()
-
-    if args.filter not in filter:
-        args.filter = int(args.filter)
+            message_proc("\n%s" % af_query(args.ident, args.query).strip(), args)
 
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
@@ -1363,6 +1410,8 @@ def main():
         out_data = dns_scrape(args)
     elif args.run == "mutex_scrape":
         out_data = mutex_scrape(args)
+    elif args.run == "service_scrape":
+        out_data = service_scrape(args)
     elif args.run == "meta_scrape" or args.run == "session_scrape":
         out_data = {}
         funct_type = "list"
@@ -1374,11 +1423,11 @@ def main():
 
     # If we have specified a -s option, do the following
     if "af_import" in args.special or "yara_rule" in args.special:
-        if not args.quiet:
-            if args.run == "meta_scrape" or args.run == "session_scrape":
-                output_list(args)
-            else:
-                output_analysis(args, out_data, funct_type)
+
+        if args.run == "meta_scrape" or args.run == "session_scrape":
+            output_list(args)
+        else:
+            output_analysis(args, out_data, funct_type)
 
         if "af_import" in args.special:
             af_import(args, out_data)

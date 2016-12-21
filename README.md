@@ -42,6 +42,7 @@ optional arguments:
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
                         "highly_suspicious" for pre-built malware filtering.
+                        Use 0 for no filtering.
   -l <number>, --limit <number>
                         Limit the number of analyzed samples, default 200.
   -r <function_name>, --run <function_name>

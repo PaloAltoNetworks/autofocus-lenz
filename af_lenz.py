@@ -1362,8 +1362,8 @@ def main():
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
                                                                                                   "Session Sections [" + ", ".join(session_sections) + "]. "
                                                                                                                                                        "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
-    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filtering.", metavar="<number>", default=10000, type=int)
-    parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200.", metavar="<number>", type=int, default=200)
+    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filter.", metavar="<number>", default=10000)
+    parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200. Use 0 for no limit.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
@@ -1382,9 +1382,13 @@ def main():
         args.query = fetch_from_file(args, args.query)
         args.ident = "query"
 
-    # No filtering
+    # No filter limit
     if args.filter == 0:
         args.filter = 1000000000
+
+    # No sample/session limit
+    if args.limit == 0:
+        args.limit = 1000000000
 
     # Gather results from functions
     funct_type = "sample"

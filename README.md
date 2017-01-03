@@ -42,9 +42,10 @@ optional arguments:
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
                         "highly_suspicious" for pre-built malware filtering.
-                        Use 0 for no filtering.
+                        Use 0 for no filter.
   -l <number>, --limit <number>
-                        Limit the number of analyzed samples, default 200.
+                        Limit the number of analyzed samples, default 200. Use
+                        0 for no limit.
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
@@ -1207,7 +1208,7 @@ v1.1.9 - 21DEC2016
 * Added "service_scrape" function to extract unique service names from a set of samples.
 * Added "-w" flag so that STDOUT can be redirected to a file.
 * Centralized all print operations into a new function and enabled utf-8 encoding. This should address problems with encoding errors that pop up infrequently with session data.
-* Passing "0" to the "filter" function will now cause no filtering to occur.
+* Passing "0" to the "filter" or "limit" function will now cause it to default to 1 billion, thus practically negating filtering or session/sample limits.
 
 v1.1.8 - 15NOV2016
 * Added "input_file_query" as input so Windows users can directly load queries from a file and avoid quote escaping from CLI.

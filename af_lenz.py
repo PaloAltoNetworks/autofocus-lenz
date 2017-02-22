@@ -2,16 +2,58 @@
 from inspect import isfunction
 from autofocus import AutoFocusAPI
 AutoFocusAPI.api_key = ""
-from autofocus import AFSession, AFSample
-from autofocus import AFServiceActivity, AFRegistryActivity, AFProcessActivity, AFApiActivity, AFJavaApiActivity, AFUserAgentFragment, AFMutexActivity, AFHttpActivity, AFDnsActivity, AFBehaviorTypeAnalysis, AFBehaviorAnalysis, AFConnectionActivity, AFFileActivity
+from autofocus import AFSession, AFSample, AFTag, AFTagDefinition
+# Analysis Sections
+from autofocus import \
+    AFApiActivity, \
+    AFBehaviorAnalysis, \
+    AFBehaviorTypeAnalysis, \
+    AFConnectionActivity, \
+    AFDnsActivity, \
+    AFFileActivity, \
+    AFHttpActivity, \
+    AFJavaApiActivity, \
+    AFMutexActivity, \
+    AFProcessActivity, \
+    AFRegistryActivity, \
+    AFServiceActivity, \
+    AFUserAgentFragment
 # APK Specific
-from autofocus import AFApkActivityAnalysis, AFApkIntentFilterAnalysis, AFApkReceiverAnalysis, AFApkSensorAnalysis, AFApkServiceAnalysis, AFApkEmbededUrlAnalysis, AFApkRequestedPermissionAnalysis, AFApkSensitiveApiCallAnalysis, AFApkSuspiciousApiCallAnalysis, AFApkSuspiciousFileAnalysis, AFApkSuspiciousStringAnalysis
-import sys, argparse, multiprocessing, os, re
+from autofocus import \
+    AFAnalysisSummary, \
+    AFApkActivityAnalysis, \
+    AFApkAppName, \
+    AFApkCertificate, \
+    AFApkEmbeddedFile, \
+    AFApkEmbeddedLibrary, \
+    AFApkEmbededUrlAnalysis, \
+    AFApkIcon, \
+    AFApkIntentFilterAnalysis, \
+    AFApkPackage, \
+    AFApkReceiverAnalysis, \
+    AFApkRepackaged, \
+    AFApkRequestedPermissionAnalysis, \
+    AFApkSensitiveApiCallAnalysis, \
+    AFApkSensorAnalysis, \
+    AFApkServiceAnalysis, \
+    AFApkSuspiciousActivitySummary, \
+    AFApkSuspiciousApiCallAnalysis, \
+    AFApkSuspiciousFileAnalysis, \
+    AFApkSuspiciousPattern, \
+    AFApkSuspiciousStringAnalysis, \
+    AFApkVersion, \
+    AFDigitalSigner
+# MAC Specific
+from autofocus import \
+    AFMacEmbeddedFile, \
+    AFMacEmbeddedURL
+
+import sys, argparse, multiprocessing, os, re, json
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.1.9"
-__date__    = "21DEC2016"
+__version__ = "1.2.0"
+__date__    = "22FEB2017"
 
 #######################
 # Check research mode #
@@ -35,33 +77,47 @@ except:
 def build_field_list():
 
     field_list = {
-        "service"           : [],
-        "registry"          : [],
-        "process"           : [],
-        "japi"              : [],
-        "misc"              : [],
-        "user_agent"        : [],
-        "mutex"             : [],
-        "http"              : [],
-        "dns"               : [],
-        "behavior_desc"     : [],
-        "behavior_type"     : [],
-        "connection"        : [],
-        "file"              : [],
-        "apk_misc"          : [],
-        "apk_filter"        : [],
-        "apk_receiver"      : [],
-        "apk_sensor"        : [],
-        "apk_service"       : [],
-        "apk_embedurl"      : [],
-        "apk_permission"    : [],
-        "apk_sensitiveapi"  : [],
-        "apk_suspiciousapi" : [],
-        "apk_file"          : [],
-        "apk_string"        : [],
-        "digital_signer"    : [],
-        "imphash"           : [],
-        "default"           : []
+        "apk_app_icon"                      : [],
+        "apk_cert_file"                     : [],
+        "apk_defined_activity"              : [],
+        "apk_defined_intent_filter"         : [],
+        "apk_defined_receiver"              : [],
+        "apk_defined_sensor"                : [],
+        "apk_defined_service"               : [],
+        "apk_digital_signer"                : [],
+        "apk_embedded_library"              : [],
+        "apk_embeded_url"                   : [],
+        "apk_internal_file"                 : [],
+        "apk_isrepackaged"                  : [],
+        "apk_name"                          : [],
+        "apk_packagename"                   : [],
+        "apk_requested_permission"          : [],
+        "apk_sensitive_api_call"            : [],
+        "apk_suspicious_action_monitored"   : [],
+        "apk_suspicious_api_call"           : [],
+        "apk_suspicious_file"               : [],
+        "apk_suspicious_pattern"            : [],
+        "apk_suspicious_string"             : [],
+        "apk_version_num"                   : [],
+        "behavior"                          : [],
+        "behavior_type"                     : [],
+        "connection"                        : [],
+        "default"                           : [],
+        "digital_signer"                    : [],
+        "dns"                               : [],
+        "file"                              : [],
+        "http"                              : [],
+        "imphash"                           : [],
+        "japi"                              : [],
+        "mac_embedded_file"                 : [],
+        "mac_embedded_url"                  : [],
+        "misc"                              : [],
+        "mutex"                             : [],
+        "process"                           : [],
+        "registry"                          : [],
+        "service"                           : [],
+        "summary"                           : [],
+        "user_agent"                        : []
     }
 
     return field_list
@@ -69,33 +125,47 @@ def build_field_list():
 def build_field_dict():
 
     field_dict = {
-        "service"           :{},
-        "registry"          :{},
-        "process"           :{},
-        "japi"              :{},
-        "misc"              :{},
-        "user_agent"        :{},
-        "mutex"             :{},
-        "http"              :{},
-        "dns"               :{},
-        "behavior_desc"     :{},
-        "behavior_type"     :{},
-        "connection"        :{},
-        "file"              :{},
-        "apk_misc"          :{},
-        "apk_filter"        :{},
-        "apk_receiver"      :{},
-        "apk_sensor"        :{},
-        "apk_service"       :{},
-        "apk_embedurl"      :{},
-        "apk_permission"    :{},
-        "apk_sensitiveapi"  :{},
-        "apk_suspiciousapi" :{},
-        "apk_file"          :{},
-        "apk_string"        :{},
-        "digital_signer"    :{},
-        "imphash"           :{},
-        "default"           :{}
+        "apk_app_icon"                      : {},
+        "apk_cert_file"                     : {},
+        "apk_defined_activity"              : {},
+        "apk_defined_intent_filter"         : {},
+        "apk_defined_receiver"              : {},
+        "apk_defined_sensor"                : {},
+        "apk_defined_service"               : {},
+        "apk_digital_signer"                : {},
+        "apk_embedded_library"              : {},
+        "apk_embeded_url"                   : {},
+        "apk_internal_file"                 : {},
+        "apk_isrepackaged"                  : {},
+        "apk_name"                          : {},
+        "apk_packagename"                   : {},
+        "apk_requested_permission"          : {},
+        "apk_sensitive_api_call"            : {},
+        "apk_suspicious_action_monitored"   : {},
+        "apk_suspicious_api_call"           : {},
+        "apk_suspicious_file"               : {},
+        "apk_suspicious_pattern"            : {},
+        "apk_suspicious_string"             : {},
+        "apk_version_num"                   : {},
+        "behavior"                          : {},
+        "behavior_type"                     : {},
+        "connection"                        : {},
+        "default"                           : {},
+        "digital_signer"                    : {},
+        "dns"                               : {},
+        "file"                              : {},
+        "http"                              : {},
+        "imphash"                           : {},
+        "japi"                              : {},
+        "mac_embedded_file"                 : {},
+        "mac_embedded_url"                  : {},
+        "misc"                              : {},
+        "mutex"                             : {},
+        "process"                           : {},
+        "registry"                          : {},
+        "service"                           : {},
+        "summary"                           : {},
+        "user_agent"                        : {}
     }
 
     return field_dict
@@ -103,15 +173,31 @@ def build_field_dict():
 def build_session_list():
 
     session_list = {
-        "email_subject"     :[],
-        "file_name"         :[],
-        "application"       :[],
-        "dst_country"       :[],
-        "industry"          :[],
-        "email_sender"      :[],
-        "file_url"          :[],
-        "email_recipient"   :[],
-        "account_name"      :[]
+        "application"           : [],
+        "account_name"          : [],
+        "device_country_code"   : [],
+        "device_country"        : [],
+        "device_hostname"       : [],
+        "industry"              : [],
+        "business_line"         : [],
+        "device_model"          : [],
+        "device_serial"         : [],
+        "device_version"        : [],
+        "dst_country_code"      : [],
+        "dst_country"           : [],
+        "dst_ip"                : [],
+        "dst_port"              : [],
+        "email_recipient"       : [],
+        "email_charset"         : [],
+        "email_sender"          : [],
+        "email_subject"         : [],
+        "file_name"             : [],
+        "file_url"              : [],
+        "src_country_code"      : [],
+        "src_country"           : [],
+        "src_ip"                : [],
+        "src_port"              : [],
+        "timestamp"             : []
     }
 
     return session_list
@@ -166,8 +252,8 @@ def af_query(ident,query):
         "user_agent"    : "sample.tasks.user_agent",
         "tag"           : "sample.tag",
         "hash_list"     : "sample.sha256",
-        "file_url"      : "session.fileurl",
-        "file_name"     : "alias.filename"
+        "fileurl"      : "session.fileurl",
+        "filename"     : "alias.filename"
     }
 
     # Create a map of input_type to operator
@@ -196,13 +282,13 @@ def af_query(ident,query):
     if operator_value == "is in the list":
         params = [v.strip() for v in query.split(",")]
 
-        # if we have less than 100 params, we only need one query field
-        if len(params) <= 100:
+        # if we have less than 999 params, we only need one query field
+        if len(params) <= 999:
             return '{"operator":"all","children":[{"field":"%s","operator":"%s","value":[%s]}]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in params]))
 
         else:
-            # split our params into a list of lists so as to create queries with <=100 elements each.
-            chunked_params = [params[index:index + 100] for index in xrange(0, len(params), 100)]
+            # split our params into a list of lists so as to create queries with <=999 elements each.
+            chunked_params = [params[index:index + 999] for index in xrange(0, len(params), 999)]
 
             # Build multiple groups of "in the list" queries
             groups = ",".join(['{"field":"%s","operator":"%s","value":[%s]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in chunk])) for chunk in chunked_params])
@@ -294,30 +380,45 @@ def hash_lookup(args, query):
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
-        AFServiceActivity                   : "service",
-        AFRegistryActivity                  : "registry",
-        AFProcessActivity                   : "process",
-        AFJavaApiActivity                   : "japi",
+        #AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
+        AFAnalysisSummary                   : "summary",
         AFApiActivity                       : "misc",
-        AFUserAgentFragment                 : "user_agent",
-        AFMutexActivity                     : "mutex",
-        AFHttpActivity                      : "http",
-        AFDnsActivity                       : "dns",
-        AFBehaviorAnalysis                  : "behavior_desc",
+        AFApkActivityAnalysis               : "apk_defined_activity",
+        AFApkAppName                        : "apk_name",
+        AFApkCertificate                    : "apk_cert_file",
+        AFApkEmbeddedFile                   : "apk_internal_file",
+        AFApkEmbeddedLibrary                : "apk_embedded_library",
+        AFApkEmbededUrlAnalysis             : "apk_embeded_url",
+        AFApkIcon                           : "apk_app_icon",
+        AFApkIntentFilterAnalysis           : "apk_defined_intent_filter",
+        AFApkPackage                        : "apk_packagename",
+        AFApkReceiverAnalysis               : "apk_defined_receiver",
+        AFApkRepackaged                     : "apk_isrepackaged",
+        AFApkRequestedPermissionAnalysis    : "apk_requested_permission",
+        AFApkSensitiveApiCallAnalysis       : "apk_sensitive_api_call",
+        AFApkSensorAnalysis                 : "apk_defined_sensor",
+        AFApkServiceAnalysis                : "apk_defined_service",
+        AFApkSuspiciousActivitySummary      : "apk_suspicious_action_monitored",
+        AFApkSuspiciousApiCallAnalysis      : "apk_suspicious_api_call",
+        AFApkSuspiciousFileAnalysis         : "apk_suspicious_file",
+        AFApkSuspiciousPattern              : "apk_suspicious_pattern",
+        AFApkSuspiciousStringAnalysis       : "apk_suspicious_string",
+        AFApkVersion                        : "apk_version_num",
+        AFBehaviorAnalysis                  : "behavior",
         AFBehaviorTypeAnalysis              : "behavior_type",
         AFConnectionActivity                : "connection",
+        AFDigitalSigner                     : "apk_digital_signer",
+        AFDnsActivity                       : "dns",
         AFFileActivity                      : "file",
-        AFApkActivityAnalysis               : "apk_misc",
-        AFApkIntentFilterAnalysis           : "apk_filter",
-        AFApkReceiverAnalysis               : "apk_receiver",
-        AFApkSensorAnalysis                 : "apk_sensor",
-        AFApkServiceAnalysis                : "apk_service",
-        AFApkEmbededUrlAnalysis             : "apk_embedurl",
-        AFApkRequestedPermissionAnalysis    : "apk_permission",
-        AFApkSensitiveApiCallAnalysis       : "apk_sensitiveapi",
-        AFApkSuspiciousApiCallAnalysis      : "apk_suspiciousapi",
-        AFApkSuspiciousFileAnalysis         : "apk_file",
-        AFApkSuspiciousStringAnalysis       : "apl_string"
+        AFHttpActivity                      : "http",
+        AFJavaApiActivity                   : "japi",
+        AFMacEmbeddedFile                   : "mac_embedded_file",
+        AFMacEmbeddedURL                    : "mac_embedded_url",
+        AFMutexActivity                     : "mutex",
+        AFProcessActivity                   : "process",
+        AFRegistryActivity                  : "registry",
+        AFServiceActivity                   : "service",
+        AFUserAgentFragment                 : "user_agent"
     }
 
     # If there are no counts for the activity, ignore them for the filter
@@ -327,15 +428,21 @@ def hash_lookup(args, query):
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
 
             try:
+
+                if args.special == "bgm":
+                    raw_line = get_bgm(analysis)
+                else:
+                    raw_line = analysis._raw_line
+
                 # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
                 if args.filter == "suspicious":
                     if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
-                        analysis_data[analysis_data_section].append(analysis._raw_line)
+                        analysis_data[analysis_data_section].append(raw_line)
                 elif args.filter == "highly_suspicious":
                     if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
-                        analysis_data[analysis_data_section].append(analysis._raw_line)
+                        analysis_data[analysis_data_section].append(raw_line)
                 elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
-                    analysis_data[analysis_data_section].append(analysis._raw_line)
+                    analysis_data[analysis_data_section].append(raw_line)
             except:
                 pass
 
@@ -350,6 +457,36 @@ def hash_lookup(args, query):
             analysis_data["digital_signer"].append(sample.digital_signer)
 
     return analysis_data
+
+# BGM Function
+# Returns human readable B(enign), G(rayware), and M(alware) counts
+# Reduces large numbers to abbreivated versions
+
+def get_bgm(analysis):
+
+    count_list = [str(analysis.benign_count), str(analysis.grayware_count), str(analysis.malware_count)]
+    raw_line = ""
+
+    for number in count_list:
+
+        if len(number) == 5: # 12345 = 12.3K
+            number = "%s.%sK" % (number[:2], number[2])
+        if len(number) == 6: # 123456 = 123K
+            number = "%sK" % (number[:3])
+        if len(number) == 7: # 1234567 = 1.2M
+            number = "%s.%sM" % (number[:1], number[1])
+        if len(number) == 8: # 12345678 = 12.3M
+            number = "%s.%sK" % (number[:2], number[2])
+        if len(number) == 9: # 123456789 = 123M
+            number = "%sM" % (number[:3])
+        if len(number) >= 10: # 1234567890 = 1B
+            number = "%sB" % (number[:3])
+
+        raw_line += "%-5s " % number
+
+    raw_line += "| %s" % analysis._raw_line
+
+    return raw_line
 
 # Common Artifacts Function
 # Identifies lines that exist, per section, in every identified sample
@@ -453,7 +590,7 @@ def common_pieces(args):
 
     # Clear out behavior descriptions so it doesn't print - doesn't really make sense for this context
     # Comment out to add them back in
-    common_pieces['behavior_desc'] = []
+    common_pieces['behavior'] = []
 
     return common_pieces
 
@@ -494,7 +631,7 @@ def uniq_sessions(args):
             break
 
     if args.special == "count":
-        session_data = count_values(session_data)
+        session_data = count_values(session_data, args)
 
     session_data['count'] = count
 
@@ -504,20 +641,22 @@ def uniq_sessions(args):
 # Totals up the unique values per section
 # Works with hash and session function
 
-def count_values(count_list):
+def count_values(count_list, args):
 
     for section in count_list:
 
-        unique_values = []
+        if args.output == "all" or section in args.output:
 
-        for value in count_list[section]:
-            unique_values.append("%-4s | %s" % (count_list[section].count(value), value))
+            unique_values = []
 
-        count_list[section] = []
+            for value in count_list[section]:
+                unique_values.append("%-4s | %s" % (count_list[section].count(value), value))
 
-        for value in unique_values:
-            if value not in count_list[section]:
-                count_list[section].append(value)
+            count_list[section] = []
+
+            for value in unique_values:
+                if value not in count_list[section]:
+                    count_list[section].append(value)
 
     return count_list
 
@@ -545,7 +684,7 @@ def hash_scrape(args):
         count += 1
 
     if args.special == "count":
-        hash_data = count_values(hash_data)
+        hash_data = count_values(hash_data, args)
 
     hash_data['count'] = count # Keep track of how many samples processed
 
@@ -746,6 +885,162 @@ def diff(args):
 
     return hash_data
 
+def tag_info(args):
+
+    # Get tag info
+    tag_info = AFTag.get(args.query)
+
+    tag_details = ""
+
+    tag_details += "\n%-15s : %s\n" % ("Tag Name", tag_info.name)
+    tag_details += "%-15s : %s\n" % ("Tag Public Name", tag_info.public_name)
+    tag_details += "%-15s : %s\n" % ("Tag Count", tag_info.count)
+    tag_details += "%-15s : %s\n" % ("Tag Created", tag_info.created)
+    tag_details += "%-15s : %s\n" % ("Tag Last Hit", tag_info.last_hit)
+    tag_details += "%-15s : %s\n" % ("Tag Class", tag_info.tag_class)
+    tag_details += "%-15s : %s\n" % ("Tag Status", tag_info.status)
+    tag_details += "%-15s : %s\n" % ("Tag Description", tag_info.description)
+
+    message_proc("\n[+] Tag Info [+]\n%s" % tag_details, args)
+
+    sys.exit(1)
+
+def tag_check(args):
+
+    # Remove filter so all artifacts are checked
+    args.filter = 1000000000
+
+    tag_data = {"tag_value"  : args.query.split(",")[0],
+                "hash_value" : args.query.split(",")[1]
+                }
+
+    # Get tag definitions
+    tag_info = AFTag.get(tag_data["tag_value"])
+    tag_def  = tag_info.tag_definitions
+
+    # Get hash info
+    args.query = tag_data["hash_value"]
+    args.ident = "hash"
+
+    hash_detail = hash_lookup(args, tag_data["hash_value"])
+
+    hash_data = build_field_list()
+
+    sections = build_field_list()
+    matches = {}
+
+    for section in hash_detail:
+        for value in hash_detail[section]:
+            if value not in hash_data[section]:
+                hash_data[section].append(value)
+
+    # Perform the tag check across sections
+    def match_check(entry):
+
+        for section in sections:
+
+            if section in entry["field"]:
+
+                if section != "behavior_type" and section != "behavior":
+
+                    # Contains / Is (search within)
+                    if entry["operator"] == "contains" or entry["operator"] == "is":
+
+                        for line in hash_detail[section]:
+
+                            if entry["value"] in line:
+
+                                entry_check = str(entry)
+                                if entry_check not in matches:
+                                    matches[entry_check] = {}
+                                if section not in matches[entry_check]:
+                                    matches[entry_check][section] = []
+                                if line not in matches[entry_check][section]:
+                                    matches[entry_check][section].append(line)
+
+                    # Is in the list (split and re-iterate each)
+                    if entry["operator"] == "is in the list":
+
+                        for value in entry["value"]:
+
+                            for line in hash_detail[section]:
+
+                                if value in line:
+
+                                    entry_check = str(entry)
+                                    if entry_check not in matches:
+                                        matches[entry_check] = {}
+                                    if section not in matches[entry_check]:
+                                        matches[entry_check][section] = []
+                                    if line not in matches[entry_check][section]:
+                                        matches[entry_check][section].append(line)
+
+                    # AF Regex (modify AF regex to compliant statement)
+                    # Attempt to convert proximity to regex - may be hit or miss
+                    if entry["operator"] == "regexp" or entry["operator"] == "proximity":
+
+                        af_regex = ".+".join(entry["value"].split(" "))
+
+                        for line in hash_detail[section]:
+
+                            if re.search(af_regex, line):
+
+                                entry_check = str(entry)
+                                if entry_check not in matches:
+                                    matches[entry_check] = {}
+                                if section not in matches[entry_check]:
+                                    matches[entry_check][section] = []
+                                if line not in matches[entry_check][section]:
+                                    matches[entry_check][section].append(line)
+
+        return
+
+    for query in tag_def:
+
+        query = json.loads(str(query))
+
+        # Attempt to wrap each query with a parent query using supplied hash
+        # Should narrow down queries that need to be deconstructed for checking
+        query_check = str(query)
+        query_check = '{"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"%s"},' % tag_data["hash_value"] + query_check
+        query_check = query_check + ']}'
+        query_check = query_check.replace("u'", "'")
+        query_check = query_check.replace("'", "\"")
+        query_check = query_check.replace("\\", "\\\\")
+
+        for sample in AFSample.search(query_check):
+
+            if sample.sha256 == tag_data["hash_value"]:
+
+                for entry in query["children"]:
+
+                    if "field" not in entry:
+
+                        for child_entry in entry["children"]:
+
+                            match_check(child_entry)
+
+                    else:
+                        match_check(entry)
+
+    for entry in matches:
+
+        message_proc("\n[+] Matched Query [+]\n\n%s" % entry, args)
+
+        for section in matches[entry]:
+
+            message_proc("\n[+] %s [+]\n" % section, args)
+
+            for line in matches[entry][section]:
+
+                message_proc(line, args)
+
+    tag_data['count'] = 1
+
+    args.filter = 0
+
+    return tag_data
+
 
 ########################
 # OUTPUT SECTION BELOW #
@@ -759,13 +1054,8 @@ def output_analysis(args, sample_data, funct_type):
 
     output = args.output.split(",")
 
-    # SESSIONS: email_subject, file_name, application, dst_country, src_country industry, email_sender, email_recipient, account_name,
-    #           file_url, dst_port, src_port, dst_ip, src_ip, timestamp
-    # SAMPLES: service, registry, process, misc, user_agent, mutex, http, dns, behavior_desc, behavior_type, connection, file, apk_misc, apk_filter,
-    #           apk_receiver, apk_sensor, apk_service, apk_embedurl,apk_permission, apk_sensitiveapi, apk_suspiciousapi, apk_file,
-    #           apk_string. digital_signer, imphash
-
     section_list = [
+        #Session
         "email_subject",
         "file_name",
         "application",
@@ -781,31 +1071,43 @@ def output_analysis(args, sample_data, funct_type):
         "email_recipient",
         "account_name",
         "timestamp",
-        "service",
-        "registry",
-        "process",
-        "misc",
-        "user_agent",
-        "mutex",
-        "http",
-        "dns",
-        "behavior_desc",
+        #Sample
+        "apk_app_icon",
+        "apk_cert_file",
+        "apk_defined_activity",
+        "apk_defined_intent_filter",
+        "apk_defined_receiver",
+        "apk_defined_sensor",
+        "apk_defined_service",
+        "apk_digital_signer",
+        "apk_embeded_url",
+        "apk_internal_file",
+        "apk_name",
+        "apk_packagename",
+        "apk_requested_permission",
+        "apk_sensitive_api_call",
+        "apk_suspicious_api_call",
+        "apk_suspicious_file",
+        "apk_suspicious_pattern",
+        "apk_suspicious_string",
+        "apk_version_num",
+        "behavior",
         "behavior_type",
         "connection",
-        "file",
-        "apk_misc",
-        "apk_filter",
-        "apk_receiver",
-        "apk_sensor",
-        "apk_service",
-        "apk_embedurl",
-        "apk_permission",
-        "apk_sensitiveapi",
-        "apk_suspiciousapi",
-        "apk_file",
-        "apk_string",
         "digital_signer",
+        "dns",
+        "file",
+        "http",
         "imphash",
+        "japi",
+        "mac_embedded_url",
+        "misc",
+        "mutex",
+        "process",
+        "registry",
+        "service",
+        "summary",
+        "user_agent",
         "default"
     ]
 
@@ -884,21 +1186,32 @@ def build_output_string(args, item, type):
     # Session
     #
     elif type == "session":
-        meta_sections = {"email_subject"    : item.email_subject,
-                         "file_name"        : item.file_name,
-                         "application"      : item.application,
-                         "dst_country"      : item.dst_country,
-                         "src_country"      : item.src_country,
-                         "dst_ip"           : item.dst_ip,
-                         "src_ip"           : item.src_ip,
-                         "dst_port"         : item.dst_port,
-                         "src_port"         : item.src_port,
-                         "industry"         : item.industry,
-                         "email_sender"     : item.email_sender,
-                         "file_url"         : item.file_url,
-                         "email_recipient"  : item.email_recipient,
-                         "account_name"     : item.account_name,
-                         "timestamp"        : str(item.timestamp)
+        meta_sections = {
+        "application"           : item.application,
+        "account_name"          : item.account_name,
+        "device_country_code"   : item.device_country_code,
+        "device_country"        : item.device_country,
+        "device_hostname"       : item.device_hostname,
+        "industry"              : item.industry,
+        "business_line"         : item.business_line,
+        "device_model"          : item.device_model,
+        "device_serial"         : item.device_serial,
+        "device_version"        : item.device_version,
+        "dst_country_code"      : item.dst_country_code,
+        "dst_country"           : item.dst_country,
+        "dst_ip"                : item.dst_ip,
+        "dst_port"              : item.dst_port,
+        "email_recipient"       : item.email_recipient,
+        "email_charset"         : item.email_charset,
+        "email_sender"          : item.email_sender,
+        "email_subject"         : item.email_subject,
+        "file_name"             : item.file_name,
+        "file_url"              : item.file_url,
+        "src_country_code"      : item.src_country_code,
+        "src_country"           : item.src_country,
+        "src_ip"                : item.src_ip,
+        "src_port"              : item.src_port,
+        "timestamp"             : str(item.timestamp)
                          }
         print_list = []
 
@@ -1264,52 +1577,79 @@ def main():
         "meta_scrape",
         "service_scrape",
         "session_scrape",
-        "diff"
+        "diff",
+        "tag_check",
+        "tag_info"
     ]
     session_sections = [
+        "application",
+        "account_name",
+        "device_country_code",
+        "device_country",
+        "device_hostname",
+        "industry",
+        "business_line",
+        "device_model",
+        "device_serial",
+        "device_version",
+        "dst_country_code",
+        "dst_country",
+        "dst_ip",
+        "dst_port",
+        "email_recipient",
+        "email_charset",
+        "email_sender",
         "email_subject",
         "file_name",
-        "application",
-        "dst_country",
-        "src_country",
-        "dst_ip",
-        "src_ip",
-        "dst_port",
-        "src_port",
-        "industry",
-        "email_sender",
         "file_url",
-        "email_recipient",
-        "account_name",
+        "src_country_code",
+        "src_country",
+        "src_ip",
+        "src_port",
         "timestamp"
     ]
     sample_sections = [
-        "service",
-        "registry",
-        "process",
-        "misc",
-        "japi",
-        "user_agent",
-        "mutex",
-        "http",
-        "dns",
-        "behavior_desc",
+        "apk_app_icon",
+        "apk_cert_file",
+        "apk_certificate_id",  # Client library passes both fields into one
+        "apk_defined_activity",
+        "apk_defined_intent_filter",
+        "apk_defined_receiver",
+        "apk_defined_sensor",
+        "apk_defined_service",
+        "apk_digital_signer",
+        "apk_embedded_library",
+        "apk_embeded_url",
+        "apk_internal_file",
+        "apk_isrepackaged",
+        "apk_name",
+        "apk_packagename",
+        "apk_requested_permission",
+        "apk_sensitive_api_call",
+        "apk_suspicious_action_monitored",
+        "apk_suspicious_api_call",
+        "apk_suspicious_file",
+        "apk_suspicious_pattern",
+        "apk_suspicious_string",
+        "apk_version_num",
+        "behavior",
         "behavior_type",
         "connection",
-        "file",
-        "apk_misc",
-        "apk_filter",
-        "apk_receiver",
-        "apk_sensor",
-        "apk_service",
-        "apk_embedurl",
-        "apk_permission",
-        "apk_sensitiveapi",
-        "apk_suspiciousapi",
-        "apk_file",
-        "apk_string",
         "digital_signer",
-        "imphash"
+        "dns",
+        "file",
+        "http",
+        "imphash",
+        "japi",
+        "mac_embedded_file",
+        "mac_embedded_url",
+        "misc",
+        "mutex",
+        "process",
+        "registry",
+        "service",
+        "summary",
+        "user_agent"
     ]
     meta_sections = [
         "sha256",
@@ -1347,7 +1687,8 @@ def main():
         "af_import",
         "range",
         "count",
-        "tag_count"
+        "tag_count",
+        "bgm"
     ]
     filter = [
         "suspicious",
@@ -1396,6 +1737,8 @@ def main():
     if not args.quiet:
         if args.ident == "query":
             message_proc("\n%s" % args.query, args)
+        elif args.run == "tag_check":
+            message_proc("\nTag:   %s\nHash:  %s" % (args.query.split(",")[0], args.query.split(",")[1]), args)
         else:
             message_proc("\n%s" % af_query(args.ident, args.query).strip(), args)
 
@@ -1421,6 +1764,10 @@ def main():
         funct_type = "list"
     elif args.run == "diff":
         out_data = diff(args)
+    elif args.run == "tag_check":
+        out_data = tag_check(args)
+    elif args.run == "tag_info":
+        tag_info(args)
 
     if "count" not in out_data:
         out_data['count'] = 1

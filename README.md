@@ -25,19 +25,31 @@ optional arguments:
   -o <section_output>, --output <section_output>
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
-                        default. Sample Sections [service, registry, process,
-                        misc, japi, user_agent, mutex, http, dns,
-                        behavior_desc, behavior_type, connection, file,
-                        apk_misc, apk_filter, apk_receiver, apk_sensor,
-                        apk_service, apk_embedurl, apk_permission,
-                        apk_sensitiveapi, apk_suspiciousapi, apk_file,
-                        apk_string, digital_signer, imphash]. Session Sections
-                        [email_subject, file_name, application, dst_country,
-                        src_country, dst_ip, src_ip, dst_port, src_port,
-                        industry, email_sender, file_url, email_recipient,
-                        account_name, timestamp]. Meta Sections [sha256,
-                        file_type, create_date, verdict, file_size, tags,
-                        sha1, md5, ssdeep, imphash, digital_signer]
+                        default. Sample Sections [apk_app_icon, apk_cert_file,
+                        apk_certificate_id, apk_defined_activity,
+                        apk_defined_intent_filter, apk_defined_receiver,
+                        apk_defined_sensor, apk_defined_service,
+                        apk_digital_signer, apk_embedded_library,
+                        apk_embeded_url, apk_internal_file, apk_isrepackaged,
+                        apk_name, apk_packagename, apk_requested_permission,
+                        apk_sensitive_api_call,
+                        apk_suspicious_action_monitored,
+                        apk_suspicious_api_call, apk_suspicious_file,
+                        apk_suspicious_pattern, apk_suspicious_string,
+                        apk_version_num, behavior, behavior_type, connection,
+                        digital_signer, dns, file, http, imphash, japi,
+                        mac_embedded_file, mac_embedded_url, misc, mutex,
+                        process, registry, service, summary, user_agent].
+                        Session Sections [application, account_name,
+                        device_country_code, device_country, device_hostname,
+                        industry, business_line, device_model, device_serial,
+                        device_version, dst_country_code, dst_country, dst_ip,
+                        dst_port, email_recipient, email_charset,
+                        email_sender, email_subject, file_name, file_url,
+                        src_country_code, src_country, src_ip, src_port,
+                        timestamp]. Meta Sections [sha256, file_type,
+                        create_date, verdict, file_size, tags, sha1, md5,
+                        ssdeep, imphash, digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
@@ -50,10 +62,10 @@ optional arguments:
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
                         mutex_scrape, meta_scrape, service_scrape,
-                        session_scrape, diff]
+                        session_scrape, diff, tag_check, tag_info]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
-                        [yara_rule, af_import, range, count, tag_count]
+                        [yara_rule, af_import, range, count, tag_count, bgm]
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
@@ -88,6 +100,8 @@ Quick links to examples:
 * [Suspicious/Highly Suspicious filter](#suspect_artifacts)
 * [Service Scrape function](#service_scrape)
 * [Write to file](#write_out)
+* [Tag Info](#tag_info)
+* [Tag Check](#tag_check)
 
 ### [+] EXAMPLES [+]
 
@@ -1192,7 +1206,7 @@ QMgcIwoT
 
 ##### write_out
 
-The "w" flag can be used to specify that STDOUT be redirected to a file.
+The "-w" flag can be used to specify that STDOUT be redirected to a file.
 
 ```
 $ python af_lenz.py -i query -q '{"operator":"all","children":[{"field":"sample.tasks.service","operator":"has any value","value":""},{"field":"sample.malware","operator":"is","value":1},{"field":"sample.tasks.dns","operator":"has any value","value":""}]}' -r service_scrape -l 10 -w aflenz.txt -Q
@@ -1202,7 +1216,95 @@ SysCPRC
 QMgcIwoT
 ```
 
+##### bgm_value
+
+The "bgm" parameter can be passed to the "-s" flag to print the B(enign), G(rayware), and M(alware) counts for each associated artifact.
+
+```
+$ python af_lenz.py -i dns -q "markovqwesta.com" -l 1 -r hash_scrape -s bgm -f 0 -o process
+
+{"operator":"all","children":[{"field":"alias.domain","operator":"contains","value":"markovqwesta.com"}]}
+
+[+] hashes [+]
+
+8ef7212841ca0894232c2d118905dfacdcad16d00ca545745eff7123565b5b39
+
+[+] process [+]
+
+19.7K 9.9M  82.1K | svchost.exe , created ,  , Users\Administrator\sample.exe ,  Users\Administrator\sample.exe
+0     0     1     | sample.exe , created ,  , Users\Administrator\AppData\Local\FWJ\csrss_patcher.exe ,  Users\sciZnBNl6e0Mg\AppData\Local\FWJ\csrss_patcher.exe
+15.0K 6.0M  65.0K | svchost.exe , terminated ,  , Users\Administrator\sample.exe
+0     0     1     | csrss_patcher.exe , created ,  , Users\Administrator\AppData\Local\FWJ\syswinlogon.exe ,  Users\sciZnBNl6e0Mg\AppData\Local\FWJ\syswinlogon.exe
+0     0     1     | csrss_patcher.exe , created ,  , Windows\SysWOW64\netsh.exe ,  Windows\System32\netsh.exe  firewall add allowedprogram  Users\sciZnBNl6e0Mg\AppData\Local\FWJ\csrss_patcher.exe   Windows Microsoft .NET Framework NGEN v4.0.30319_X64  ENABLE
+337M  9.6M  79.5K | csrss.exe , created ,  , Windows\System32\conhost.exe , \??\Windows\system32\conhost.exe
+0     0     1     | csrss_patcher.exe , terminated ,  , Windows\SysWOW64\netsh.exe
+370M  7.9M  87.6K | winlogon.exe , terminated ,  , Windows\System32\userinit.exe
+85.3K 764K  15.7K | svchost.exe , terminated ,  , Windows\System32\mobsync.exe
+354M  10.4K 87.6K | unknown , terminated ,  , Program Files (x86)\Adobe\Reader 11.0\Reader\reader_sl.exe
+376M  11.6K 92.8K | SearchIndexer.exe , terminated ,  , Windows\System32\SearchProtocolHost.exe
+376M  11.6K 92.9K | cmd.exe , terminated ,  , Users\Administrator\explorer.exe
+393M  11.7K 93.4K | explorer.exe , terminated ,  , WINDOWS\system32\cmd.exe
+```
+
+##### tag_info
+
+Returns the basic tag meta-data.
+
+```
+$ python af_lenz.py -i tag -q 'Commodity.NJRat' -r tag_info
+
+{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Commodity.NJRat"]}]}
+
+[+] Tag Info [+]
+
+Tag Name        : NJRat
+Tag Public Name : Commodity.NJRat
+Tag Count       : 815787
+Tag Created     : 2016-01-01 00:00:00
+Tag Last Hit    : 2017-02-22 07:55:00
+Tag Class       : malware_family
+Tag Status      : enabled
+Tag Description : NJRat is a remote-access Trojan that has been used for the last few years. We haven’t heard much about NJRat since April 2014, but some samples we’ve recently received show that this malware is making a comeback. ( For some background on NJRat,  a 2013 report from Fidelis Cybersecurity Solutions at General Dynamics detailed indicators, domains, and TTP’s in conjunction with cyber-attacks using NJRat.)
+```
+
+##### tag_check
+
+```
+$ python af_lenz.py -i tag -q 'Commodity.NJRat,2ea576290117ca82cb55f599e00233eb963d940f96ed05f5ce31e7262573e212' -r tag_check
+
+Tag:   Commodity.NJRat
+Hash:  2ea576290117ca82cb55f599e00233eb963d940f96ed05f5ce31e7262573e212
+
+[+] Matched Query [+]
+
+{u'operator': u'contains', u'field': u'sample.tasks.registry', u'value': u'SetValueKey , HKCU\\Environment\\SEE_MASK_NOZONECHECKS , Value:1 , Type:1'}
+
+[+] registry [+]
+
+sample.exe , SetValueKey , HKCU\Environment\SEE_MASK_NOZONECHECKS , Value:1 , Type:1
+
+[+] Matched Query [+]
+
+{u'operator': u'contains', u'field': u'sample.tasks.registry', u'value': u'HKCU\\Environment , SEE_MASK_NOZONECHECKS , 1'}
+
+[+] registry [+]
+
+sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
+
+[+] processed 1 hashes with a BGM filter of 0 [+]
+```
+
 ### [+] CHANGE LOG [+]
+
+v1.2.0 - 22FEB2017
+* Fixed an issue with 'count' function processing more than the expected sections.
+* Added the following new APK sections: apk_app_icon, apk_cert_file, apk_defined_activity, apk_defined_intent_filter, apk_digital_signer, apk_embedded_library, apk_isrepackaged, apk_name, apk_packagename, apk_suspicious_action_monitored, apk_suspicious_file, apk_suspicious_pattern, apk_version_num.
+* Added the following new MAC sections: mac_embedded_file, mac_embedded_url.
+* Added the following new Session sections: device_country_code, device_country, device_hostname, business_line, device_model, device_serial, device_version, dst_country_code, dst_ip, dst_port, email_charset, src_country_code, src_country, src_ip, src_port, timestamp.
+* Renamed the following sections to align with client library: apk_receiver => apk_defined_receiver, apk_sensor => apk_defined_sensor, apk_service => apk_defined_service, apk_embedurl => apk_embeded_url, apk_file => apk_internal_file, apk_permission => apk_requested_permission, apk_sensitiveapi => apk_sensitive_api_call, apk_suspiciousapi => apk_suspisicous_api_call, apk_string => apk_suspicious_string, behavior_desc => behavior.
+* Added new "bgm" parameter to "-s" flag which will print the B(enign), G(rayware), and M(alware) counts per artifact.
+* Added "tag_info" function which returns the tag meta-data.
+* Added "tag_check" function, which should be considered BEST EFFORT. It will take each defined query for a tag and attempt to identify which sub-queries caused the sample to be tagged. Supports "contains", "is", "in the list", "regexp", and "proximity" but highly complex rules may cause problems.
 
 v1.1.9 - 21DEC2016
 * Added "service_scrape" function to extract unique service names from a set of samples.

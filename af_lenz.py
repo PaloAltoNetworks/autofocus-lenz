@@ -935,7 +935,7 @@ def tag_check(args):
                 hash_data[section].append(value)
 
     # Perform the tag check across sections
-    def match_check(entry):
+    def match_check(entry, match_flag):
 
         for section in sections:
 
@@ -948,7 +948,9 @@ def tag_check(args):
 
                         for line in hash_detail[section]:
 
-                            if entry["value"] in line:
+                            if entry["value"].lower() in line.lower(): # AF is case-insensitive here
+
+                                match_flag = 1
 
                                 entry_check = str(entry)
                                 if entry_check not in matches:
@@ -965,7 +967,9 @@ def tag_check(args):
 
                             for line in hash_detail[section]:
 
-                                if value in line:
+                                if value.lower() in line.lower():
+
+                                    match_flag = 1
 
                                     entry_check = str(entry)
                                     if entry_check not in matches:
@@ -983,7 +987,9 @@ def tag_check(args):
 
                         for line in hash_detail[section]:
 
-                            if re.search(af_regex, line):
+                            if re.search(af_regex, line, re.IGNORECASE):
+
+                                match_flag = 1
 
                                 entry_check = str(entry)
                                 if entry_check not in matches:
@@ -993,9 +999,11 @@ def tag_check(args):
                                 if line not in matches[entry_check][section]:
                                     matches[entry_check][section].append(line)
 
-        return
+        return match_flag
 
     for query in tag_def:
+
+        match_flag = 0
 
         query = json.loads(str(query))
 
@@ -1018,10 +1026,14 @@ def tag_check(args):
 
                         for child_entry in entry["children"]:
 
-                            match_check(child_entry)
+                            match_flag = match_check(child_entry, match_flag)
 
                     else:
-                        match_check(entry)
+                        match_flag = match_check(entry, match_flag)
+
+                if match_flag == 0:
+
+                    message_proc("\n[+] Unsupported Matched Query [+]\n\n%s" % query, args)
 
     for entry in matches:
 
@@ -1080,12 +1092,15 @@ def output_analysis(args, sample_data, funct_type):
         "apk_defined_sensor",
         "apk_defined_service",
         "apk_digital_signer",
+        "apk_embedded_library",
         "apk_embeded_url",
         "apk_internal_file",
+        "apk_isrepackaged",
         "apk_name",
         "apk_packagename",
         "apk_requested_permission",
         "apk_sensitive_api_call",
+        "apk_suspicious_action_monitored",
         "apk_suspicious_api_call",
         "apk_suspicious_file",
         "apk_suspicious_pattern",
@@ -1094,12 +1109,14 @@ def output_analysis(args, sample_data, funct_type):
         "behavior",
         "behavior_type",
         "connection",
+        "default",
         "digital_signer",
         "dns",
         "file",
         "http",
         "imphash",
         "japi",
+        "mac_embedded_file",
         "mac_embedded_url",
         "misc",
         "mutex",
@@ -1108,7 +1125,6 @@ def output_analysis(args, sample_data, funct_type):
         "service",
         "summary",
         "user_agent",
-        "default"
     ]
 
     if "all" in output:
@@ -1611,7 +1627,6 @@ def main():
     sample_sections = [
         "apk_app_icon",
         "apk_cert_file",
-        "apk_certificate_id",  # Client library passes both fields into one
         "apk_defined_activity",
         "apk_defined_intent_filter",
         "apk_defined_receiver",
@@ -1635,6 +1650,7 @@ def main():
         "behavior",
         "behavior_type",
         "connection",
+        "default",
         "digital_signer",
         "dns",
         "file",

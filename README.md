@@ -1296,6 +1296,9 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 ### [+] CHANGE LOG [+]
 
+v1.2.1 - 05APR2017
+* Changed internal hash_lookup section to only pull the requested sections as opposed to all - should save bandwidth and speed things up for queries with thousands of requests.
+
 v1.2.0 - 22FEB2017
 * Fixed an issue with 'count' function processing more than the expected sections.
 * Added the following new APK sections: apk_app_icon, apk_cert_file, apk_defined_activity, apk_defined_intent_filter, apk_digital_signer, apk_embedded_library, apk_isrepackaged, apk_name, apk_packagename, apk_suspicious_action_monitored, apk_suspicious_file, apk_suspicious_pattern, apk_version_num.

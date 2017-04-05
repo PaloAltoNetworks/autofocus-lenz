@@ -52,8 +52,8 @@ import sys, argparse, multiprocessing, os, re, json
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.0"
-__date__    = "22FEB2017"
+__version__ = "1.2.1"
+__date__    = "05APR2017"
 
 #######################
 # Check research mode #
@@ -421,9 +421,20 @@ def hash_lookup(args, query):
         AFUserAgentFragment                 : "user_agent"
     }
 
+    # This may speed up large queries by reducing the volume of data returned from the API
+    if args.output == "all":
+        section_value = None
+    else:
+        section_value = []
+        for section in args.output.split(","):
+            for section_map in analysis_data_map:
+                if section == analysis_data_map[section_map]:
+                    section_value.append(section_map)
+
     # If there are no counts for the activity, ignore them for the filter
     for sample in AFSample.search(af_query("hash",query)):
-        for analysis in sample.get_analyses():
+
+        for analysis in sample.get_analyses(sections=section_value):
 
             analysis_data_section = analysis_data_map.get(type(analysis), "default")
 

@@ -53,7 +53,7 @@ import sys, argparse, multiprocessing, os, re, json
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.2.1"
-__date__    = "05APR2017"
+__date__    = "11MAY2017"
 
 #######################
 # Check research mode #

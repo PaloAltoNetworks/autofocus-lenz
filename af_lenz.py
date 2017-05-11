@@ -544,7 +544,7 @@ def common_artifacts(args):
                 else:
                     common_data[section].append(value)
 
-    common_data['count'] = count # Keep track of how many samples processed
+    common_data['count']    = count # Keep track of how many samples processed
     common_data['hashes'] = hashes.keys()
 
     return common_data
@@ -597,7 +597,8 @@ def common_pieces(args):
                 else:
                     common_pieces[section].append(value)
 
-    common_pieces['count'] = count # Keep track of how many samples processed
+    common_pieces['count']  = count # Keep track of how many samples processed
+    common_pieces['hashes'] = hashes.keys()
 
     # Clear out behavior descriptions so it doesn't print - doesn't really make sense for this context
     # Comment out to add them back in
@@ -697,7 +698,8 @@ def hash_scrape(args):
     if args.special == "count":
         hash_data = count_values(hash_data, args)
 
-    hash_data['count'] = count # Keep track of how many samples processed
+    hash_data['count']  = count # Keep track of how many samples processed
+    hash_data['hashes'] = hashes.keys()
 
     return hash_data
 
@@ -722,7 +724,8 @@ def http_scrape(args):
                 http_data['http'].append(url_value)
         count += 1
 
-    http_data['count'] = count # Keep track of how many samples processed
+    http_data['count']  = count # Keep track of how many samples processed
+    http_data['hashes'] = hashes.keys()
 
     return http_data
 
@@ -749,7 +752,8 @@ def dns_scrape(args):
                 dns_data['dns'].append(dns_query)
         count += 1
 
-    dns_data['count'] = count # Keep track of how many samples processed
+    dns_data['count']   = count # Keep track of how many samples processed
+    dns_data['hashes']  = hashes.keys()
 
     return dns_data
 
@@ -776,7 +780,8 @@ def mutex_scrape(args):
                 mutex_data['mutex'].append(mutex_value)
         count += 1
 
-    mutex_data['count'] = count # Keep track of how many samples processed
+    mutex_data['count']     = count # Keep track of how many samples processed
+    mutex_data['hashes']    = hashes.keys()
 
     return mutex_data
 
@@ -803,7 +808,8 @@ def service_scrape(args):
                 service_data['service'].append(service_query)
         count += 1
 
-    service_data['count'] = count # Keep track of how many samples processed
+    service_data['count']   = count # Keep track of how many samples processed
+    service_data['hashes']  = hashes.keys()
 
     return service_data
 
@@ -892,7 +898,8 @@ def diff(args):
                         hash_data[section].append("> | " + value)
         count += 1
 
-    hash_data['count'] = count
+    hash_data['count']  = count
+    hash_data['hashes'] = hashes.keys()
 
     return hash_data
 

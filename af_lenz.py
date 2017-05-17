@@ -53,7 +53,7 @@ import sys, argparse, multiprocessing, os, re, json
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.2.1"
-__date__    = "11MAY2017"
+__date__    = "17MAY2017"
 
 #######################
 # Check research mode #
@@ -1028,11 +1028,11 @@ def tag_check(args):
         # Attempt to wrap each query with a parent query using supplied hash
         # Should narrow down queries that need to be deconstructed for checking
         query_check = str(query)
-        query_check = '{"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"%s"},' % tag_data["hash_value"] + query_check
-        query_check = query_check + ']}'
+        query_check = query_check.replace("\"", "\\\"") # Escape single quotes before injecting operator part of query
+        query_check = '{"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"%s"},' % tag_data["hash_value"] + query_check + "]}"
         query_check = query_check.replace("u'", "'")
         query_check = query_check.replace("'", "\"")
-        query_check = query_check.replace("\\", "\\\\")
+        #query_check = query_check.replace("\\", "\\\\")
 
         for sample in AFSample.search(query_check):
 

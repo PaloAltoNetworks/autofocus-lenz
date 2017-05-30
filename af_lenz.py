@@ -52,8 +52,8 @@ import sys, argparse, multiprocessing, os, re, json
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.1"
-__date__    = "17MAY2017"
+__version__ = "1.2.2"
+__date__    = "30MAY2017"
 
 #######################
 # Check research mode #
@@ -1028,11 +1028,38 @@ def tag_check(args):
         # Attempt to wrap each query with a parent query using supplied hash
         # Should narrow down queries that need to be deconstructed for checking
         query_check = str(query)
-        query_check = query_check.replace("\"", "\\\"") # Escape single quotes before injecting operator part of query
+
+        #print "\n[ ORIGINAL ]\n%s\n" % query_check
+
+        # Poor anchors for reverse converting at the end for special cases
+        query_check = query_check.replace('u"', "ABCSTARTQU0TEDEF")
+        query_check = query_check.replace('",', "ABCENDQU0TEDEF")
+        query_check = query_check.replace('"}', "ABCDICTQU0TEDEF")
+        query_check = query_check.replace('"]', "ABCLISTQU0TEDEF")
+
+        # If double quotes in value, temporarily replace them and escape/add back in at the end after all string manipulation
+        query_check = query_check.replace('"', 'ABCDOULBEQU0TEDEF')
+
+        # General replacements to massage query into acceptable query for API - single to double quotes
+        query_check = re.sub("(u')", "\"", query_check)
+        query_check = re.sub("(': )", "\": ", query_check)
+        query_check = re.sub("(', )", "\", ", query_check)
+        query_check = re.sub("('})", "\"}", query_check)
+        query_check = re.sub("('])", "\"]", query_check)
+
+        # Surround query with hash
+        query_check = query_check.replace("[{u'operator': u'any', u'children':", "")
         query_check = '{"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"%s"},' % tag_data["hash_value"] + query_check + "]}"
-        query_check = query_check.replace("u'", "'")
-        query_check = query_check.replace("'", "\"")
-        #query_check = query_check.replace("\\", "\\\\")
+
+        # Convert fields back for API
+        query_check = query_check.replace("ABCSTARTQU0TEDEF", '"')
+        query_check = query_check.replace("ABCENDQU0TEDEF"  , '",')
+        query_check = query_check.replace("ABCDICTQU0TEDEF" , '"}')
+        query_check = query_check.replace("ABCLISTQU0TEDEF" , '"]')
+
+        query_check = query_check.replace("ABCDOULBEQU0TEDEF", '\\"')
+
+        #print "\n[MODIFIED]\n%s\n" % query_check
 
         for sample in AFSample.search(query_check):
 
@@ -1044,7 +1071,17 @@ def tag_check(args):
 
                         for child_entry in entry["children"]:
 
-                            match_flag = match_check(child_entry, match_flag)
+                            if "field" not in entry:
+
+                                for child_child_entry in child_entry: # Lots of kids...
+
+                                    if "field" in child_child_entry:
+
+                                        match_flag = match_check(child_entry, match_flag)
+
+                            else:
+
+                                match_flag = match_check(child_entry, match_flag)
 
                     else:
                         match_flag = match_check(entry, match_flag)
@@ -1070,7 +1107,6 @@ def tag_check(args):
     args.filter = 0
 
     return tag_data
-
 
 ########################
 # OUTPUT SECTION BELOW #

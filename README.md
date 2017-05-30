@@ -1296,6 +1296,9 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 ### [+] CHANGE LOG [+]
 
+v1.2.2 - 30MAY2017
+* Adjusted tag_check function to support more variations in queries.
+
 v1.2.1 - 05APR2017
 * Changed internal hash_lookup section to only pull the requested sections as opposed to all - should save bandwidth and speed things up for queries with thousands of requests.
 * Adjusted tag_check function to account for escaping double quotes within a query being checked.

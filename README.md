@@ -5,7 +5,6 @@
 The AutoFocus API exposes a wealth of dynamic analysis information about malware activities from disk to wire, which is made easily accessible for scripting through the [AutoFocus Python Client Library](https://github.com/PaloAltoNetworks/autofocus-client-library). The goal of *af_lenz.py* is to build ontop of the client library by providing a set of helpful tools to aide incident responders, or analysts, in rapidly extracting information from AutoFocus that can be used for operational intelligence.
 
 ```
-$ python af_lenz.py --help
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
                   [-s <special_output>] [-c <integer_percent>] [-Q]
@@ -26,26 +25,27 @@ optional arguments:
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
                         default. Sample Sections [apk_app_icon, apk_cert_file,
-                        apk_certificate_id, apk_defined_activity,
-                        apk_defined_intent_filter, apk_defined_receiver,
-                        apk_defined_sensor, apk_defined_service,
-                        apk_digital_signer, apk_embedded_library,
-                        apk_embeded_url, apk_internal_file, apk_isrepackaged,
-                        apk_name, apk_packagename, apk_requested_permission,
+                        apk_defined_activity, apk_defined_intent_filter,
+                        apk_defined_receiver, apk_defined_sensor,
+                        apk_defined_service, apk_digital_signer,
+                        apk_embedded_library, apk_embeded_url,
+                        apk_internal_file, apk_isrepackaged, apk_name,
+                        apk_packagename, apk_requested_permission,
                         apk_sensitive_api_call,
                         apk_suspicious_action_monitored,
                         apk_suspicious_api_call, apk_suspicious_file,
                         apk_suspicious_pattern, apk_suspicious_string,
                         apk_version_num, behavior, behavior_type, connection,
-                        digital_signer, dns, file, http, imphash, japi,
-                        mac_embedded_file, mac_embedded_url, misc, mutex,
-                        process, registry, service, summary, user_agent].
-                        Session Sections [application, account_name,
-                        device_country_code, device_country, device_hostname,
-                        industry, business_line, device_model, device_serial,
-                        device_version, dst_country_code, dst_country, dst_ip,
-                        dst_port, email_recipient, email_charset,
-                        email_sender, email_subject, file_name, file_url,
+                        default, digital_signer, dns, file, http, imphash,
+                        japi, mac_embedded_file, mac_embedded_url, misc,
+                        mutex, process, registry, service, summary,
+                        user_agent]. Session Sections [application,
+                        account_name, device_country_code, device_country,
+                        device_hostname, industry, business_line,
+                        device_model, device_serial, device_version,
+                        dst_country_code, dst_country, dst_ip, dst_port,
+                        email_recipient, email_charset, email_sender,
+                        email_subject, file_name, file_url, sha256,
                         src_country_code, src_country, src_ip, src_port,
                         timestamp]. Meta Sections [sha256, file_type,
                         create_date, verdict, file_size, tags, sha1, md5,
@@ -1295,6 +1295,9 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 ```
 
 ### [+] CHANGE LOG [+]
+
+v1.2.3 - 07AUG2017
+* Added SHA256 as a field for session_scrape function.
 
 v1.2.2 - 30MAY2017
 * Adjusted tag_check function to support more variations in queries.

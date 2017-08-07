@@ -53,7 +53,7 @@ import sys, argparse, multiprocessing, os, re, json
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.2.2"
-__date__    = "30MAY2017"
+__date__    = "07AUG2017"
 
 #######################
 # Check research mode #
@@ -1023,7 +1023,7 @@ def tag_check(args):
 
         match_flag = 0
 
-        query = json.loads(str(query))
+        query = json.loads(str(query).encode("utf-8"))
 
         # Attempt to wrap each query with a parent query using supplied hash
         # Should narrow down queries that need to be deconstructed for checking
@@ -1277,6 +1277,7 @@ def build_output_string(args, item, type):
         "email_subject"         : item.email_subject,
         "file_name"             : item.file_name,
         "file_url"              : item.file_url,
+        "sha256"                : item.sha256,
         "src_country_code"      : item.src_country_code,
         "src_country"           : item.src_country,
         "src_ip"                : item.src_ip,
@@ -1287,7 +1288,8 @@ def build_output_string(args, item, type):
 
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
 
-            all_sections = ["timestamp",
+            all_sections = ["sha256",
+                            "timestamp",
                             "account_name",
                             "email_sender",
                             "email_subject",
@@ -1672,6 +1674,7 @@ def main():
         "email_subject",
         "file_name",
         "file_url",
+        "sha256",
         "src_country_code",
         "src_country",
         "src_ip",

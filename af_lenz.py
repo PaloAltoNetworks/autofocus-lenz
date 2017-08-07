@@ -52,7 +52,7 @@ import sys, argparse, multiprocessing, os, re, json
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 __date__    = "07AUG2017"
 
 #######################

@@ -1298,6 +1298,7 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 v1.2.3 - 07AUG2017
 * Added SHA256 as a field for session_scrape function.
+* Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.
 
 v1.2.2 - 30MAY2017
 * Adjusted tag_check function to support more variations in queries.

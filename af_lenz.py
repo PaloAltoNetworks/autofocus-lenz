@@ -53,7 +53,7 @@ import sys, argparse, multiprocessing, os, re, json
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.2.3"
-__date__    = "07AUG2017"
+__date__    = "15AUG2017"
 
 #######################
 # Check research mode #
@@ -77,12 +77,12 @@ except:
 class AFLenzNameSpace(object):
     ''' A class which wraps an AFlenz command line statement arguments into members
     '''
-    def __init__(self, query, run_type, limit, quiet=True, commonality=100, filter=10000, write=False):
+    def __init__(self, commonality=100, filter=10000, ident="query", limit=200, output="all", query='{"operator":"all","children":[{"field":"sample.malware","operator":"is","value":1}]}', quiet=True, run_type="hash_scrape", write=False):
         self.commonality = commonality
         self.filter = filter
-        self.ident = 'query'
+        self.ident = ident
         self.limit = limit
-        self.output = 'all'
+        self.output = output
         self.query = query
         self.quiet = quiet
         self.run = run_type
@@ -1333,7 +1333,7 @@ def build_output_string(args, item, type):
         "src_is_private_ip"     : item.src_is_private_ip,
         "src_port"              : item.src_port,
         "timestamp"             : str(item.timestamp),
-        "user_id"               : item._user_id,
+        "user_id"               : item.user_id,
         "_vsys"                 : item._vsys}
         print_list = []
 

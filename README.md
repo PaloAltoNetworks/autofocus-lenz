@@ -1299,9 +1299,10 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 v1.2.3 - 15AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.
-* Added Tom Lancasters AFLenz Class to support third party scripts calling functions directly.
-* Added the following new Session sections: session_id, dst_is_private_ip, is_uploaded, sha256, src_is_private_ip, user_id, _vsys
+* Added AFLenz class to support third party scripts calling functions directly.
+* Added the following new Session sections: session_id, dst_is_private_ip, is_uploaded, sha256, src_is_private_ip, user_id, _vsys.
 * Modified to APK section "apk_name" to "apk_app_name" to align to the client library.
+* Separated out the "session_scrape" and "meta_scrape" code into unique functions for calling by the AFLenz class.
 
 v1.2.2 - 30MAY2017
 * Adjusted tag_check function to support more variations in queries.

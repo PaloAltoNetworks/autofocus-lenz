@@ -931,6 +931,10 @@ def diff(args):
 
     return hash_data
 
+# Tag Info
+# Pulls back specific tag details
+# Output should be similar to what's presented when looking at a tag in AF
+
 def tag_info(args):
 
     # Get tag info
@@ -950,6 +954,10 @@ def tag_info(args):
     message_proc("\n[+] Tag Info [+]\n%s" % tag_details, args)
 
     sys.exit(1)
+
+# Tag Checker
+# Tries to identify what artifact in a sample caused it to be tagged with the supplied tag
+# BETA
 
 def tag_check(args):
 
@@ -1135,6 +1143,80 @@ def tag_check(args):
     args.filter = 0
 
     return tag_data
+
+
+# Metadata Scraper Function
+# Extracts all metadata data from the identified samples
+# BGM filtering is done on the entire line
+
+def meta_scrape(args):
+    results = []
+    count = 0
+
+    if research_mode == "True":
+        poll_af = AFSample.scan
+    else:
+        poll_af = AFSample.search
+
+    if not args.quiet:
+        message_proc("\n[+] sample_meta [+]\n", args)
+
+    if args.ident == "query":
+        for sample in poll_af(args.query):
+            print_line = build_output_string(args, sample, "meta")
+            if count < args.limit:
+                results.append(print_line)
+                count += 1
+            else:
+                break
+
+    else:
+        for sample in poll_af(af_query(args.ident, args.query)):
+            print_line = build_output_string(args, sample, "meta")
+            if count < args.limit:
+                results.append(print_line)
+                count += 1
+            else:
+                break
+
+    return results
+
+
+# Session Scraper Function
+# Extracts all session data from the identified samples
+# BGM filtering is done on the entire line
+
+def session_scrape(args):
+    results = []
+    count = 0
+
+    if research_mode == "True":
+        poll_af = AFSession.scan
+    else:
+        poll_af = AFSession.search
+
+    if not args.quiet:
+        message_proc("\n[+] session_meta [+]\n", args)
+
+    if args.ident == "query":
+        for session in poll_af(args.query):
+            print_line = build_output_string(args, session, "session")
+            if count < args.limit:
+                results.append(print_line)
+                count += 1
+            else:
+                break
+
+    else:
+        for session in poll_af(af_query(args.ident, args.query)):
+            print_line = build_output_string(args, session, "session")
+            if count < args.limit:
+                results.append(print_line)
+                count += 1
+            else:
+                break
+
+    return results
 
 ########################
 # OUTPUT SECTION BELOW #
@@ -1368,31 +1450,7 @@ def output_list(args):
     #
     if args.run == "meta_scrape":
 
-        if research_mode == "True":
-            poll_af = AFSample.scan
-        else:
-            poll_af = AFSample.search
-
-        if not args.quiet:
-            message_proc("\n[+] sample_meta [+]\n", args)
-
-        if args.ident == "query":
-                for sample in poll_af(args.query):
-                    print_line = build_output_string(args, sample, "meta")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
-
-        else:
-                for sample in poll_af(af_query(args.ident,args.query)):
-                    print_line = build_output_string(args, sample, "meta")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
+        results = meta_scrape(args)
 
         # Count and print only tags
         if args.special == "tag_count":
@@ -1421,36 +1479,10 @@ def output_list(args):
         if not args.quiet:
             message_proc("\n[+] processed %s samples [+]\n" % str(count), args)
 
-    #
-    # Session scrape
-    #
+    # Session output
     if args.run == "session_scrape":
 
-        if research_mode == "True":
-            poll_af = AFSession.scan
-        else:
-            poll_af = AFSession.search
-
-        if not args.quiet:
-            message_proc("\n[+] session_meta [+]\n", args)
-
-        if args.ident == "query":
-                for session in poll_af(args.query):
-                    print_line = build_output_string(args, session, "session")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
-
-        else:
-                for session in poll_af(af_query(args.ident,args.query)):
-                    print_line = build_output_string(args, session, "session")
-                    if count < args.limit:
-                        results.append(print_line)
-                        count += 1
-                    else:
-                        break
+        results = session_scrape(args)
 
         # Auto-adjust column widths
         widths = [max(map(len,col)) for col in zip(*results)]

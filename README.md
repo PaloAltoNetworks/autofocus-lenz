@@ -29,7 +29,7 @@ optional arguments:
                         apk_defined_receiver, apk_defined_sensor,
                         apk_defined_service, apk_digital_signer,
                         apk_embedded_library, apk_embeded_url,
-                        apk_internal_file, apk_isrepackaged, apk_name,
+                        apk_internal_file, apk_isrepackaged, apk_app_name,
                         apk_packagename, apk_requested_permission,
                         apk_sensitive_api_call,
                         apk_suspicious_action_monitored,
@@ -39,17 +39,18 @@ optional arguments:
                         default, digital_signer, dns, file, http, imphash,
                         japi, mac_embedded_file, mac_embedded_url, misc,
                         mutex, process, registry, service, summary,
-                        user_agent]. Session Sections [application,
-                        account_name, device_country_code, device_country,
+                        user_agent]. Session Sections [account_name,
+                        application, device_country_code, device_country,
                         device_hostname, industry, business_line,
                         device_model, device_serial, device_version,
-                        dst_country_code, dst_country, dst_ip, dst_port,
-                        email_recipient, email_charset, email_sender,
-                        email_subject, file_name, file_url, sha256,
-                        src_country_code, src_country, src_ip, src_port,
-                        timestamp]. Meta Sections [sha256, file_type,
-                        create_date, verdict, file_size, tags, sha1, md5,
-                        ssdeep, imphash, digital_signer]
+                        dst_country_code, dst_country, dst_ip,
+                        dst_is_private_ipdst_port, email_recipient,
+                        email_charset, email_sender, email_subject, file_name,
+                        file_url, sha256, src_country_code, src_country,
+                        src_ip, src_is_private_ipsrc_port, timestamp, user_id,
+                        _vsys]. Meta Sections [sha256, file_type, create_date,
+                        verdict, file_size, tags, sha1, md5, ssdeep, imphash,
+                        digital_signer]
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
@@ -1296,9 +1297,11 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 ### [+] CHANGE LOG [+]
 
-v1.2.3 - 07AUG2017
-* Added SHA256 as a field for session_scrape function.
+v1.2.3 - 15AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.
+* Added Tom Lancasters AFLenz Class to support third party scripts calling functions directly.
+* Added the following new Session sections: session_id, dst_is_private_ip, is_uploaded, sha256, src_is_private_ip, user_id, _vsys
+* Modified to APK section "apk_name" to "apk_app_name" to align to the client library.
 
 v1.2.2 - 30MAY2017
 * Adjusted tag_check function to support more variations in queries.

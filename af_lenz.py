@@ -70,6 +70,25 @@ try:
 except:
     pass
 
+################
+# AFLenz Class #
+################
+
+class AFLenzNameSpace(object):
+    ''' A class which wraps an AFlenz command line statement arguments into members
+    '''
+    def __init__(self, query, run_type, limit, quiet=True, commonality=100, filter=10000, write=False):
+        self.commonality = commonality
+        self.filter = filter
+        self.ident = 'query'
+        self.limit = limit
+        self.output = 'all'
+        self.query = query
+        self.quiet = quiet
+        self.run = run_type
+        self.special = []
+        self.write = write
+
 ####################
 # Build structures #
 ####################
@@ -79,6 +98,7 @@ def build_field_list():
     field_list = {
         "apk_app_icon"                      : [],
         "apk_cert_file"                     : [],
+#        "apk_certificate_id"                : [],
         "apk_defined_activity"              : [],
         "apk_defined_intent_filter"         : [],
         "apk_defined_receiver"              : [],
@@ -89,7 +109,7 @@ def build_field_list():
         "apk_embeded_url"                   : [],
         "apk_internal_file"                 : [],
         "apk_isrepackaged"                  : [],
-        "apk_name"                          : [],
+        "apk_app_name"                      : [],
         "apk_packagename"                   : [],
         "apk_requested_permission"          : [],
         "apk_sensitive_api_call"            : [],
@@ -127,6 +147,7 @@ def build_field_dict():
     field_dict = {
         "apk_app_icon"                      : {},
         "apk_cert_file"                     : {},
+#        "apk_certificate_id"                : {},
         "apk_defined_activity"              : {},
         "apk_defined_intent_filter"         : {},
         "apk_defined_receiver"              : {},
@@ -137,7 +158,7 @@ def build_field_dict():
         "apk_embeded_url"                   : {},
         "apk_internal_file"                 : {},
         "apk_isrepackaged"                  : {},
-        "apk_name"                          : {},
+        "apk_app_name"                      : {},
         "apk_packagename"                   : {},
         "apk_requested_permission"          : {},
         "apk_sensitive_api_call"            : {},
@@ -173,8 +194,8 @@ def build_field_dict():
 def build_session_list():
 
     session_list = {
-        "application"           : [],
         "account_name"          : [],
+        "application"           : [],
         "device_country_code"   : [],
         "device_country"        : [],
         "device_hostname"       : [],
@@ -186,6 +207,7 @@ def build_session_list():
         "dst_country_code"      : [],
         "dst_country"           : [],
         "dst_ip"                : [],
+        "dst_is_private_ip"     : [],
         "dst_port"              : [],
         "email_recipient"       : [],
         "email_charset"         : [],
@@ -193,11 +215,17 @@ def build_session_list():
         "email_subject"         : [],
         "file_name"             : [],
         "file_url"              : [],
+        "is_uploaded"           : [],
+        "session_id"            : [],
+        "sha256"                : [],
         "src_country_code"      : [],
         "src_country"           : [],
         "src_ip"                : [],
+        "src_is_private_ip"     : [],
         "src_port"              : [],
-        "timestamp"             : []
+        "timestamp"             : [],
+        "user_id"               : [],
+        "_vsys"                 : []
     }
 
     return session_list
@@ -380,12 +408,12 @@ def hash_lookup(args, query):
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
-        #AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
         AFAnalysisSummary                   : "summary",
         AFApiActivity                       : "misc",
         AFApkActivityAnalysis               : "apk_defined_activity",
-        AFApkAppName                        : "apk_name",
+        AFApkAppName                        : "apk_app_name",
         AFApkCertificate                    : "apk_cert_file",
+#        AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
         AFApkEmbeddedFile                   : "apk_internal_file",
         AFApkEmbeddedLibrary                : "apk_embedded_library",
         AFApkEmbededUrlAnalysis             : "apk_embeded_url",
@@ -1122,24 +1150,42 @@ def output_analysis(args, sample_data, funct_type):
 
     section_list = [
         #Session
+        "application",
+        "account_name",
+        "device_country_code",
+        "device_country",
+        "device_hostname",
+        "industry",
+        "business_line",
+        "device_model",
+        "device_serial",
+        "device_version",
+        "dst_country_code",
+        "dst_country",
+        "dst_ip",
+        "dst_is_private_ip",
+        "dst_port",
+        "email_recipient",
+        "email_charset",
+        "email_sender",
         "email_subject",
         "file_name",
-        "application",
-        "dst_country",
-        "src_country",
-        "dst_ip",
-        "src_ip",
-        "dst_port",
-        "src_port",
-        "industry",
-        "email_sender",
         "file_url",
-        "email_recipient",
-        "account_name",
+        "is_uploaded",
+        "session_id",
+        "sha256",
+        "src_country_code",
+        "src_country",
+        "src_ip",
+        "src_is_private_ip",
+        "src_port",
         "timestamp",
+        "user_id",
+        "_vsys"
         #Sample
         "apk_app_icon",
         "apk_cert_file",
+#        "apk_certificate_id",
         "apk_defined_activity",
         "apk_defined_intent_filter",
         "apk_defined_receiver",
@@ -1150,7 +1196,7 @@ def output_analysis(args, sample_data, funct_type):
         "apk_embeded_url",
         "apk_internal_file",
         "apk_isrepackaged",
-        "apk_name",
+        "apk_app_name",
         "apk_packagename",
         "apk_requested_permission",
         "apk_sensitive_api_call",
@@ -1257,8 +1303,8 @@ def build_output_string(args, item, type):
     #
     elif type == "session":
         meta_sections = {
-        "application"           : item.application,
         "account_name"          : item.account_name,
+        "application"           : item.application,
         "device_country_code"   : item.device_country_code,
         "device_country"        : item.device_country,
         "device_hostname"       : item.device_hostname,
@@ -1270,6 +1316,7 @@ def build_output_string(args, item, type):
         "dst_country_code"      : item.dst_country_code,
         "dst_country"           : item.dst_country,
         "dst_ip"                : item.dst_ip,
+        "dst_is_private_ip"     : item.dst_is_private_ip,
         "dst_port"              : item.dst_port,
         "email_recipient"       : item.email_recipient,
         "email_charset"         : item.email_charset,
@@ -1277,13 +1324,17 @@ def build_output_string(args, item, type):
         "email_subject"         : item.email_subject,
         "file_name"             : item.file_name,
         "file_url"              : item.file_url,
+        "is_uploaded"           : item.is_uploaded,
+        "session_id"            : item.session_id,
         "sha256"                : item.sha256,
         "src_country_code"      : item.src_country_code,
         "src_country"           : item.src_country,
         "src_ip"                : item.src_ip,
+        "src_is_private_ip"     : item.src_is_private_ip,
         "src_port"              : item.src_port,
-        "timestamp"             : str(item.timestamp)
-                         }
+        "timestamp"             : str(item.timestamp),
+        "user_id"               : item._user_id,
+        "_vsys"                 : item._vsys}
         print_list = []
 
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
@@ -1654,8 +1705,8 @@ def main():
         "tag_info"
     ]
     session_sections = [
-        "application",
         "account_name",
+        "application",
         "device_country_code",
         "device_country",
         "device_hostname",
@@ -1667,6 +1718,7 @@ def main():
         "dst_country_code",
         "dst_country",
         "dst_ip",
+        "dst_is_private_ip"
         "dst_port",
         "email_recipient",
         "email_charset",
@@ -1678,12 +1730,16 @@ def main():
         "src_country_code",
         "src_country",
         "src_ip",
+        "src_is_private_ip"
         "src_port",
-        "timestamp"
+        "timestamp",
+        "user_id",
+        "_vsys"
     ]
     sample_sections = [
         "apk_app_icon",
         "apk_cert_file",
+#        "apk_certificate_id",
         "apk_defined_activity",
         "apk_defined_intent_filter",
         "apk_defined_receiver",
@@ -1694,7 +1750,7 @@ def main():
         "apk_embeded_url",
         "apk_internal_file",
         "apk_isrepackaged",
-        "apk_name",
+        "apk_app_name",
         "apk_packagename",
         "apk_requested_permission",
         "apk_sensitive_api_call",

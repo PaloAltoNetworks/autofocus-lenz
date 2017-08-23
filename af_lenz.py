@@ -847,7 +847,7 @@ def service_scrape(args):
 
 def fetch_from_file(args,input_file):
 
-    if args.ident == "input_file":
+    if args.ident == "file_hashes":
         hashlist = []
 
         if not args.quiet:
@@ -872,7 +872,7 @@ def fetch_from_file(args,input_file):
 
         return hashlist
 
-    elif args.ident == "input_file_query":
+    elif args.ident == "file_query":
 
         if not args.quiet:
             message_proc("\n[+] Attempting to read query from %s" % input_file, args)
@@ -1840,8 +1840,8 @@ def main():
         "user_agent",
         "tag",
         "query",
-        "input_file",
-        "input_file_query"
+        "file_hashes",
+        "file_query"
     ]
     specials = [
         "yara_rule",
@@ -1874,13 +1874,13 @@ def main():
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
 
-    if args.ident == "input_file":
+    if args.ident == "file_hashes":
         hashlist = fetch_from_file(args, args.query)
         # Build an AF query using the hash list that was just generated join the list into a comma-separated string, because this is what some other functions expect.
         args.query = af_query("hash_list",",".join(item for item in hashlist))
         args.ident = "query"
-    elif args.ident == "input_file_query":
-        # Build an AF query using input from a file - helpful for Windows OS users where quotes on CLI are not escaped the same
+    elif args.ident == "file_query":
+        # Build an AF query using input from a file - helpful for when quotes on CLI are not escaped the same
         args.query = fetch_from_file(args, args.query)
         args.ident = "query"
 

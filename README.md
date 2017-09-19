@@ -1297,6 +1297,9 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 ### [+] CHANGE LOG [+]
 
+v1.2.4 - XXMMMYYYY
+* Added tag definition (queries) to "tag_info" output.
+
 v1.2.3 - 23AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.
 * Added AFLenz class to support third party scripts calling functions directly.

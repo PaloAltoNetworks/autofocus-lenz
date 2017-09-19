@@ -950,8 +950,12 @@ def tag_info(args):
     tag_details += "%-15s : %s\n" % ("Tag Class", tag_info.tag_class)
     tag_details += "%-15s : %s\n" % ("Tag Status", tag_info.status)
     tag_details += "%-15s : %s\n" % ("Tag Description", tag_info.description)
+    tag_details += "%-15s : " % ("Tag Queries")
 
-    message_proc("\n[+] Tag Info [+]\n%s" % tag_details, args)
+    for tagQuery in tag_info.tag_definitions:
+        tag_details += ("\n\n" + str(tagQuery).encode("utf-8"))
+
+    message_proc("\n[+] Tag Info [+]\n%s\n" % tag_details, args)
 
     sys.exit(1)
 

@@ -480,7 +480,7 @@ def hash_lookup(args, query):
                 elif args.filter == "highly_suspicious":
                     if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
                         analysis_data[analysis_data_section].append(raw_line)
-                elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < args.filter:
+                elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < int(args.filter):
                     analysis_data[analysis_data_section].append(raw_line)
             except:
                 pass

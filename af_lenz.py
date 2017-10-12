@@ -472,7 +472,6 @@ def hash_lookup(args, query):
                     raw_line = get_bgm(analysis)
                 else:
                     raw_line = analysis._raw_line
-
                 # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
                 if args.filter == "suspicious":
                     if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
@@ -562,6 +561,7 @@ def common_artifacts(args):
         count += 1
 
     for section in compare_data:
+
         for value in compare_data[section]:
             if float(compare_data[section][value])/float(count) >= commonality:
 
@@ -1076,6 +1076,7 @@ def tag_check(args):
         query_check = query_check.replace('",', "ABCENDQU0TEDEF")
         query_check = query_check.replace('"}', "ABCDICTQU0TEDEF")
         query_check = query_check.replace('"]', "ABCLISTQU0TEDEF")
+        query_check = query_check.replace("\\'\\'", "ABC2XSINGLEDEF")
 
         # If double quotes in value, temporarily replace them and escape/add back in at the end after all string manipulation
         query_check = query_check.replace('"', 'ABCDOULBEQU0TEDEF')
@@ -1096,8 +1097,8 @@ def tag_check(args):
         query_check = query_check.replace("ABCENDQU0TEDEF"  , '",')
         query_check = query_check.replace("ABCDICTQU0TEDEF" , '"}')
         query_check = query_check.replace("ABCLISTQU0TEDEF" , '"]')
-
         query_check = query_check.replace("ABCDOULBEQU0TEDEF", '\\"')
+        query_check = query_check.replace("ABC2XSINGLEDEF", "''")
 
         #print "\n[MODIFIED]\n%s\n" % query_check
 
@@ -1889,7 +1890,7 @@ def main():
         args.ident = "query"
 
     # No filter limit
-    if args.filter == 0:
+    if args.filter == "0": # String due to keyword usage
         args.filter = 1000000000
 
     # No sample/session limit

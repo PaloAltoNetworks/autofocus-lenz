@@ -1063,7 +1063,7 @@ def tag_check(args):
 
         match_flag = 0
 
-        query = json.loads(str(query).encode("utf-8"))
+        query = json.loads(query.ui_search_definition)#.encode("utf-8"))
 
         # Attempt to wrap each query with a parent query using supplied hash
         # Should narrow down queries that need to be deconstructed for checking
@@ -1100,6 +1100,9 @@ def tag_check(args):
         query_check = query_check.replace("ABCDOULBEQU0TEDEF", '\\"')
         query_check = query_check.replace("ABC2XSINGLEDEF", "''")
 
+        # This fixes a hidden character from a specific query
+        query_check = query_check.replace("\\xad","")
+
         #print "\n[MODIFIED]\n%s\n" % query_check
 
         for sample in AFSample.search(query_check):
@@ -1129,7 +1132,7 @@ def tag_check(args):
 
                 if match_flag == 0:
 
-                    message_proc("\n[+] Unsupported Matched Query [+]\n\n%s" % query, args)
+                    message_proc("\n[+] Unsupported Matched Query [+]\n\n%s" % query_check, args)
 
     for entry in matches:
 

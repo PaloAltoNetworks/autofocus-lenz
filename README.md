@@ -1300,6 +1300,7 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 v1.2.4 - XXMMMYYYY
 * Added tag definition (queries) to "tag_info" output.
 * Fixed an issue with the filter function not working due to being a string instead of int.
+* Fixed an issue with af_import handling side-by-side double quotes in strings.
 
 v1.2.3 - 23AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.

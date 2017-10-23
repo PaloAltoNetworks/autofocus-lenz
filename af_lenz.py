@@ -1540,7 +1540,7 @@ def af_import(args, sample_data):
                 import_query += '{"field":"sample.tasks.mutex","operator":"contains","value":"' + value + '"},'
         if entry in sample_data.keys() and entry == "process":
             for value in sample_data[entry]:
-                import_query += '{"field":"sample.tasks.process","operator":"contains","value":"' + value + '"},'
+                import_query += '{"field":"sample.tasks.process","operator":"contains","value":"' + value.replace("\"", "\\\"") + '"},'
         if entry in sample_data.keys() and entry == "file":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.file","operator":"contains","value":"' + value + '"},'
@@ -1553,6 +1553,7 @@ def af_import(args, sample_data):
     import_query += ']}'
     import_query = import_query[:len(import_query) - 3] + import_query[-2:]
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
+    import_query = import_query.replace("\\\\\"", "\\\"")
 
     message_proc("%s\n" % import_query, args)
 

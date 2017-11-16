@@ -15,10 +15,11 @@ Run functions to retrieve information from AutoFocus.
 optional arguments:
   -h, --help            show this help message and exit
   -i <query_type>, --ident <query_type>
-                        Query identifier type for AutoFocus search. [hash,
-                        hash_list, ip, connection, dns, file, http, mutex,
-                        process, registry, service, user_agent, tag, query,
-                        input_file, input_file_query]
+                        Query identifier type for AutoFocus search.
+                        [connection, dns, email, file, file_hashes,
+                        file_query, filename, fileurl, hash, hash_list, http,
+                        ip, mutex, process, query, registry, service, tag,
+                        threat, url, user_agent]
   -q <query>, --query <query>
                         Value to query Autofocus for.
   -o <section_output>, --output <section_output>
@@ -1301,6 +1302,7 @@ v1.2.4 - XXMMMYYYY
 * Added tag definition (queries) to "tag_info" output.
 * Fixed an issue with the filter function not working due to being a string instead of int.
 * Fixed an issue with af_import handling side-by-side double quotes in strings.
+* Added some new input queries - "email", "url" (alias version), and "threat".
 
 v1.2.3 - 23AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.

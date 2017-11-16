@@ -267,21 +267,24 @@ def af_query(ident,query):
 
     # Create a map of input_type to field_value
     field_map = {
-        "ip"            : "alias.ip_address",
+        "connection"    : "sample.tasks.connection",
         "dns"           : "alias.domain",
-        "hash"          : map_hash_value,
-        "http"          : "sample.tasks.http",
+        "email"         : "alias.email",
         "file"          : "sample.tasks.file",
-        "process"       : "sample.tasks.process",
+        "filename"      : "alias.filename",
+        "fileurl"       : "session.fileurl",
+        "hash"          : "map_hash_value",
+        "hash_list"     : "sample.sha256",
+        "http"          : "sample.tasks.http",
+        "ip"            : "alias.ip_address",
         "mutex"         : "sample.tasks.mutex",
+        "process"       : "sample.tasks.process",
         "registry"      : "sample.tasks.registry",
         "service"       : "sample.tasks.service",
-        "connection"    : "sample.tasks.connection",
-        "user_agent"    : "sample.tasks.user_agent",
         "tag"           : "sample.tag",
-        "hash_list"     : "sample.sha256",
-        "fileurl"      : "session.fileurl",
-        "filename"     : "alias.filename"
+        "threat"        : "sample.threat_name",
+        "url"           : "alias.url",
+        "user_agent"    : "sample.tasks.user_agent"
     }
 
     # Create a map of input_type to operator
@@ -1835,22 +1838,27 @@ def main():
         "digital_signer"
     ]
     identifiers = [
-        "hash",
-        "hash_list",
-        "ip",
         "connection",
         "dns",
+        "email",
         "file",
+        "file_hashes",
+        "file_query",
+        "filename",
+        "fileurl",
+        "hash",
+        "hash_list",
         "http",
+        "ip",
         "mutex",
         "process",
+        "query",
         "registry",
         "service",
-        "user_agent",
         "tag",
-        "query",
-        "file_hashes",
-        "file_query"
+        "threat",
+        "url",
+        "user_agent",
     ]
     specials = [
         "yara_rule",

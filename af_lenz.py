@@ -273,7 +273,7 @@ def af_query(ident,query):
         "file"          : "sample.tasks.file",
         "filename"      : "alias.filename",
         "fileurl"       : "session.fileurl",
-        "hash"          : "map_hash_value",
+        "hash"          : map_hash_value,
         "hash_list"     : "sample.sha256",
         "http"          : "sample.tasks.http",
         "ip"            : "alias.ip_address",

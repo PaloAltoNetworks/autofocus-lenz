@@ -48,12 +48,12 @@ from autofocus import \
     AFMacEmbeddedFile, \
     AFMacEmbeddedURL
 
-import sys, argparse, multiprocessing, os, re, json
+import sys, argparse, multiprocessing, os, re, json, logging
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.3"
-__date__    = "15AUG2017"
+__version__ = "1.2.4"
+__date__    = "19DEC2017"
 
 #######################
 # Check research mode #
@@ -976,6 +976,7 @@ def tag_check(args):
                 }
 
     # Get tag definitions
+    logging.info("Retrieving tag definitions for tag %s" % tag_data["tag_value"])
     tag_info = AFTag.get(tag_data["tag_value"])
     tag_def  = tag_info.tag_definitions
 
@@ -983,6 +984,7 @@ def tag_check(args):
     args.query = tag_data["hash_value"]
     args.ident = "hash"
 
+    logging.info("Retrieving data for sample %s" % tag_data["hash_value"])
     hash_detail = hash_lookup(args, tag_data["hash_value"])
 
     hash_data = build_field_list()
@@ -1062,6 +1064,7 @@ def tag_check(args):
 
         return match_flag
 
+    logging.info("Found %s queries to check against the sample" % len(tag_def))
     for query in tag_def:
 
         match_flag = 0
@@ -1072,7 +1075,7 @@ def tag_check(args):
         # Should narrow down queries that need to be deconstructed for checking
         query_check = str(query)
 
-        #print "\n[ ORIGINAL ]\n%s\n" % query_check
+        logging.info("[ ORIGINAL ]\n%s\n" % query_check)
 
         # Poor anchors for reverse converting at the end for special cases
         query_check = query_check.replace('u"', "ABCSTARTQU0TEDEF")
@@ -1106,7 +1109,7 @@ def tag_check(args):
         # This fixes a hidden character from a specific query
         query_check = query_check.replace("\\xad","")
 
-        #print "\n[MODIFIED]\n%s\n" % query_check
+        logging.info("[MODIFIED]\n%s\n" % query_check)
 
         for sample in AFSample.search(query_check):
 
@@ -1153,6 +1156,7 @@ def tag_check(args):
 
     args.filter = 0
 
+    logging.info("Completed tag_check function")
     return tag_data
 
 
@@ -1886,10 +1890,23 @@ def main():
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
-    parser.add_argument("-Q", "--quiet",help="Suppress any informational output and only return data.",action="store_true",default=False)
+    parser.add_argument("-Q", "--quiet",help="Suppress any additional informational output and only return specified data.",action="store_true",default=False)
     parser.add_argument("-w", "--write", help="Write output to a file instead of STDOUT.", metavar='<filename>', default=False)
+    parser.add_argument("-d", "--debug", help="Enable debug logging (limited usage).", action="store_true")
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
+
+    # Setup logging (separate
+    if args.debug:
+        logging.basicConfig(level   = logging.INFO,
+                            format  = "%(asctime)s %(levelname)-8s %(message)s",
+                            datefmt = "%Y-%m-%d %H:%M:%S",
+                            stream  = sys.stdout)
+    else:
+        logging.basicConfig(level   = logging.ERROR,
+                            format="%(asctime)s %(levelname)-8s %(message)s",
+                            datefmt="%Y-%m-%d %H:%M:%S",
+                            stream=sys.stdout)
 
     if args.ident == "file_hashes":
         hashlist = fetch_from_file(args, args.query)

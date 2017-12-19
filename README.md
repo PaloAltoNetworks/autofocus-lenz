@@ -8,7 +8,7 @@ The AutoFocus API exposes a wealth of dynamic analysis information about malware
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
                   [-s <special_output>] [-c <integer_percent>] [-Q]
-                  [-w <filename>]
+                  [-w <filename>] [-d]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -71,10 +71,11 @@ optional arguments:
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
-  -Q, --quiet           Suppress any informational output and only return
-                        data.
+  -Q, --quiet           Suppress any additional informational output and only
+                        return specified data.
   -w <filename>, --write <filename>
                         Write output to a file instead of STDOUT.
+  -d, --debug           Enable debug logging (limited usage).
 ```
 
 Quick links to examples:
@@ -1303,6 +1304,7 @@ v1.2.4 - XXMMMYYYY
 * Fixed an issue with the filter function not working due to being a string instead of int.
 * Fixed an issue with af_import handling side-by-side double quotes in strings.
 * Added some new input queries - "email", "url" (alias version), and "threat".
+* Added some additional logging to tag_check for troubleshooting.
 
 v1.2.3 - 23AUG2017
 * Added some additional forced encoding within the tag_check function - should make it more stable when dealing with tag queries that have non-UTF-8 chars.

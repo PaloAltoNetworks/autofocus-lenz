@@ -75,8 +75,9 @@ except:
 ################
 
 class AFLenzNameSpace(object):
-    ''' A class which wraps an AFlenz command line statement arguments into members
-    '''
+
+    # A class which wraps an AFlenz command line statement arguments into members
+
     def __init__(self, commonality=100, filter=10000, ident="query", limit=200, output="all", query='{"operator":"all","children":[{"field":"sample.malware","operator":"is","value":1}]}', quiet=True, run_type="hash_scrape", write=False):
         self.commonality = commonality
         self.filter = filter
@@ -238,9 +239,9 @@ def message_proc(message, args):
 
     if args.write:
         file_handle = open(args.write, "a")
-        file_handle.write(("%s\n" % message).encode('utf-8'))
+        file_handle.write(("%s\n" % message).encode("utf-8"))
     else:
-        print message.encode('utf-8')
+        print message.encode("utf-8")
 
     return
 
@@ -352,7 +353,10 @@ def hash_library(args):
         poll_af = AFSample.search
 
     count = 0
+
     if args.ident == "query":
+        logging.info("Running query: %s", args.query)
+
         for sample in poll_af(args.query):
             if count < args.limit:
                 input_data.append(sample.sha256)
@@ -360,13 +364,19 @@ def hash_library(args):
             else:
                 break
 
+        logging.info("Finished running query: %s", args.query)
+
     else:
+        logging.info("Running query: %s", af_query(args.ident,args.query))
+
         for sample in poll_af(af_query(args.ident,args.query)):
             if count < args.limit:
                 input_data.append(sample.sha256)
                 count += 1
             else:
                 break
+
+        logging.info("Finished running query: %s", af_query(args.ident,args.query))
 
     # Set the number of workers to be three times the number of cores.
     # These operations are not very CPU-intensive, we can get away with a higher number of processes.
@@ -375,7 +385,9 @@ def hash_library(args):
     pool = multiprocessing.Pool(processes=pool_size)
     # Since we have to pass an iterable to pool.map(), and our worker function requires args to be passed we need to build a dictionary consisting of tuples. e.g:
     # [ (args, hash_1), (args, hash_2), (args, hash_n) ]
+    logging.info("Running queries to get requested sections")
     pool_output = pool.map(hash_worker,[(args,item) for item in input_data])
+    logging.info("Finished running queries for section data")
     pool.close()
     pool.join()
 
@@ -398,7 +410,6 @@ def hash_worker(args_tuple):
         message_proc(sample_hash, args)
 
     return { sample_hash : hash_lookup(args,sample_hash) }
-
 
 # Hash Lookup Function
 # Basic hash lookup for a sample
@@ -457,8 +468,11 @@ def hash_lookup(args, query):
         section_value = None
     else:
         section_value = []
+
         for section in args.output.split(","):
+
             for section_map in analysis_data_map:
+
                 if section == analysis_data_map[section_map]:
                     section_value.append(section_map)
 
@@ -475,13 +489,16 @@ def hash_lookup(args, query):
                     raw_line = get_bgm(analysis)
                 else:
                     raw_line = analysis._raw_line
+
                 # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
                 if args.filter == "suspicious":
                     if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
                         analysis_data[analysis_data_section].append(raw_line)
+
                 elif args.filter == "highly_suspicious":
                     if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
                         analysis_data[analysis_data_section].append(raw_line)
+
                 elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < int(args.filter):
                     analysis_data[analysis_data_section].append(raw_line)
             except:
@@ -575,8 +592,8 @@ def common_artifacts(args):
                 else:
                     common_data[section].append(value)
 
-    common_data['count']    = count # Keep track of how many samples processed
-    common_data['hashes'] = hashes.keys()
+    common_data["count"]  = count # Keep track of how many samples processed
+    common_data["hashes"] = hashes.keys()
 
     return common_data
 
@@ -628,12 +645,12 @@ def common_pieces(args):
                 else:
                     common_pieces[section].append(value)
 
-    common_pieces['count']  = count # Keep track of how many samples processed
-    common_pieces['hashes'] = hashes.keys()
+    common_pieces["count"]  = count # Keep track of how many samples processed
+    common_pieces["hashes"] = hashes.keys()
 
     # Clear out behavior descriptions so it doesn't print - doesn't really make sense for this context
     # Comment out to add them back in
-    common_pieces['behavior'] = []
+    common_pieces["behavior"] = []
 
     return common_pieces
 
@@ -661,9 +678,11 @@ def uniq_sessions(args):
 
         unique_list = []
         for section in session_data:
+
             if args.special == "count" and session.__dict__[section] and session.__dict__[section] not in unique_list:
                 session_data[section].append(session.__dict__[section])
                 unique_list.append(session.__dict__[section])
+
             else:
                 if session.__dict__[section] not in session_data[section] and session.__dict__[section]:
                     session_data[section].append(session.__dict__[section])
@@ -676,7 +695,7 @@ def uniq_sessions(args):
     if args.special == "count":
         session_data = count_values(session_data, args)
 
-    session_data['count'] = count
+    session_data["count"] = count
 
     return session_data
 
@@ -711,13 +730,14 @@ def hash_scrape(args):
 
     hash_data = build_field_list()
 
-    count   = 0
-    hashes  = hash_library(args)
+    count  = 0
+    hashes = hash_library(args)
 
     for hash in hashes:
         for section in hashes[hash]:
             unique_list = []
             for value in hashes[hash][section]:
+
                 if args.special == "count" and value not in unique_list:
                     hash_data[section].append(value)
                     unique_list.append(value)
@@ -729,8 +749,8 @@ def hash_scrape(args):
     if args.special == "count":
         hash_data = count_values(hash_data, args)
 
-    hash_data['count']  = count # Keep track of how many samples processed
-    hash_data['hashes'] = hashes.keys()
+    hash_data["count"]  = count # Keep track of how many samples processed
+    hash_data["hashes"] = hashes.keys()
 
     return hash_data
 
@@ -740,23 +760,26 @@ def hash_scrape(args):
 
 def http_scrape(args):
 
-    http_data   = {"http":[]}
-    count       = 0
-    hashes      = hash_library(args)
+    http_data = {"http": []}
+    count     = 0
+    hashes    = hash_library(args)
 
     for hash in hashes.keys():
 
         sample_data = hashes[hash]
 
-        for entry in sample_data['http']:
+        for entry in sample_data["http"]:
+
             http_list = entry.split(" , ")
             url_value = "hxxp://" + http_list[0] + http_list[2]
-            if url_value not in http_data['http']:
-                http_data['http'].append(url_value)
+
+            if url_value not in http_data["http"]:
+                http_data["http"].append(url_value)
+
         count += 1
 
-    http_data['count']  = count # Keep track of how many samples processed
-    http_data['hashes'] = hashes.keys()
+    http_data["count"]  = count # Keep track of how many samples processed
+    http_data["hashes"] = hashes.keys()
 
     return http_data
 
@@ -766,25 +789,26 @@ def http_scrape(args):
 
 def dns_scrape(args):
 
-    dns_data    = {"dns":[]}
-    count       = 0
-    hashes      = hash_library(args)
+    dns_data = {"dns": []}
+    count    = 0
+    hashes   = hash_library(args)
 
     for hash in hashes.keys():
 
         sample_data = hashes[hash]
 
-        for entry in sample_data['dns']:
+        for entry in sample_data["dns"]:
 
-            dns_list    = entry.split(" , ")
-            dns_query   = dns_list[0]
+            dns_list  = entry.split(" , ")
+            dns_query = dns_list[0]
 
-            if dns_query not in dns_data['dns']:
-                dns_data['dns'].append(dns_query)
+            if dns_query not in dns_data["dns"]:
+                dns_data["dns"].append(dns_query)
+
         count += 1
 
-    dns_data['count']   = count # Keep track of how many samples processed
-    dns_data['hashes']  = hashes.keys()
+    dns_data["count"]  = count # Keep track of how many samples processed
+    dns_data["hashes"] = hashes.keys()
 
     return dns_data
 
@@ -794,27 +818,122 @@ def dns_scrape(args):
 
 def mutex_scrape(args):
 
-    mutex_data  = {"mutex":[]}
-    count       = 0
-    hashes      = hash_library(args)
+    mutex_data = {"mutex": []}
+    count      = 0
+    hashes     = hash_library(args)
 
     for hash in hashes.keys():
 
         sample_data = hashes[hash]
 
-        for entry in sample_data['mutex']:
+        for entry in sample_data["mutex"]:
 
             mutex_list  = entry.split(" , ")
             mutex_value = mutex_list[2]
 
-            if mutex_value not in mutex_data['mutex']:
-                mutex_data['mutex'].append(mutex_value)
+            if mutex_value not in mutex_data["mutex"]:
+                mutex_data["mutex"].append(mutex_value)
+
         count += 1
 
-    mutex_data['count']     = count # Keep track of how many samples processed
-    mutex_data['hashes']    = hashes.keys()
+    mutex_data["count"]  = count # Keep track of how many samples processed
+    mutex_data["hashes"] = hashes.keys()
 
     return mutex_data
+
+# Dropped File scraper function
+# Extracts all dropped files from the identified samples
+# BGM filtering is done on the entire line
+
+def dropped_file_scrape(args):
+
+    dropped_file_data = {"dropped_files": []}
+    count  = 0
+    hashes = hash_library(args)
+
+    for hash in hashes:
+        ''' 
+        At the time of writing, for each case we have to process two sections to find possible dropped files
+
+        * Dropped files in the process section contain "hash" as the processes' action
+        * Dropped files in the file section contain "sha256" in the file section
+        We'll handle these two cases in order
+        '''
+
+        # List of directories for filtering
+        dir_filters = ["Documents and Settings\\Administrator\\Local Settings\\Temporary Internet Files\\Content.Word\\",
+                       "Documents and Settings\\Administrator\\Application Data\\Microsoft\\Office\\Recent\\",
+                       "\\Microsoft\\Windows\\Temporary Internet Files\\Content.Word\\",
+                       "\\Microsoft\\Office\\Recent\\",
+                       "documents and settings\\administrator\\~$",
+                       "Users\\Administrator\\~$",
+                       "\\AppData\\Local\\Microsoft\\Office\\14.0\\OfficeFileCache\\",
+                       "Documents and Settings\\Administrator\\Local Settings\\Temporary Internet Files\\Content.MSO\\",
+                       "\\AppData\\Roaming\\Microsoft\\Templates\\",
+                       "\\AppData\\Roaming\\Microsoft\\Word\\STARTUP\\"
+                     ]
+
+        # Process "process" entries
+        sample_data = hashes[hash]
+
+        for entry in sample_data["process"]:
+
+            if "hash" in entry.split(",")[1]:
+
+                file_sha256 = entry.split(",")[-1].strip()
+                file_path   = entry.split(",")[2].strip()
+
+                # Don't return the hash of the file we're looking at already.
+                if hash == file_sha256.lower():
+                    continue
+
+                res_string = "%s | %s" % (file_sha256, file_path)
+
+                if res_string not in dropped_file_data["dropped_files"]:
+                    dropped_file_data["dropped_files"].append(res_string)
+
+        # Process "file" entries
+        for entry in sample_data["file"]:
+
+            if "sha256=" in entry:
+
+                file_sha256 = re.search("[A-Za-z0-9]{64}", entry.split(",")[-1]).group()
+                file_path   = entry.split(",")[2].strip()
+
+                # Ignore if the result is the same as the hash of the file
+                if hash == file_sha256.lower():
+                    continue
+
+                res_string = "%s | %s" % (file_sha256.upper(), file_path)
+                    
+                # Filter files from specific directories
+                break_flag = 0
+
+                for filter in dir_filters:
+
+                    if filter.lower() in file_path.lower():
+                        logging.info("Filtering dropped file %s | %s as it matches filter %s" % (file_path, file_sha256, filter))
+                        break_flag = 1
+                        break
+
+                if break_flag == 0:
+
+                    if res_string not in dropped_file_data["dropped_files"]:
+                        logging.info("Adding result %s as it didn't match any filters", res_string)
+                        dropped_file_data["dropped_files"].append(res_string)
+
+        count += 1
+
+    for entry in dropped_file_data["dropped_files"]:
+        if map(unicode.lower, dropped_file_data["dropped_files"]).count(entry.lower()) > 1:
+            dropped_file_data["dropped_files"].remove(entry)
+
+    dropped_file_data["dropped_files"].sort()
+
+    dropped_file_data["count"]  = count
+    dropped_file_data["hashes"] = hashes.keys()
+
+    return dropped_file_data
 
 # Service Scraper Function
 # Extracts all service names from the identified samples
@@ -822,25 +941,25 @@ def mutex_scrape(args):
 
 def service_scrape(args):
 
-    service_data    = {"service":[]}
-    count       = 0
-    hashes      = hash_library(args)
+    service_data = {"service": []}
+    count        = 0
+    hashes       = hash_library(args)
 
     for hash in hashes.keys():
 
         sample_data = hashes[hash]
 
-        for entry in sample_data['service']:
+        for entry in sample_data["service"]:
 
-            service_list    = entry.split(" , ")
-            service_query   = service_list[2]
+            service_list  = entry.split(" , ")
+            service_query = service_list[2]
 
-            if service_query not in service_data['service']:
-                service_data['service'].append(service_query)
+            if service_query not in service_data["service"]:
+                service_data["service"].append(service_query)
         count += 1
 
-    service_data['count']   = count # Keep track of how many samples processed
-    service_data['hashes']  = hashes.keys()
+    service_data["count"]  = count # Keep track of how many samples processed
+    service_data["hashes"] = hashes.keys()
 
     return service_data
 
@@ -857,13 +976,13 @@ def fetch_from_file(args,input_file):
             message_proc("\n[+] Attempting to read hashes from %s" % input_file, args)
 
         try:
-            with open(input_file,'r') as fh:
+            with open(input_file, "r") as fh:
 
                 for line in fh.readlines():
 
                     line = line.strip()
 
-                    if re.match('^[0-9a-zA-Z]{64}$',line):
+                    if re.match("^[0-9a-zA-Z]{64}$",line):
                         hashlist.append(line)
                     else:
                         # Ignore any malformed hashes or bad lines
@@ -881,7 +1000,7 @@ def fetch_from_file(args,input_file):
             message_proc("\n[+] Attempting to read query from %s" % input_file, args)
 
         try:
-            with open(input_file, 'r') as fh:
+            with open(input_file, "r") as fh:
 
                 query = (fh.read()).strip()
 
@@ -929,8 +1048,8 @@ def diff(args):
                         hash_data[section].append("> | " + value)
         count += 1
 
-    hash_data['count']  = count
-    hash_data['hashes'] = hashes.keys()
+    hash_data["count"]  = count
+    hash_data["hashes"] = hashes.keys()
 
     return hash_data
 
@@ -964,7 +1083,6 @@ def tag_info(args):
 
 # Tag Checker
 # Tries to identify what artifact in a sample caused it to be tagged with the supplied tag
-# BETA
 
 def tag_check(args):
 
@@ -1152,13 +1270,13 @@ def tag_check(args):
 
                 message_proc(line, args)
 
-    tag_data['count'] = 1
+    tag_data["count"] = 1
 
     args.filter = 0
 
     logging.info("Completed tag_check function")
-    return tag_data
 
+    return tag_data
 
 # Metadata Scraper Function
 # Extracts all metadata data from the identified samples
@@ -1177,8 +1295,11 @@ def meta_scrape(args):
         message_proc("\n[+] sample_meta [+]\n", args)
 
     if args.ident == "query":
+
         for sample in poll_af(args.query):
+
             print_line = build_output_string(args, sample, "meta")
+
             if count < args.limit:
                 results.append(print_line)
                 count += 1
@@ -1187,7 +1308,9 @@ def meta_scrape(args):
 
     else:
         for sample in poll_af(af_query(args.ident, args.query)):
+
             print_line = build_output_string(args, sample, "meta")
+
             if count < args.limit:
                 results.append(print_line)
                 count += 1
@@ -1196,14 +1319,14 @@ def meta_scrape(args):
 
     return results
 
-
 # Session Scraper Function
 # Extracts all session data from the identified samples
 # BGM filtering is done on the entire line
 
 def session_scrape(args):
+
     results = []
-    count = 0
+    count   = 0
 
     if research_mode == "True":
         poll_af = AFSession.scan
@@ -1214,8 +1337,11 @@ def session_scrape(args):
         message_proc("\n[+] session_meta [+]\n", args)
 
     if args.ident == "query":
+
         for session in poll_af(args.query):
+
             print_line = build_output_string(args, session, "session")
+
             if count < args.limit:
                 results.append(print_line)
                 count += 1
@@ -1223,8 +1349,11 @@ def session_scrape(args):
                 break
 
     else:
+
         for session in poll_af(af_query(args.ident, args.query)):
+
             print_line = build_output_string(args, session, "session")
+
             if count < args.limit:
                 results.append(print_line)
                 count += 1
@@ -1322,6 +1451,7 @@ def output_analysis(args, sample_data, funct_type):
         "service",
         "summary",
         "user_agent",
+        "dropped_files"
     ]
 
     if "all" in output:
@@ -1343,10 +1473,10 @@ def output_analysis(args, sample_data, funct_type):
 
     if funct_type == "sample":
         if not args.quiet:
-            message_proc("\n[+] processed %s hashes with a BGM filter of %s [+]\n" % (sample_data['count'], str(args.filter)), args)
+            message_proc("\n[+] processed %s hashes with a BGM filter of %s [+]\n" % (sample_data["count"], str(args.filter)), args)
     elif funct_type == "session":
         if not args.quiet:
-            message_proc("\n[+] processed %s sessions [+]\n" % sample_data['count'], args)
+            message_proc("\n[+] processed %s sessions [+]\n" % sample_data["count"], args)
 
 # Output List Function
 # This just returns sample based meta-data based on the query provided
@@ -1354,12 +1484,13 @@ def output_analysis(args, sample_data, funct_type):
 
 def build_output_string(args, item, type):
 
-    output  = args.output.split(",")
+    output = args.output.split(",")
 
     #
     # Meta
     #
     if type == "meta":
+
         meta_sections = {"tags"             : ",".join(item._tags),
                          "sha256"           : item.sha256,
                          "file_type"        : item.file_type,
@@ -1372,6 +1503,7 @@ def build_output_string(args, item, type):
                          "ssdeep"           : item.ssdeep,
                          "imphash"          : item.imphash
                          }
+
         print_list = []
 
         if args.special == "tag_count":
@@ -1385,11 +1517,13 @@ def build_output_string(args, item, type):
                             "verdict",
                             "file_size",
                             "tags"]
+
             for entry in all_sections:
                 if meta_sections[entry] == None:
                     print_list.append("None")
                 else:
                     print_list.append(meta_sections[entry])
+
         else:
             for entry in output:
                 if entry in meta_sections:
@@ -1399,6 +1533,7 @@ def build_output_string(args, item, type):
     # Session
     #
     elif type == "session":
+
         meta_sections = {
         "account_name"          : item.account_name,
         "application"           : item.application,
@@ -1432,6 +1567,7 @@ def build_output_string(args, item, type):
         "timestamp"             : str(item.timestamp),
         "user_id"               : item.user_id,
         "_vsys"                 : item._vsys}
+
         print_list = []
 
         if "all" in output: # Not literally 'all' in this particular case - more aligned to default UI display of AutoFocus
@@ -1443,11 +1579,13 @@ def build_output_string(args, item, type):
                             "email_subject",
                             "file_name",
                             "file_url"]
+
             for entry in all_sections:
                 if meta_sections[entry] == None:
                     print_list.append("None")
                 else:
                     print_list.append(meta_sections[entry])
+
         else:
             for entry in output:
                 if entry in meta_sections:
@@ -1557,6 +1695,7 @@ def af_import(args, sample_data):
         if entry in sample_data.keys() and entry == "service":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.service","operator":"contains","value":"' + value + '"},'
+
     import_query += ']}'
     import_query = import_query[:len(import_query) - 3] + import_query[-2:]
     import_query = str(import_query.replace("\\", "\\\\")) # Double escape for AF
@@ -1581,9 +1720,9 @@ def yara_rule(args, sample_data):
     if not args.quiet:
         message_proc("[+] yara rule [+]\n", args)
 
-    min_len         = 4 # Minimum string length
-    contained_list  = []
-    entry_list      = []
+    min_len        = 4 # Minimum string length
+    contained_list = []
+    entry_list     = []
 
     # Build yara rule
     yara_sig = "rule autogen_afLenz\n{\n\t// %s\n\n\tstrings:\n" % args
@@ -1750,7 +1889,8 @@ def main():
         "session_scrape",
         "diff",
         "tag_check",
-        "tag_info"
+        "tag_info",
+        "dropped_file_scrape"
     ]
     session_sections = [
         "account_name",
@@ -1883,8 +2023,7 @@ def main():
     parser.add_argument("-q", "--query", help="Value to query Autofocus for.", metavar='<query>', required=True)
     parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. "
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
-                                                                                                  "Session Sections [" + ", ".join(session_sections) + "]. "
-                                                                                                                                                       "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
+                                               "Session Sections [" + ", ".join(session_sections) + "]. " + "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filter.", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200. Use 0 for no limit.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
@@ -1896,7 +2035,7 @@ def main():
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
 
-    # Setup logging (separate
+    # Setup logging (separate)
     if args.debug:
         logging.basicConfig(level   = logging.INFO,
                             format  = "%(asctime)s %(levelname)-8s %(message)s",
@@ -1904,15 +2043,16 @@ def main():
                             stream  = sys.stdout)
     else:
         logging.basicConfig(level   = logging.ERROR,
-                            format="%(asctime)s %(levelname)-8s %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S",
-                            stream=sys.stdout)
+                            format  = "%(asctime)s %(levelname)-8s %(message)s",
+                            datefmt = "%Y-%m-%d %H:%M:%S",
+                            stream  = sys.stdout)
 
     if args.ident == "file_hashes":
         hashlist = fetch_from_file(args, args.query)
         # Build an AF query using the hash list that was just generated join the list into a comma-separated string, because this is what some other functions expect.
         args.query = af_query("hash_list",",".join(item for item in hashlist))
         args.ident = "query"
+
     elif args.ident == "file_query":
         # Build an AF query using input from a file - helpful for when quotes on CLI are not escaped the same
         args.query = fetch_from_file(args, args.query)
@@ -1963,6 +2103,8 @@ def main():
         out_data = tag_check(args)
     elif args.run == "tag_info":
         tag_info(args)
+    elif args.run == "dropped_file_scrape":
+        out_data = dropped_file_scrape(args)
 
     if "count" not in out_data:
         out_data['count'] = 1

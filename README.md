@@ -64,7 +64,8 @@ optional arguments:
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
                         mutex_scrape, meta_scrape, service_scrape,
-                        session_scrape, diff, tag_check, tag_info]
+                        session_scrape, diff, tag_check, tag_info,
+                        dropped_file_scrape]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import, range, count, tag_count, bgm]

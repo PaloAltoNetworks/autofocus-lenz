@@ -1300,6 +1300,9 @@ sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 ### [+] CHANGE LOG [+]
 
+v1.2.5 - XXXXX2018
+* Added a try/except to catch tag_check queries the script is unable to parse correctly.
+
 v1.2.4 - 04JAN2018
 * Added tag definition (queries) to "tag_info" output.
 * Fixed an issue with the filter function not working due to being a string instead of int.

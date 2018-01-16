@@ -52,8 +52,8 @@ import sys, argparse, multiprocessing, os, re, json, logging
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.4"
-__date__    = "19DEC2017"
+__version__ = "1.2.5"
+__date__    = "XXXXX2018"
 
 #######################
 # Check research mode #
@@ -1197,16 +1197,19 @@ def tag_check(args):
 
         # Poor anchors for reverse converting at the end for special cases
         query_check = query_check.replace('u"', "ABCSTARTQU0TEDEF")
+        query_check = query_check.replace("u'", "ABCSTARTQU0TEDEF")
         query_check = query_check.replace('",', "ABCENDQU0TEDEF")
         query_check = query_check.replace('"}', "ABCDICTQU0TEDEF")
         query_check = query_check.replace('"]', "ABCLISTQU0TEDEF")
         query_check = query_check.replace("\\'\\'", "ABC2XSINGLEDEF")
+        query_check = query_check.replace("\\", "ABCBACKSLASHDEF")
 
         # If double quotes in value, temporarily replace them and escape/add back in at the end after all string manipulation
         query_check = query_check.replace('"', 'ABCDOULBEQU0TEDEF')
 
         # General replacements to massage query into acceptable query for API - single to double quotes
         query_check = re.sub("(u')", "\"", query_check)
+        query_check = re.sub('(u")', "\"", query_check)
         query_check = re.sub("(': )", "\": ", query_check)
         query_check = re.sub("(', )", "\", ", query_check)
         query_check = re.sub("('})", "\"}", query_check)
@@ -1223,40 +1226,48 @@ def tag_check(args):
         query_check = query_check.replace("ABCLISTQU0TEDEF" , '"]')
         query_check = query_check.replace("ABCDOULBEQU0TEDEF", '\\"')
         query_check = query_check.replace("ABC2XSINGLEDEF", "''")
+        query_check = query_check.replace("ABCBACKSLASHDEF", "\\")
 
         # This fixes a hidden character from a specific query
         query_check = query_check.replace("\\xad","")
 
-        logging.info("[MODIFIED]\n%s\n" % query_check)
+        logging.info("[ MODIFIED ]\n%s\n" % query_check)
 
-        for sample in AFSample.search(query_check):
+        try:
 
-            if sample.sha256 == tag_data["hash_value"]:
+            for sample in AFSample.search(query_check):
 
-                for entry in query["children"]:
+                if sample.sha256 == tag_data["hash_value"]:
 
-                    if "field" not in entry:
+                    for entry in query["children"]:
 
-                        for child_entry in entry["children"]:
+                        if "field" not in entry:
 
-                            if "field" not in entry:
+                            for child_entry in entry["children"]:
 
-                                for child_child_entry in child_entry: # Lots of kids...
+                                if "field" not in entry:
 
-                                    if "field" in child_child_entry:
+                                    for child_child_entry in child_entry: # Lots of kids...
 
-                                        match_flag = match_check(child_entry, match_flag)
+                                        if "field" in child_child_entry:
 
-                            else:
+                                            match_flag = match_check(child_entry, match_flag)
 
-                                match_flag = match_check(child_entry, match_flag)
+                                else:
 
-                    else:
-                        match_flag = match_check(entry, match_flag)
+                                    match_flag = match_check(child_entry, match_flag)
 
-                if match_flag == 0:
+                        else:
+                            match_flag = match_check(entry, match_flag)
 
-                    message_proc("\n[+] Unsupported Matched Query [+]\n\n%s" % query_check, args)
+                    if match_flag == 0:
+
+                        message_proc("\n[+] Unsupported Matched Query [+]\n\n%s" % query_check, args)
+
+        except Exception as e:
+
+            message_proc("\n[!] Unable to Parse/Check Query [+]\n\n%s" % query, args)
+            logging.debug("Failed to parse the following query: \n%s\n%s" % (query, e))
 
     for entry in matches:
 

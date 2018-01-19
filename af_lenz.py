@@ -47,6 +47,24 @@ from autofocus import \
 from autofocus import \
     AFMacEmbeddedFile, \
     AFMacEmbeddedURL
+# ELF Specific
+from autofocus import \
+    AFELFCommands, \
+    AFELFFilePath, \
+    AFELFSuspiciousBehavior, \
+    AFELFFunction, \
+    AFELFIPAddress, \
+    AFELFDomain, \
+    AFELFURL
+# Macro Specific
+from autofocus import \
+    AFRelatedMacro
+# Coverage Specific
+#from autofocus import \
+#    AFC2DomainSignature, \
+#    AFURLCatogorization, \
+#    AFAVSignature, \
+#    AFDNSDownloadSignature
 
 import sys, argparse, multiprocessing, os, re, json, logging
 
@@ -63,8 +81,8 @@ research_mode = "False"
 
 try:
     import ConfigParser
-    parser      = ConfigParser.ConfigParser()
-    conf_path   = os.environ.get("PANW_CONFIG", "~/.config/panw")
+    parser    = ConfigParser.ConfigParser()
+    conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
     parser.read(os.path.expanduser(conf_path))
     research_mode = parser.get("researcher", "enabled")
 except:
@@ -98,8 +116,9 @@ def build_field_list():
 
     field_list = {
         "apk_app_icon"                      : [],
+        "apk_app_name"                      : [],
         "apk_cert_file"                     : [],
-#        "apk_certificate_id"                : [],
+        #"apk_certificate_id"                : [], # Unused currently
         "apk_defined_activity"              : [],
         "apk_defined_intent_filter"         : [],
         "apk_defined_receiver"              : [],
@@ -110,7 +129,6 @@ def build_field_list():
         "apk_embeded_url"                   : [],
         "apk_internal_file"                 : [],
         "apk_isrepackaged"                  : [],
-        "apk_app_name"                      : [],
         "apk_packagename"                   : [],
         "apk_requested_permission"          : [],
         "apk_sensitive_api_call"            : [],
@@ -126,19 +144,31 @@ def build_field_list():
         "default"                           : [],
         "digital_signer"                    : [],
         "dns"                               : [],
+        "dns_sig"                           : [],
+        "elf_commands"                      : [],
+        "elf_domains"                       : [],
+        "elf_file_paths"                    : [],
+        "elf_functions"                     : [],
+        "elf_ip_address"                    : [],
+        "elf_suspicious_behavior"           : [],
+        "elf_urls"                          : [],
         "file"                              : [],
+        "fileurl_sig"                       : [],
         "http"                              : [],
         "imphash"                           : [],
         "japi"                              : [],
         "mac_embedded_file"                 : [],
         "mac_embedded_url"                  : [],
+        "macro"                             : [],
         "misc"                              : [],
         "mutex"                             : [],
         "process"                           : [],
         "registry"                          : [],
         "service"                           : [],
         "summary"                           : [],
-        "user_agent"                        : []
+        "url_cat"                           : [],
+        "user_agent"                        : [],
+        "wf_av_sig"                         : []
     }
 
     return field_list
@@ -147,8 +177,9 @@ def build_field_dict():
 
     field_dict = {
         "apk_app_icon"                      : {},
+        "apk_app_name"                      : {},
         "apk_cert_file"                     : {},
-#        "apk_certificate_id"                : {},
+        #"apk_certificate_id"                : {}, # Unused currently
         "apk_defined_activity"              : {},
         "apk_defined_intent_filter"         : {},
         "apk_defined_receiver"              : {},
@@ -159,7 +190,6 @@ def build_field_dict():
         "apk_embeded_url"                   : {},
         "apk_internal_file"                 : {},
         "apk_isrepackaged"                  : {},
-        "apk_app_name"                      : {},
         "apk_packagename"                   : {},
         "apk_requested_permission"          : {},
         "apk_sensitive_api_call"            : {},
@@ -175,19 +205,31 @@ def build_field_dict():
         "default"                           : {},
         "digital_signer"                    : {},
         "dns"                               : {},
+        "dns_sig"                           : {},
+        "elf_commands"                      : {},
+        "elf_domains"                       : {},
+        "elf_file_paths"                    : {},
+        "elf_functions"                     : {},
+        "elf_ip_address"                    : {},
+        "elf_suspicious_behavior"           : {},
+        "elf_urls"                          : {},
         "file"                              : {},
+        "fileurl_sig"                       : {},
         "http"                              : {},
         "imphash"                           : {},
         "japi"                              : {},
         "mac_embedded_file"                 : {},
         "mac_embedded_url"                  : {},
+        "macro"                             : {},
         "misc"                              : {},
         "mutex"                             : {},
         "process"                           : {},
         "registry"                          : {},
         "service"                           : {},
         "summary"                           : {},
-        "user_agent"                        : {}
+        "url_cat"                           : {},
+        "user_agent"                        : {},
+        "wf_av_sig"                         : {}
     }
 
     return field_dict
@@ -422,12 +464,13 @@ def hash_lookup(args, query):
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
+        #AFAVSignature                       : "wf_av_sig",
         AFAnalysisSummary                   : "summary",
         AFApiActivity                       : "misc",
         AFApkActivityAnalysis               : "apk_defined_activity",
         AFApkAppName                        : "apk_app_name",
         AFApkCertificate                    : "apk_cert_file",
-#        AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
+        #AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
         AFApkEmbeddedFile                   : "apk_internal_file",
         AFApkEmbeddedLibrary                : "apk_embedded_library",
         AFApkEmbededUrlAnalysis             : "apk_embeded_url",
@@ -448,9 +491,18 @@ def hash_lookup(args, query):
         AFApkVersion                        : "apk_version_num",
         AFBehaviorAnalysis                  : "behavior",
         AFBehaviorTypeAnalysis              : "behavior_type",
+        #AFC2DomainSignature                 : "dns_sig",
         AFConnectionActivity                : "connection",
+        #AFDNSDownloadSignature              : "fileurl_sig",
         AFDigitalSigner                     : "apk_digital_signer",
         AFDnsActivity                       : "dns",
+        AFELFCommands                       : "elf_commands",
+        AFELFDomain                         : "elf_domains",
+        AFELFFilePath                       : "elf_file_paths",
+        AFELFFunction                       : "elf_functions",
+        AFELFIPAddress                      : "elf_ip_address",
+        AFELFSuspiciousBehavior             : "elf_suspicious_behavior",
+        AFELFURL                            : "elf_urls",
         AFFileActivity                      : "file",
         AFHttpActivity                      : "http",
         AFJavaApiActivity                   : "japi",
@@ -459,7 +511,9 @@ def hash_lookup(args, query):
         AFMutexActivity                     : "mutex",
         AFProcessActivity                   : "process",
         AFRegistryActivity                  : "registry",
+        AFRelatedMacro                      : "macro",
         AFServiceActivity                   : "service",
+        #AFURLCatogorization                 : "url_cat",
         AFUserAgentFragment                 : "user_agent"
     }
 
@@ -852,13 +906,11 @@ def dropped_file_scrape(args):
     hashes = hash_library(args)
 
     for hash in hashes:
-        ''' 
-        At the time of writing, for each case we have to process two sections to find possible dropped files
 
-        * Dropped files in the process section contain "hash" as the processes' action
-        * Dropped files in the file section contain "sha256" in the file section
-        We'll handle these two cases in order
-        '''
+        # At the time of writing, for each case we have to process two sections to find possible dropped files
+        # * Dropped files in the process section contain "hash" as the processes' action
+        # * Dropped files in the file section contain "sha256" in the file section
+        # We'll handle these two cases in order
 
         # List of directories for filtering
         dir_filters = ["Documents and Settings\\Administrator\\Local Settings\\Temporary Internet Files\\Content.Word\\",
@@ -1421,8 +1473,9 @@ def output_analysis(args, sample_data, funct_type):
         "_vsys"
         #Sample
         "apk_app_icon",
+        "apk_app_name",
         "apk_cert_file",
-#        "apk_certificate_id",
+        #"apk_certificate_id", # Unused currently
         "apk_defined_activity",
         "apk_defined_intent_filter",
         "apk_defined_receiver",
@@ -1433,7 +1486,6 @@ def output_analysis(args, sample_data, funct_type):
         "apk_embeded_url",
         "apk_internal_file",
         "apk_isrepackaged",
-        "apk_app_name",
         "apk_packagename",
         "apk_requested_permission",
         "apk_sensitive_api_call",
@@ -1449,12 +1501,21 @@ def output_analysis(args, sample_data, funct_type):
         "default",
         "digital_signer",
         "dns",
+        "dropped_files",
+        "elf_commands",
+        "elf_domains",
+        "elf_file_paths",
+        "elf_functions",
+        "elf_ip_address",
+        "elf_suspicious_behavior",
+        "elf_urls",
         "file",
         "http",
         "imphash",
         "japi",
         "mac_embedded_file",
         "mac_embedded_url",
+        "macro",
         "misc",
         "mutex",
         "process",
@@ -1462,7 +1523,11 @@ def output_analysis(args, sample_data, funct_type):
         "service",
         "summary",
         "user_agent",
-        "dropped_files"
+        # Coverage
+        "dns_sig",
+        "fileurl_sig",
+        "url_cat",
+        "wf_av_sig"
     ]
 
     if "all" in output:
@@ -1937,8 +2002,9 @@ def main():
     ]
     sample_sections = [
         "apk_app_icon",
+        "apk_app_name",
         "apk_cert_file",
-#        "apk_certificate_id",
+        "apk_certificate_id", # Unused currently
         "apk_defined_activity",
         "apk_defined_intent_filter",
         "apk_defined_receiver",
@@ -1949,7 +2015,6 @@ def main():
         "apk_embeded_url",
         "apk_internal_file",
         "apk_isrepackaged",
-        "apk_app_name",
         "apk_packagename",
         "apk_requested_permission",
         "apk_sensitive_api_call",
@@ -1965,12 +2030,21 @@ def main():
         "default",
         "digital_signer",
         "dns",
+        "dropped_files",
+        "elf_commands",
+        "elf_domains",
+        "elf_file_paths",
+        "elf_functions",
+        "elf_ip_address",
+        "elf_suspicious_behavior",
+        "elf_urls",
         "file",
         "http",
         "imphash",
         "japi",
         "mac_embedded_file",
         "mac_embedded_url",
+        "macro",
         "misc",
         "mutex",
         "process",
@@ -2013,7 +2087,7 @@ def main():
         "tag",
         "threat",
         "url",
-        "user_agent",
+        "user_agent"
     ]
     specials = [
         "yara_rule",

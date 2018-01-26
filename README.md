@@ -25,22 +25,25 @@ optional arguments:
   -o <section_output>, --output <section_output>
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
-                        default. Sample Sections [apk_app_icon, apk_cert_file,
+                        default. Sample Sections [apk_app_icon, apk_app_name,
+                        apk_cert_file, apk_certificate_id,
                         apk_defined_activity, apk_defined_intent_filter,
                         apk_defined_receiver, apk_defined_sensor,
                         apk_defined_service, apk_digital_signer,
                         apk_embedded_library, apk_embeded_url,
-                        apk_internal_file, apk_isrepackaged, apk_app_name,
-                        apk_packagename, apk_requested_permission,
-                        apk_sensitive_api_call,
+                        apk_internal_file, apk_isrepackaged, apk_packagename,
+                        apk_requested_permission, apk_sensitive_api_call,
                         apk_suspicious_action_monitored,
                         apk_suspicious_api_call, apk_suspicious_file,
                         apk_suspicious_pattern, apk_suspicious_string,
                         apk_version_num, behavior, behavior_type, connection,
-                        default, digital_signer, dns, file, http, imphash,
-                        japi, mac_embedded_file, mac_embedded_url, misc,
-                        mutex, process, registry, service, summary,
-                        user_agent]. Session Sections [account_name,
+                        default, digital_signer, dns, dropped_files,
+                        elf_commands, elf_domains, elf_file_paths,
+                        elf_functions, elf_ip_address,
+                        elf_suspicious_behavior, elf_urls, file, http,
+                        imphash, japi, mac_embedded_file, mac_embedded_url,
+                        macro, misc, mutex, process, registry, service,
+                        summary, user_agent]. Session Sections [account_name,
                         application, device_country_code, device_country,
                         device_hostname, industry, business_line,
                         device_model, device_serial, device_version,
@@ -51,7 +54,8 @@ optional arguments:
                         src_ip, src_is_private_ipsrc_port, timestamp, user_id,
                         _vsys]. Meta Sections [sha256, file_type, create_date,
                         verdict, file_size, tags, sha1, md5, ssdeep, imphash,
-                        digital_signer]
+                        digital_signer]. Coverage Sections [dns_sig,
+                        fileurl_sig, url_cat, wf_av_sig].
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
@@ -65,7 +69,7 @@ optional arguments:
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
                         mutex_scrape, meta_scrape, service_scrape,
                         session_scrape, diff, tag_check, tag_info,
-                        dropped_file_scrape]
+                        dropped_file_scrape, coverage_scrape]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
                         [yara_rule, af_import, range, count, tag_count, bgm]
@@ -104,8 +108,9 @@ Quick links to examples:
 * [Suspicious/Highly Suspicious filter](#suspect_artifacts)
 * [Service Scrape function](#service_scrape)
 * [Write to file](#write_out)
-* [Tag Info](#tag_info)
-* [Tag Check](#tag_check)
+* [Tag Info function](#tag_info)
+* [Tag Check function](#tag_check)
+* [Coverage Scrape function](#coverage_scrape)
 
 ### [+] EXAMPLES [+]
 
@@ -1296,6 +1301,57 @@ sample.exe , SetValueKey , HKCU\Environment\SEE_MASK_NOZONECHECKS , Value:1 , Ty
 sample.exe , RegSetValueEx , HKCU\Environment , SEE_MASK_NOZONECHECKS , 1
 
 [+] processed 1 hashes with a BGM filter of 0 [+]
+```
+
+##### coverage_scrape
+
+```
+$ python af_lenz.py -i hash -q '9b9c1720afd80b32f800ed7183447d9139e7a614bdcc48bafbe9e3e36bed992b' -r coverage_scrape
+
+{"operator":"all","children":[{"field":"sample.sha256","operator":"is","value":"9b9c1720afd80b32f800ed7183447d9139e7a614bdcc48bafbe9e3e36bed992b"}]}
+
+[+] hashes [+]
+
+9b9c1720afd80b32f800ed7183447d9139e7a614bdcc48bafbe9e3e36bed992b
+
+[+] dns_sig [+]
+
+ocsp.comodoca.com , generic:ocsp.comodoca.com , 2013-10-06 01:23:35 , None , None , False
+
+[+] url_cat [+]
+
+ns1.comododns.com , Business and Economy
+ns0.comododns.net , Computer and Internet Info
+comodoca.com , Computer and Internet Info
+crl.comodoca.com , Computer and Internet Info
+crl.usertrust.com , Computer and Internet Info
+crt.comodoca.com , Computer and Internet Info
+dns.msftncsi.com , Computer and Internet Info
+www.download.windowsupdate.com , Computer and Internet Info
+msftncsi.com , Computer and Internet Info
+cloudflare.net , Computer and Internet Info
+usertrust.com , Computer and Internet Info
+ns1.comododns.net , Computer and Internet Info
+ns4.cloudflare.net , Computer and Internet Info
+ns4.msft.net , Computer and Internet Info
+ns5.cloudflare.net , Computer and Internet Info
+ocsp.comodoca.com , Computer and Internet Info
+ocsp.usertrust.com , Computer and Internet Info
+time.windows.com , Computer and Internet Info
+n5dspw65.akamai.net , Content Delivery Networks
+akadns.net , Content Delivery Networks
+dspw65.akamai.net , Content Delivery Networks
+a0dspw65.akamai.net , Content Delivery Networks
+a12-131.akadns.org , Content Delivery Networks
+a1-128.akadns.net , Content Delivery Networks
+klifex.pw , Home and Garden
+unknown , Society
+
+[+] wf_av_sig [+]
+
+Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
+
+[+] processed 1 hashes with a BGM filter of 10000 [+]
 ```
 
 ### [+] CHANGE LOG [+]

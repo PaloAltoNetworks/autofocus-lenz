@@ -2057,7 +2057,6 @@ def main():
         "default",
         "digital_signer",
         "dns",
-        "dns_sig",
         "dropped_files",
         "elf_commands",
         "elf_domains",
@@ -2067,7 +2066,6 @@ def main():
         "elf_suspicious_behavior",
         "elf_urls",
         "file",
-        "fileurl_sig",
         "http",
         "imphash",
         "japi",
@@ -2080,8 +2078,12 @@ def main():
         "registry",
         "service",
         "summary",
+        "user_agent"
+    ]
+    coverage_sections = [
+        "dns_sig",
+        "fileurl_sig",
         "url_cat",
-        "user_agent",
         "wf_av_sig"
     ]
     meta_sections = [
@@ -2139,7 +2141,9 @@ def main():
     parser.add_argument("-q", "--query", help="Value to query Autofocus for.", metavar='<query>', required=True)
     parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. "
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
-                                               "Session Sections [" + ", ".join(session_sections) + "]. " + "Meta Sections [" + ", ".join(meta_sections) + "]", metavar='<section_output>', default="all")
+                                               "Session Sections [" + ", ".join(session_sections) + "]. "
+                                               "Meta Sections [" + ", ".join(meta_sections) + "]. "
+                                               "Coverage Sections [" + ", ".join(coverage_sections) + "]. " , metavar='<section_output>', default="all")
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filter.", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200. Use 0 for no limit.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)

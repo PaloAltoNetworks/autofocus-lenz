@@ -60,11 +60,11 @@ from autofocus import \
 from autofocus import \
     AFRelatedMacro
 # Coverage Specific
-#from autofocus import \
-#    AFC2DomainSignature, \
-#    AFURLCatogorization, \
-#    AFAVSignature, \
-#    AFDNSDownloadSignature
+from autofocus import \
+    AFC2DomainSignature, \
+    AFURLCatogorization, \
+    AFAVSignature, \
+    AFDNSDownloadSignature
 
 import sys, argparse, multiprocessing, os, re, json, logging
 
@@ -287,7 +287,6 @@ def message_proc(message, args):
 
     return
 
-
 ##########################
 # AF QUERY SECTION BELOW #
 ##########################
@@ -464,7 +463,7 @@ def hash_lookup(args, query):
 
     # Map analysis types to analysis_data keys
     analysis_data_map = {
-        #AFAVSignature                       : "wf_av_sig",
+        AFAVSignature                       : "wf_av_sig",
         AFAnalysisSummary                   : "summary",
         AFApiActivity                       : "misc",
         AFApkActivityAnalysis               : "apk_defined_activity",
@@ -491,9 +490,9 @@ def hash_lookup(args, query):
         AFApkVersion                        : "apk_version_num",
         AFBehaviorAnalysis                  : "behavior",
         AFBehaviorTypeAnalysis              : "behavior_type",
-        #AFC2DomainSignature                 : "dns_sig",
+        AFC2DomainSignature                 : "dns_sig",
         AFConnectionActivity                : "connection",
-        #AFDNSDownloadSignature              : "fileurl_sig",
+        AFDNSDownloadSignature              : "fileurl_sig",
         AFDigitalSigner                     : "apk_digital_signer",
         AFDnsActivity                       : "dns",
         AFELFCommands                       : "elf_commands",
@@ -513,7 +512,7 @@ def hash_lookup(args, query):
         AFRegistryActivity                  : "registry",
         AFRelatedMacro                      : "macro",
         AFServiceActivity                   : "service",
-        #AFURLCatogorization                 : "url_cat",
+        AFURLCatogorization                 : "url_cat",
         AFUserAgentFragment                 : "user_agent"
     }
 
@@ -533,40 +532,67 @@ def hash_lookup(args, query):
     # If there are no counts for the activity, ignore them for the filter
     for sample in AFSample.search(af_query("hash",query)):
 
-        for analysis in sample.get_analyses(sections=section_value):
+        # Coverage Specific Details
+        if args.run == "coverage_scrape":
 
-            analysis_data_section = analysis_data_map.get(type(analysis), "default")
+            for coverage in sample.get_coverage():
 
-            try:
+                coverage_data_section = analysis_data_map.get(type(coverage), "default")
 
-                if args.special == "bgm":
-                    raw_line = get_bgm(analysis)
-                else:
-                    raw_line = analysis._raw_line
+                if coverage_data_section == "url_cat":
+                    analysis_data[coverage_data_section].append("%s , %s" % (coverage.url,
+                                                                             coverage.category))
 
-                # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
-                if args.filter == "suspicious":
-                    if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
+                if coverage_data_section == "dns_sig" or coverage_data_section == "fileurl_sig":
+                    analysis_data[coverage_data_section].append("%s , %s , %s , %s , %s , %s" % (coverage.domain,
+                                                                                                 coverage.name,
+                                                                                                 coverage.time,
+                                                                                                 coverage.first_daily_release,
+                                                                                                 coverage.latest_daily_release,
+                                                                                                 coverage.current_daily_release))
+
+                if coverage_data_section == "wf_av_sig":
+                    analysis_data[coverage_data_section].append("%s , %s , %s , %s , %s" % (coverage.name,
+                                                                                            coverage.time,
+                                                                                            coverage.first_daily_release,
+                                                                                            coverage.latest_daily_release,
+                                                                                            coverage.current_daily_release))
+        if args.run != "coverage_scrape":
+            # Sample Analysis Specific Details
+            for analysis in sample.get_analyses(sections=section_value):
+
+                analysis_data_section = analysis_data_map.get(type(analysis), "default")
+
+                try:
+
+                    if args.special == "bgm":
+                        raw_line = get_bgm(analysis)
+                    else:
+                        raw_line = analysis._raw_line
+
+                    # Filter based on established values for low and high-distribution of malware artifacts, otherwise filter on aggregate counts for uniquness
+                    if args.filter == "suspicious":
+                        if (analysis.malware_count > (analysis.benign_count * 3)) and (analysis.malware_count >= 500):
+                            analysis_data[analysis_data_section].append(raw_line)
+
+                    elif args.filter == "highly_suspicious":
+                        if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
+                            analysis_data[analysis_data_section].append(raw_line)
+
+                    elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < int(args.filter):
                         analysis_data[analysis_data_section].append(raw_line)
+                except:
+                    pass
 
-                elif args.filter == "highly_suspicious":
-                    if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
-                        analysis_data[analysis_data_section].append(raw_line)
+                # Handle Behaviors which have no BGM values
+                if type(analysis) == AFBehaviorTypeAnalysis or type(analysis) == AFBehaviorAnalysis:
+                    analysis_data[analysis_data_section].append(analysis._raw_line)
 
-                elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < int(args.filter):
-                    analysis_data[analysis_data_section].append(raw_line)
-            except:
-                pass
+            if sample.imphash:
+                analysis_data["imphash"].append(sample.imphash)
 
-            # Handle Behaviors which have no BGM values
-            if type(analysis) == AFBehaviorTypeAnalysis or type(analysis) == AFBehaviorAnalysis:
-                analysis_data[analysis_data_section].append(analysis._raw_line)
-
-        if sample.imphash:
-            analysis_data["imphash"].append(sample.imphash)
-
-        if sample.digital_signer:
-            analysis_data["digital_signer"].append(sample.digital_signer)
+            if sample.digital_signer:
+                analysis_data["digital_signer"].append(sample.digital_signer)
 
     return analysis_data
 
@@ -1966,7 +1992,8 @@ def main():
         "diff",
         "tag_check",
         "tag_info",
-        "dropped_file_scrape"
+        "dropped_file_scrape",
+        "coverage_scrape"
     ]
     session_sections = [
         "account_name",
@@ -2030,6 +2057,7 @@ def main():
         "default",
         "digital_signer",
         "dns",
+        "dns_sig",
         "dropped_files",
         "elf_commands",
         "elf_domains",
@@ -2039,6 +2067,7 @@ def main():
         "elf_suspicious_behavior",
         "elf_urls",
         "file",
+        "fileurl_sig",
         "http",
         "imphash",
         "japi",
@@ -2051,7 +2080,9 @@ def main():
         "registry",
         "service",
         "summary",
-        "user_agent"
+        "url_cat",
+        "user_agent",
+        "wf_av_sig"
     ]
     meta_sections = [
         "sha256",
@@ -2165,7 +2196,7 @@ def main():
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
-    elif args.run == "hash_scrape":
+    elif args.run == "hash_scrape" or "coverage_scrape":
         out_data = hash_scrape(args)
     elif args.run == "common_artifacts":
         out_data = common_artifacts(args)

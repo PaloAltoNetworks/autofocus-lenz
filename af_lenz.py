@@ -2200,7 +2200,7 @@ def main():
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
-    elif args.run == "hash_scrape" or "coverage_scrape":
+    elif args.run == "hash_scrape" or args.run == "coverage_scrape":
         out_data = hash_scrape(args)
     elif args.run == "common_artifacts":
         out_data = common_artifacts(args)

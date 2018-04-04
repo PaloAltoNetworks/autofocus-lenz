@@ -8,7 +8,7 @@ The AutoFocus API exposes a wealth of dynamic analysis information about malware
 usage: af_lenz.py [-h] -i <query_type> -q <query> [-o <section_output>]
                   [-f <number>] [-l <number>] -r <function_name>
                   [-s <special_output>] [-c <integer_percent>] [-Q]
-                  [-w <filename>] [-d]
+                  [-w <filename>] [-d] [-p <platform>]
 
 Run functions to retrieve information from AutoFocus.
 
@@ -81,6 +81,9 @@ optional arguments:
   -w <filename>, --write <filename>
                         Write output to a file instead of STDOUT.
   -d, --debug           Enable debug logging (limited usage).
+  -p <platform>, --platform <platform>
+                        Limit results to the specific VM platform. [win7,
+                        win10, winxp, android, staticAnalyzer, mac]
 ```
 
 Quick links to examples:
@@ -1356,10 +1359,11 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
-v1.2.5 - XXXXX2018
+v1.2.5 - 04APR2018
 * Added a try/except to catch tag_check queries the script is unable to parse correctly.
 * Added new output sections for ELF and Macro: elf_commands, elf_file_paths, elf_suspicious_behavior, elf_functions, elf_ip_address, elf_domains, elf_urls, macro
 * Added new function "coverage_scrape" which will build strings from the data found on the Coverage tab in AF.
+* Added ability to restrict output by specific VM platform with "-p" or "--platform".
 
 v1.2.4 - 04JAN2018
 * Added tag definition (queries) to "tag_info" output.

@@ -71,7 +71,7 @@ import sys, argparse, multiprocessing, os, re, json, logging
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
 __version__ = "1.2.5"
-__date__    = "XXXXX2018"
+__date__    = "04APR2018"
 
 #######################
 # Check research mode #
@@ -529,6 +529,16 @@ def hash_lookup(args, query):
                 if section == analysis_data_map[section_map]:
                     section_value.append(section_map)
 
+    # Specify platform to restrict results further
+    if args.platform == "all":
+        platform_value = None
+    else:
+        platform_value = []
+
+        for platform in args.platform.split(","):
+
+            platform_value.append(platform)
+
     # If there are no counts for the activity, ignore them for the filter
     for sample in AFSample.search(af_query("hash",query)):
 
@@ -559,7 +569,7 @@ def hash_lookup(args, query):
                                                                                             coverage.current_daily_release))
         if args.run != "coverage_scrape":
             # Sample Analysis Specific Details
-            for analysis in sample.get_analyses(sections=section_value):
+            for analysis in sample.get_analyses(sections=section_value, platforms=platform_value):
 
                 analysis_data_section = analysis_data_map.get(type(analysis), "default")
 
@@ -2134,24 +2144,33 @@ def main():
         "suspicious",
         "highly_suspicious"
     ]
+    platforms = [
+        "win7",
+        "win10",
+        "winxp",
+        "android",
+        "staticAnalyzer",
+        "mac"
+    ]
 
     # Grab initial arguments from CLI
     parser = argparse.ArgumentParser(description="Run functions to retrieve information from AutoFocus.")
-    parser.add_argument("-i", "--ident", help="Query identifier type for AutoFocus search. [" + ", ".join(identifiers) + "]", metavar='<query_type>', required=True)
+    parser.add_argument("-i", "--ident", help="Query identifier type for AutoFocus search. [" + ", ".join(identifiers) + "]", metavar="<query_type>", required=True)
     parser.add_argument("-q", "--query", help="Value to query Autofocus for.", metavar='<query>', required=True)
     parser.add_argument("-o", "--output", help="Section of data to return. Multiple values are comma separated (no space) or \"all\" for everything, which is default. "
                                                "Sample Sections [" + ", ".join(sample_sections) + "]. "
                                                "Session Sections [" + ", ".join(session_sections) + "]. "
                                                "Meta Sections [" + ", ".join(meta_sections) + "]. "
-                                               "Coverage Sections [" + ", ".join(coverage_sections) + "]. " , metavar='<section_output>', default="all")
+                                               "Coverage Sections [" + ", ".join(coverage_sections) + "]. " , metavar="<section_output>", default="all")
     parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filter.", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200. Use 0 for no limit.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
     parser.add_argument("-c", "--commonality", help="Commonality percentage for comparison functions, default is 100", metavar="<integer_percent>", type=int, default=100)
     parser.add_argument("-Q", "--quiet",help="Suppress any additional informational output and only return specified data.",action="store_true",default=False)
-    parser.add_argument("-w", "--write", help="Write output to a file instead of STDOUT.", metavar='<filename>', default=False)
+    parser.add_argument("-w", "--write", help="Write output to a file instead of STDOUT.", metavar="<filename>", default=False)
     parser.add_argument("-d", "--debug", help="Enable debug logging (limited usage).", action="store_true")
+    parser.add_argument("-p", "--platform", help="Limit results to the specific VM platform. [" + ", ".join(platforms) + "]", metavar="<platform>", default="all")
     args = parser.parse_args()
     args.query = args.query.replace("\\", "\\\\")
 

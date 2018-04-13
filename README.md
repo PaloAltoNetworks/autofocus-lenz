@@ -1359,6 +1359,9 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
+v1.2.6 - DDMMM2018
+* Added section "upload_source" for session output.
+
 v1.2.5 - 04APR2018
 * Added a try/except to catch tag_check queries the script is unable to parse correctly.
 * Added new output sections for ELF and Macro: elf_commands, elf_file_paths, elf_suspicious_behavior, elf_functions, elf_ip_address, elf_domains, elf_urls, macro

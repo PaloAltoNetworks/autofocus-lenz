@@ -70,8 +70,8 @@ import sys, argparse, multiprocessing, os, re, json, logging
 
 __author__  = "Jeff White [karttoon]"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.5"
-__date__    = "04APR2018"
+__version__ = "1.2.6"
+__date__    = "XXX2018"
 
 #######################
 # Check research mode #
@@ -267,6 +267,7 @@ def build_session_list():
         "src_is_private_ip"     : [],
         "src_port"              : [],
         "timestamp"             : [],
+        "upload_source"         : [],
         "user_id"               : [],
         "_vsys"                 : []
     }
@@ -1505,6 +1506,7 @@ def output_analysis(args, sample_data, funct_type):
         "src_is_private_ip",
         "src_port",
         "timestamp",
+        "upload_source",
         "user_id",
         "_vsys"
         #Sample
@@ -1677,6 +1679,7 @@ def build_output_string(args, item, type):
         "src_is_private_ip"     : item.src_is_private_ip,
         "src_port"              : item.src_port,
         "timestamp"             : str(item.timestamp),
+        "upload_source"         : item.upload_source,
         "user_id"               : item.user_id,
         "_vsys"                 : item._vsys}
 
@@ -2034,6 +2037,7 @@ def main():
         "src_is_private_ip"
         "src_port",
         "timestamp",
+        "upload_source",
         "user_id",
         "_vsys"
     ]

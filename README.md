@@ -51,11 +51,11 @@ optional arguments:
                         dst_is_private_ipdst_port, email_recipient,
                         email_charset, email_sender, email_subject, file_name,
                         file_url, sha256, src_country_code, src_country,
-                        src_ip, src_is_private_ipsrc_port, timestamp, user_id,
-                        _vsys]. Meta Sections [sha256, file_type, create_date,
-                        verdict, file_size, tags, sha1, md5, ssdeep, imphash,
-                        digital_signer]. Coverage Sections [dns_sig,
-                        fileurl_sig, url_cat, wf_av_sig].
+                        src_ip, src_is_private_ipsrc_port, timestamp,
+                        upload_source, user_id, _vsys]. Meta Sections [sha256,
+                        file_type, create_date, verdict, file_size, tags,
+                        sha1, md5, ssdeep, imphash, digital_signer]. Coverage
+                        Sections [dns_sig, fileurl_sig, url_cat, wf_av_sig].
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
                         number, default 10,000. Use "suspicious" and
@@ -1361,6 +1361,7 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 v1.2.6 - DDMMM2018
 * Added section "upload_source" for session output.
+* Expanded special "count" function to work across meta and session sections.
 
 v1.2.5 - 04APR2018
 * Added a try/except to catch tag_check queries the script is unable to parse correctly.

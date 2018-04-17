@@ -1738,6 +1738,23 @@ def output_list(args):
             for tag in tag_count:
                 message_proc("%05s | %s" % (tag_count[tag], tag), args)
 
+        elif args.special == "count":
+
+            row_count = {}
+
+            for row in results:
+                entry = " , ".join(row)
+                if entry not in row_count:
+                    row_count[entry] = 1
+                else:
+                    row_count[entry] += 1
+
+            widths = [max(map(len, col)) for col in zip(*results)]
+            for row in row_count:
+                new_row = row.split(",")
+                new_row = " | ".join((val.ljust(width) for val, width in zip(new_row, widths)))
+                message_proc("%05s | %s" % (row_count[row], new_row), args)
+
         else:
             # Auto-adjust column widths
             widths = [max(map(len,col)) for col in zip(*results)]
@@ -1752,13 +1769,32 @@ def output_list(args):
 
         results = session_scrape(args)
 
-        # Auto-adjust column widths
-        widths = [max(map(len,col)) for col in zip(*results)]
-        for row in results:
-            message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
+        if args.special == "count":
 
-        if not args.quiet:
-            message_proc("\n[+] processed %s sessions [+]\n" % str(count), args)
+            row_count = {}
+
+            for row in results:
+                entry = " , ".join(row)
+                if entry not in row_count:
+                    row_count[entry] = 1
+                else:
+                    row_count[entry] += 1
+
+            widths = [max(map(len, col)) for col in zip(*results)]
+            for row in row_count:
+                new_row = row.split(",")
+                new_row = " | ".join((val.ljust(width) for val, width in zip(new_row, widths)))
+                message_proc("%05s | %s" % (row_count[row], new_row), args)
+
+        else:
+
+            # Auto-adjust column widths
+            widths = [max(map(len,col)) for col in zip(*results)]
+            for row in results:
+                message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
+
+            if not args.quiet:
+                message_proc("\n[+] processed %s sessions [+]\n" % str(count), args)
 
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results

@@ -96,7 +96,17 @@ class AFLenzNameSpace(object):
 
     # A class which wraps an AFlenz command line statement arguments into members
 
-    def __init__(self, commonality=100, filter=10000, ident="query", limit=200, output="all", query='{"operator":"all","children":[{"field":"sample.malware","operator":"is","value":1}]}', quiet=True, run_type="hash_scrape", write=False):
+    def __init__(self,
+                 commonality=100,
+                 filter=10000,
+                 ident="query",
+                 limit=200,
+                 output="all",
+                 query='{"operator":"all","children":[{"field":"sample.malware","operator":"is","value":1}]}',
+                 quiet=True,
+                 run_type="hash_scrape",
+                 write=False,
+                 platform="all"):
         self.commonality = commonality
         self.filter = filter
         self.ident = ident
@@ -107,6 +117,7 @@ class AFLenzNameSpace(object):
         self.run = run_type
         self.special = []
         self.write = write
+        self.platform = platform
 
 ####################
 # Build structures #

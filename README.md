@@ -1263,20 +1263,31 @@ $ python af_lenz.py -i dns -q "markovqwesta.com" -l 1 -r hash_scrape -s bgm -f 0
 Returns the basic tag meta-data.
 
 ```
-$ python af_lenz.py -i tag -q 'Commodity.NJRat' -r tag_info
+$ python af_lenz.py -i tag -q 'Unit42.NJRat' -r tag_info
 
-{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Commodity.NJRat"]}]}
+{"operator":"all","children":[{"field":"sample.tag","operator":"is in the list","value":["Unit42.NJRat"]}]}
 
 [+] Tag Info [+]
 
 Tag Name        : NJRat
-Tag Public Name : Commodity.NJRat
-Tag Count       : 815787
+Tag Public Name : Unit42.NJRat
+Tag Count       : 1225435
 Tag Created     : 2016-01-01 00:00:00
-Tag Last Hit    : 2017-02-22 07:55:00
+Tag Last Hit    : 2018-07-19 10:08:08
 Tag Class       : malware_family
 Tag Status      : enabled
+Tag Source      : unit42
 Tag Description : NJRat is a remote-access Trojan that has been used for the last few years. We haven’t heard much about NJRat since April 2014, but some samples we’ve recently received show that this malware is making a comeback. ( For some background on NJRat,  a 2013 report from Fidelis Cybersecurity Solutions at General Dynamics detailed indicators, domains, and TTP’s in conjunction with cyber-attacks using NJRat.)
+Tag References  :
+	[Source] Fidelis | [Title] NJRat Uncovered | [URL] http://www.fidelissecurity.com/sites/default/files/FTA_1009-njRAT_Uncovered_rev2.pdf
+	[Source] Phishme | [Title] Return of NJRat | [URL] http://phishme.com/the-return-of-njrat/
+Tag Queries     :
+
+{"operator":"all","children":[{"field":"sample.tasks.process","operator":"contains","value":"\\DR-RAT\\Server.exe"}]}
+
+{"operator":"any","children":[{"field":"sample.tasks.file","operator":"contains","value":"users\\administrator\\appdata\\roaming\\windowsupdate.config"},{"field":"sample.tasks.mutex","operator":"contains","value":"CreateMutexW , f91bafdfdfd375ea2dff161183a71733"}]}
+
+    <TRUNCATED>
 ```
 
 ##### tag_check
@@ -1363,6 +1374,8 @@ v1.2.6 - DDMMM2018
 * Added section "upload_source" for session output.
 * Expanded special "count" function to work across meta and session sections.
 * Updated LenzNameSpace to include platform coverage.
+* Added references and tag source to the "tag_info" function.
+* Fixed an issue where multiprocess module would hang due to a suspected race condition.
 
 v1.2.5 - 04APR2018
 * Added a try/except to catch tag_check queries the script is unable to parse correctly.

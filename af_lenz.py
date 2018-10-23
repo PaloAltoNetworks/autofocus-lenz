@@ -55,7 +55,10 @@ from autofocus import \
     AFELFFunction, \
     AFELFIPAddress, \
     AFELFDomain, \
-    AFELFURL
+    AFELFURL, \
+    AFELFSuspiciousActionMonitored, \
+    AFELFCommandAction, \
+    AFELFFileActivity
 # Macro Specific
 from autofocus import \
     AFRelatedMacro
@@ -157,10 +160,13 @@ def build_field_list():
         "dns"                               : [],
         "dns_sig"                           : [],
         "elf_commands"                      : [],
+	"elf_command_action"		    : [],
         "elf_domains"                       : [],
+	"elf_file_activity"		    : [],
         "elf_file_paths"                    : [],
         "elf_functions"                     : [],
         "elf_ip_address"                    : [],
+	"elf_suspicious_action"		    : [],
         "elf_suspicious_behavior"           : [],
         "elf_urls"                          : [],
         "file"                              : [],
@@ -218,10 +224,13 @@ def build_field_dict():
         "dns"                               : {},
         "dns_sig"                           : {},
         "elf_commands"                      : {},
+	"elf_command_action"		    : {},
         "elf_domains"                       : {},
+	"elf_file_activity"		    : {},
         "elf_file_paths"                    : {},
         "elf_functions"                     : {},
         "elf_ip_address"                    : {},
+	"elf_suspicious_action"		    : {},
         "elf_suspicious_behavior"           : {},
         "elf_urls"                          : {},
         "file"                              : {},
@@ -508,13 +517,15 @@ def hash_lookup(args, query):
         AFDigitalSigner                     : "apk_digital_signer",
         AFDnsActivity                       : "dns",
         AFELFCommands                       : "elf_commands",
+	AFELFCommandAction		    : "elf_command_action",
         AFELFDomain                         : "elf_domains",
+	AFELFFileActivity		    : "elf_file_activity",
         AFELFFilePath                       : "elf_file_paths",
         AFELFFunction                       : "elf_functions",
         AFELFIPAddress                      : "elf_ip_address",
+	AFELFSuspiciousActionMonitored	    : "elf_suspicious_action",
         AFELFSuspiciousBehavior             : "elf_suspicious_behavior",
         AFELFURL                            : "elf_urls",
-        AFFileActivity                      : "file",
         AFHttpActivity                      : "http",
         AFJavaApiActivity                   : "japi",
         AFMacEmbeddedFile                   : "mac_embedded_file",
@@ -839,8 +850,8 @@ def hash_scrape(args):
         for section in hashes[hash]:
             unique_list = []
             for value in hashes[hash][section]:
-
-                if args.special == "count" and value not in unique_list:
+                
+		if args.special == "count" and value not in unique_list:
                     hash_data[section].append(value)
                     unique_list.append(value)
                 else:
@@ -1558,6 +1569,9 @@ def output_analysis(args, sample_data, funct_type):
         "elf_ip_address",
         "elf_suspicious_behavior",
         "elf_urls",
+	"elf_file_activity",
+	"elf_command_action",
+	"elf_suspicious_action",
         "file",
         "http",
         "imphash",
@@ -2120,10 +2134,13 @@ def main():
         "dns",
         "dropped_files",
         "elf_commands",
+	"elf_command_action",
         "elf_domains",
+	"elf_file_activity",
         "elf_file_paths",
         "elf_functions",
         "elf_ip_address",
+	"elf_suspicious_action",
         "elf_suspicious_behavior",
         "elf_urls",
         "file",

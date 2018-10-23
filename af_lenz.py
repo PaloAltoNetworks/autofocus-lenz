@@ -450,7 +450,7 @@ def hash_library(args):
     logging.info("Running queries to get requested sections")
     pool_output = pool.map(hash_worker,[(args,item) for item in input_data])
     logging.info("Finished running queries for section data")
-    pool.close()
+    pool.terminate()
     pool.join()
 
     for item in pool_output:
@@ -1172,7 +1172,6 @@ def tag_info(args):
 
     # Get tag info
     tag_info = AFTag.get(args.query)
-
     tag_details = ""
 
     tag_details += "\n%-15s : %s\n" % ("Tag Name", tag_info.name)
@@ -1182,7 +1181,15 @@ def tag_info(args):
     tag_details += "%-15s : %s\n" % ("Tag Last Hit", tag_info.last_hit)
     tag_details += "%-15s : %s\n" % ("Tag Class", tag_info.tag_class)
     tag_details += "%-15s : %s\n" % ("Tag Status", tag_info.status)
+    tag_details += "%-15s : %s\n" % ("Tag Source", tag_info.scope)
     tag_details += "%-15s : %s\n" % ("Tag Description", tag_info.description)
+    tag_details += "%-15s : \n" % ("Tag References")
+    for entry in tag_info.references:
+        try:
+            tag_details += "\t[Source] %s | [Title] %s | [URL] %s\n" % (entry.source, entry.title, entry)
+        except:
+            pass
+
     tag_details += "%-15s : " % ("Tag Queries")
 
     for tagQuery in tag_info.tag_definitions:

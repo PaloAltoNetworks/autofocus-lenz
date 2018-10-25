@@ -160,13 +160,13 @@ def build_field_list():
         "dns"                               : [],
         "dns_sig"                           : [],
         "elf_commands"                      : [],
-        "elf_command_action"		    : [],
+        "elf_command_action"		        : [],
         "elf_domains"                       : [],
-        "elf_file_activity"		    : [],
+        "elf_file_activity"		            : [],
         "elf_file_paths"                    : [],
         "elf_functions"                     : [],
         "elf_ip_address"                    : [],
-        "elf_suspicious_action"		    : [],
+        "elf_suspicious_action"		        : [],
         "elf_suspicious_behavior"           : [],
         "elf_urls"                          : [],
         "file"                              : [],
@@ -224,13 +224,13 @@ def build_field_dict():
         "dns"                               : {},
         "dns_sig"                           : {},
         "elf_commands"                      : {},
-        "elf_command_action"		    : {},
+        "elf_command_action"		        : {},
         "elf_domains"                       : {},
-        "elf_file_activity"		    : {},
+        "elf_file_activity"		            : {},
         "elf_file_paths"                    : {},
         "elf_functions"                     : {},
         "elf_ip_address"                    : {},
-        "elf_suspicious_action"		    : {},
+        "elf_suspicious_action"		        : {},
         "elf_suspicious_behavior"           : {},
         "elf_urls"                          : {},
         "file"                              : {},
@@ -517,9 +517,9 @@ def hash_lookup(args, query):
         AFDigitalSigner                     : "apk_digital_signer",
         AFDnsActivity                       : "dns",
         AFELFCommands                       : "elf_commands",
-        AFELFCommandAction		    : "elf_command_action",
+        AFELFCommandAction		            : "elf_command_action",
         AFELFDomain                         : "elf_domains",
-        AFELFFileActivity		    : "elf_file_activity",
+        AFELFFileActivity		            : "elf_file_activity",
         AFELFFilePath                       : "elf_file_paths",
         AFELFFunction                       : "elf_functions",
         AFELFIPAddress                      : "elf_ip_address",
@@ -850,8 +850,8 @@ def hash_scrape(args):
         for section in hashes[hash]:
             unique_list = []
             for value in hashes[hash][section]:
-                
-		if args.special == "count" and value not in unique_list:
+
+                if args.special == "count" and value not in unique_list:
                     hash_data[section].append(value)
                     unique_list.append(value)
                 else:
@@ -2208,24 +2208,24 @@ def main():
         "user_agent"
     ]
     specials = [
-        "yara_rule",
         "af_import",
-        "range",
+        "bgm",
         "count",
+        "range",
         "tag_count",
-        "bgm"
+        "yara_rule"
     ]
     filter = [
-        "suspicious",
-        "highly_suspicious"
+        "highly_suspicious",
+        "suspicious"
     ]
     platforms = [
-        "win7",
-        "win10",
-        "winxp",
         "android",
+        "mac",
         "staticAnalyzer",
-        "mac"
+        "win10",
+        "win7",
+        "winxp"
     ]
 
     # Grab initial arguments from CLI

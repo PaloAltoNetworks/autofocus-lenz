@@ -15,7 +15,7 @@ setup(
     description="Autofocus Lenz",
     author_email="jwhite@paloaltonetworks.com",
     url="",
-    keywords=["autofocus", "af_lenz"]
+    keywords=["autofocus", "af_lenz"],
     install_requires=REQUIRES,
     packages=find_packages(),
     include_package_data=True,

@@ -21,6 +21,6 @@ setup(
     include_package_data=True,
     long_description="A tool for interfacing with the PANW autofocus api",
     entry_points = {
-        'console_scripts': ['af_lenz=af_lenz.main']
+        'console_scripts': ['af_lenz=af_lenz:main']
     }
 )

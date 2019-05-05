@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from inspect import isfunction
 from autofocus import AutoFocusAPI
 AutoFocusAPI.api_key = ""

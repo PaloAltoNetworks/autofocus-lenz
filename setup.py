@@ -18,6 +18,7 @@ setup(
     keywords=["autofocus", "af_lenz"],
     install_requires=REQUIRES,
     packages=find_packages(),
+    py_modules=['af_lenz'],
     include_package_data=True,
     long_description="A tool for interfacing with the PANW autofocus api",
     entry_points = {

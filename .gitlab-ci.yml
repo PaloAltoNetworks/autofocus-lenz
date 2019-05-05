@@ -1,0 +1,15 @@
+image: docker-gsrt-tech.af.paloaltonetworks.local/base-image/alpine:latest
+
+before_script:
+    - python3 -V               # Print out python version for debugging
+
+pypi:
+    script:
+        - pip3 install -U twine wheel
+        - python3 setup.py bdist_wheel
+        - twine upload dist/*
+        # Triger a rebuild of the tools container
+        - curl -X POST -F token=bbbd5b8ee425f3ad32a03a91ee4cc9 -F ref=master https://gitlab.gsrt.paloaltonetworks.local/api/v4/projects/54/trigger/pipeline
+    only:
+        - master-py3
+

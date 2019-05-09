@@ -7,7 +7,7 @@ NAME = "af_lenz"
 VERSION = "1.2.7"
 
 #REQUIRES = ["autofocus"]
-REQUIRES = [""]
+REQUIRES = ["autofocus-client-library", "requests"]
 
 setup(
     name=NAME,

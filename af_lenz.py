@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from inspect import isfunction
 from autofocus import AutoFocusAPI
-AutoFocusAPI.api_key = ""
 from autofocus import AFSession, AFSample, AFTag, AFTagDefinition
 # Analysis Sections
 from autofocus import \

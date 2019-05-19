@@ -1,4 +1,4 @@
-image: docker-gsrt-tech.af.paloaltonetworks.local/base-image/alpine:latest
+image: docker-gsrt-tech.af.paloaltonetworks.local/base-image/gitlabci:latest
 
 stages:
     - build
@@ -6,18 +6,26 @@ stages:
     - post
 
 before_script:
-    - python3 -V               # Print out python version for debugging
+  - python3 -V
 
 pypi:
     stage: pypi
     script:
-        - pip3 install -U twine wheel
         - python3 setup.py bdist_wheel
         - twine upload dist/*
     only:
-        - master-python3
-post:
+        refs:
+            - master-python3
+        changes:
+            - "setup.py"
+
+build-utilties-container:
     stage: post
     trigger:
         project: gsrt-tools/gsrt-utilities-container
         branch: master
+    only:
+        refs:
+            - master-python3
+        changes:
+            - "setup.py"

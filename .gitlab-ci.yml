@@ -1,0 +1,31 @@
+image: docker-gsrt-tech.af.paloaltonetworks.local/base-image/gitlabci:latest
+
+stages:
+    - build
+    - pypi
+    - post
+
+before_script:
+  - python3 -V
+
+pypi:
+    stage: pypi
+    script:
+        - python3 setup.py bdist_wheel
+        - twine upload dist/*
+    only:
+        refs:
+            - master
+        changes:
+            - "setup.py"
+
+build-utilties-container:
+    stage: post
+    trigger:
+        project: gsrt-tools/gsrt-utilities-container
+        branch: master
+    only:
+        refs:
+            - master
+        changes:
+            - "setup.py"

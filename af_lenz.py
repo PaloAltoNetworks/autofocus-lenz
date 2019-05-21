@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from inspect import isfunction
 from autofocus import AutoFocusAPI
-AutoFocusAPI.api_key = ""
 from autofocus import AFSession, AFSample, AFTag, AFTagDefinition
 # Analysis Sections
 from autofocus import \
@@ -83,8 +82,8 @@ __date__    = "XXX2018"
 research_mode = "False"
 
 try:
-    import ConfigParser
-    parser    = ConfigParser.ConfigParser()
+    import configparser
+    parser    = configparser.ConfigParser()
     conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
     parser.read(os.path.expanduser(conf_path))
     research_mode = parser.get("researcher", "enabled")
@@ -304,7 +303,7 @@ def message_proc(message, args):
         file_handle = open(args.write, "a")
         file_handle.write(("%s\n" % message).encode("utf-8"))
     else:
-        print message.encode("utf-8")
+        print(message.encode("utf-8"))
 
     return
 
@@ -382,7 +381,7 @@ def af_query(ident,query):
 
         else:
             # split our params into a list of lists so as to create queries with <=999 elements each.
-            chunked_params = [params[index:index + 999] for index in xrange(0, len(params), 999)]
+            chunked_params = [params[index:index + 999] for index in range(0, len(params), 999)]
 
             # Build multiple groups of "in the list" queries
             groups = ",".join(['{"field":"%s","operator":"%s","value":[%s]}' % (field_value, operator_value, ",".join(['"{}"'.format(v) for v in chunk])) for chunk in chunked_params])
@@ -455,7 +454,7 @@ def hash_library(args):
 
     for item in pool_output:
         # structure of item is [{'hash' : { analysis data keys/values }}]
-        result_data[item.keys()[0]] = item[item.keys()[0]]
+        result_data[list(item.keys())[0]] = item[list(item.keys())[0]]
 
     return result_data
 
@@ -676,7 +675,7 @@ def common_artifacts(args):
     count   = 0
     hashes  = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         # Sample data
         hash_data = build_field_dict()
@@ -706,7 +705,7 @@ def common_artifacts(args):
                     common_data[section].append(value)
 
     common_data["count"]  = count # Keep track of how many samples processed
-    common_data["hashes"] = hashes.keys()
+    common_data["hashes"] = list(hashes.keys())
 
     return common_data
 
@@ -727,7 +726,7 @@ def common_pieces(args):
     count   = 0
     hashes  = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         # Sample data
         hash_data = build_field_dict()
@@ -759,7 +758,7 @@ def common_pieces(args):
                     common_pieces[section].append(value)
 
     common_pieces["count"]  = count # Keep track of how many samples processed
-    common_pieces["hashes"] = hashes.keys()
+    common_pieces["hashes"] = list(hashes.keys())
 
     # Clear out behavior descriptions so it doesn't print - doesn't really make sense for this context
     # Comment out to add them back in
@@ -863,7 +862,7 @@ def hash_scrape(args):
         hash_data = count_values(hash_data, args)
 
     hash_data["count"]  = count # Keep track of how many samples processed
-    hash_data["hashes"] = hashes.keys()
+    hash_data["hashes"] = list(hashes.keys())
 
     return hash_data
 
@@ -877,7 +876,7 @@ def http_scrape(args):
     count     = 0
     hashes    = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         sample_data = hashes[hash]
 
@@ -892,7 +891,7 @@ def http_scrape(args):
         count += 1
 
     http_data["count"]  = count # Keep track of how many samples processed
-    http_data["hashes"] = hashes.keys()
+    http_data["hashes"] = list(hashes.keys())
 
     return http_data
 
@@ -906,7 +905,7 @@ def dns_scrape(args):
     count    = 0
     hashes   = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         sample_data = hashes[hash]
 
@@ -921,7 +920,7 @@ def dns_scrape(args):
         count += 1
 
     dns_data["count"]  = count # Keep track of how many samples processed
-    dns_data["hashes"] = hashes.keys()
+    dns_data["hashes"] = list(hashes.keys())
 
     return dns_data
 
@@ -935,7 +934,7 @@ def mutex_scrape(args):
     count      = 0
     hashes     = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         sample_data = hashes[hash]
 
@@ -950,7 +949,7 @@ def mutex_scrape(args):
         count += 1
 
     mutex_data["count"]  = count # Keep track of how many samples processed
-    mutex_data["hashes"] = hashes.keys()
+    mutex_data["hashes"] = list(hashes.keys())
 
     return mutex_data
 
@@ -1036,13 +1035,13 @@ def dropped_file_scrape(args):
         count += 1
 
     for entry in dropped_file_data["dropped_files"]:
-        if map(unicode.lower, dropped_file_data["dropped_files"]).count(entry.lower()) > 1:
+        if list(map(str.lower, dropped_file_data["dropped_files"])).count(entry.lower()) > 1:
             dropped_file_data["dropped_files"].remove(entry)
 
     dropped_file_data["dropped_files"].sort()
 
     dropped_file_data["count"]  = count
-    dropped_file_data["hashes"] = hashes.keys()
+    dropped_file_data["hashes"] = list(hashes.keys())
 
     return dropped_file_data
 
@@ -1056,7 +1055,7 @@ def service_scrape(args):
     count        = 0
     hashes       = hash_library(args)
 
-    for hash in hashes.keys():
+    for hash in list(hashes.keys()):
 
         sample_data = hashes[hash]
 
@@ -1070,7 +1069,7 @@ def service_scrape(args):
         count += 1
 
     service_data["count"]  = count # Keep track of how many samples processed
-    service_data["hashes"] = hashes.keys()
+    service_data["hashes"] = list(hashes.keys())
 
     return service_data
 
@@ -1160,7 +1159,7 @@ def diff(args):
         count += 1
 
     hash_data["count"]  = count
-    hash_data["hashes"] = hashes.keys()
+    hash_data["hashes"] = list(hashes.keys())
 
     return hash_data
 
@@ -1602,7 +1601,7 @@ def output_analysis(args, sample_data, funct_type):
 
     if "all" in output:
         for entry in section_list:
-            if entry in sample_data.keys() and sample_data[entry] != []:
+            if entry in list(sample_data.keys()) and sample_data[entry] != []:
                 if not args.quiet:
                     message_proc("\n[+] %s [+]\n" % entry, args)
                 for value in sample_data[entry]:
@@ -1610,7 +1609,7 @@ def output_analysis(args, sample_data, funct_type):
                         message_proc(value, args)
     else:
         for entry in output:
-            if entry in sample_data.keys() and sample_data[entry] != []:
+            if entry in list(sample_data.keys()) and sample_data[entry] != []:
                 if not args.quiet:
                     message_proc("\n[+] %s [+]\n" % entry, args)
                 for value in sample_data[entry]:
@@ -1781,7 +1780,7 @@ def output_list(args):
                 else:
                     row_count[entry] += 1
 
-            widths = [max(map(len, col)) for col in zip(*results)]
+            widths = [max(list(map(len, col))) for col in zip(*results)]
             for row in row_count:
                 new_row = row.split(",")
                 new_row = " | ".join((val.ljust(width) for val, width in zip(new_row, widths)))
@@ -1789,7 +1788,7 @@ def output_list(args):
 
         else:
             # Auto-adjust column widths
-            widths = [max(map(len,col)) for col in zip(*results)]
+            widths = [max(list(map(len,col))) for col in zip(*results)]
             for row in results:
                 message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
 
@@ -1812,7 +1811,7 @@ def output_list(args):
                 else:
                     row_count[entry] += 1
 
-            widths = [max(map(len, col)) for col in zip(*results)]
+            widths = [max(list(map(len, col))) for col in zip(*results)]
             for row in row_count:
                 new_row = row.split(",")
                 new_row = " | ".join((val.ljust(width) for val, width in zip(new_row, widths)))
@@ -1821,7 +1820,7 @@ def output_list(args):
         else:
 
             # Auto-adjust column widths
-            widths = [max(map(len,col)) for col in zip(*results)]
+            widths = [max(list(map(len,col))) for col in zip(*results)]
             for row in results:
                 message_proc(" | ".join((val.ljust(width) for val, width in zip(row, widths))), args)
 
@@ -1839,7 +1838,7 @@ def af_import(args, sample_data):
 
     if "all" in output:
         output = []
-        for key in sample_data.keys():
+        for key in list(sample_data.keys()):
             output.append(key)
 
     # Build AutoFocus query
@@ -1848,34 +1847,34 @@ def af_import(args, sample_data):
 
     import_query = '{"operator":"all","children":['
     for entry in output:
-        if entry in sample_data.keys() and entry == "dns":
+        if entry in list(sample_data.keys()) and entry == "dns":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.dns","operator":"contains","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "http":
+        if entry in list(sample_data.keys()) and entry == "http":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.http","operator":"contains","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "connection":
+        if entry in list(sample_data.keys()) and entry == "connection":
             for value in sample_data[entry]:
                 value_split = value.split(" , ")
                 for subvalue in value_split: # Instead of trying to parse all of the different formats for connection, just include IP:DPORT
                     if ":" in subvalue:
                         import_query += '{"field":"sample.tasks.connection","operator":"contains","value":"' + subvalue + '"},'
-        if entry in sample_data.keys() and entry == "user_agent":
+        if entry in list(sample_data.keys()) and entry == "user_agent":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.user_agent","operator":"is","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "mutex":
+        if entry in list(sample_data.keys()) and entry == "mutex":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.mutex","operator":"contains","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "process":
+        if entry in list(sample_data.keys()) and entry == "process":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.process","operator":"contains","value":"' + value.replace("\"", "\\\"") + '"},'
-        if entry in sample_data.keys() and entry == "file":
+        if entry in list(sample_data.keys()) and entry == "file":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.file","operator":"contains","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "registry":
+        if entry in list(sample_data.keys()) and entry == "registry":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.registry","operator":"contains","value":"' + value + '"},'
-        if entry in sample_data.keys() and entry == "service":
+        if entry in list(sample_data.keys()) and entry == "service":
             for value in sample_data[entry]:
                 import_query += '{"field":"sample.tasks.service","operator":"contains","value":"' + value + '"},'
 
@@ -1897,7 +1896,7 @@ def yara_rule(args, sample_data):
 
     if "all" in output:
         output = []
-        for key in sample_data.keys():
+        for key in list(sample_data.keys()):
             output.append(key)
 
     if not args.quiet:
@@ -1911,7 +1910,7 @@ def yara_rule(args, sample_data):
     yara_sig = "rule autogen_afLenz\n{\n\t// %s\n\n\tstrings:\n" % args
 
     for entry in output:
-        if entry in sample_data.keys() and entry == "dns":
+        if entry in list(sample_data.keys()) and entry == "dns":
             count = 0
 
             if args.run == "dns_scrape":
@@ -1935,7 +1934,7 @@ def yara_rule(args, sample_data):
                         yara_sig += "\t\t$dns_" + str(count+1) + " = \"" + dns_resolve + "\" wide ascii\n" # Just grab the resolved IP
                     count += 2
 
-        if entry in sample_data.keys() and entry == "http":
+        if entry in list(sample_data.keys()) and entry == "http":
             count = 0
             if args.run == "http_scrape":
                 for value in sample_data[entry]:
@@ -1970,7 +1969,7 @@ def yara_rule(args, sample_data):
                         yara_sig += "\t\t$http_" + str(count+2) + " = \"" + full_ua + "\" wide ascii\n" # Just grab the full user-agent
                     count += 3
 
-        if entry in sample_data.keys() and entry == "connection":
+        if entry in list(sample_data.keys()) and entry == "connection":
             count = 0
             for value in sample_data[entry]:
                 value_split = value.split(" , ")
@@ -1981,7 +1980,7 @@ def yara_rule(args, sample_data):
                         yara_sig += "\t\t$connection_" + str(count) + " = \"" + subvalue.split(":")[0] + "\"\n" # Just grab IP
                 count += 1
 
-        if entry in sample_data.keys() and entry == "user_agent":
+        if entry in list(sample_data.keys()) and entry == "user_agent":
             count = 0
             for value in sample_data[entry]:
                 if value not in contained_list and value != "" and len(value) > min_len:
@@ -1990,7 +1989,7 @@ def yara_rule(args, sample_data):
                     yara_sig += "\t\t$user_agent_" + str(count) + " = \"" + value + "\"\n" # Just grab the UA fragment
                 count += 1
 
-        if entry in sample_data.keys() and entry == "mutex":
+        if entry in list(sample_data.keys()) and entry == "mutex":
             mutex_blacklist = ["Local\!IETld!Mutex",
                                "IESQMMUTEX_0_208",
                                "c:!documents and settings!administrator!local settings!temporary internet files!content.ie5!",
@@ -2344,3 +2343,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

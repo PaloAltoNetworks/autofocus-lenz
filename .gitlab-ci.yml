@@ -15,7 +15,7 @@ pypi:
         - twine upload dist/*
     only:
         refs:
-            - master-python3
+            - master
         changes:
             - "setup.py"
 
@@ -26,6 +26,6 @@ build-utilties-container:
         branch: master
     only:
         refs:
-            - master-python3
+            - master
         changes:
             - "setup.py"

@@ -1370,7 +1370,11 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
-v1.2.6 - DDMMM2018
+v1.2.7 - 06JUN2019
+* - Modified the implementation of multiprocessing to allow for graceful handling of SIGINT (CTRL-C).
+* - Converted to Python3.
+
+v1.2.6 - 16MAY2018
 * Added section "upload_source" for session output.
 * Expanded special "count" function to work across meta and session sections.
 * Updated LenzNameSpace to include platform coverage.

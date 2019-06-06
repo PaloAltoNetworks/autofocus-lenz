@@ -73,7 +73,7 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.7"
+__version__ = "1.3.0"
 __date__    = "06JUN2019"
 
 

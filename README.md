@@ -1370,7 +1370,7 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
-v1.2.7 - 06JUN2019
+v1.3.0 - 06JUN2019
 * - Modified the implementation of multiprocessing to allow for graceful handling of SIGINT (CTRL-C).
 * - Converted to Python3.
 

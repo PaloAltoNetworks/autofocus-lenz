@@ -68,12 +68,14 @@ from autofocus import \
     AFAVSignature, \
     AFDNSDownloadSignature
 
-import sys, argparse, multiprocessing, os, re, json, logging
+import sys, argparse, multiprocessing, os, re, json, logging, signal
 
-__author__  = "Jeff White [karttoon]"
+
+__author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.2.6"
-__date__    = "XXX2018"
+__version__ = "1.2.7"
+__date__    = "06JUN2019"
+
 
 #######################
 # Check research mode #
@@ -89,6 +91,7 @@ try:
     research_mode = parser.get("researcher", "enabled")
 except:
     pass
+
 
 ################
 # AFLenz Class #
@@ -120,6 +123,7 @@ class AFLenzNameSpace(object):
         self.special = []
         self.write = write
         self.platform = platform
+
 
 ####################
 # Build structures #
@@ -189,6 +193,7 @@ def build_field_list():
 
     return field_list
 
+
 def build_field_dict():
 
     field_dict = {
@@ -253,6 +258,7 @@ def build_field_dict():
 
     return field_dict
 
+
 def build_session_list():
 
     session_list = {
@@ -293,6 +299,7 @@ def build_session_list():
 
     return session_list
 
+
 ###############################
 # MESSAGE PROCESSING FUNCTION #
 ###############################
@@ -301,11 +308,12 @@ def message_proc(message, args):
 
     if args.write:
         file_handle = open(args.write, "a")
-        file_handle.write(("%s\n" % message).encode("utf-8"))
+        file_handle.write(("%s\n" % message))
     else:
-        print(message.encode("utf-8"))
+        print(message)
 
     return
+
 
 ##########################
 # AF QUERY SECTION BELOW #
@@ -392,6 +400,7 @@ def af_query(ident,query):
 
         return '{"operator":"all","children":[{"field":"%s","operator":"%s","value":"%s"}]}' % (field_value, operator_value, query)
 
+
 ###########################
 # FUNCTION SECTIONS BELOW #
 ###########################
@@ -443,20 +452,38 @@ def hash_library(args):
     # These operations are not very CPU-intensive, we can get away with a higher number of processes.
     pool_size = multiprocessing.cpu_count() * 3
 
+    # Due to a bug in python with mutiprocessing, we need to set our script to ignore SIGINT before creating the pool.
+    # Shoutout: https://stackoverflow.com/a/35134329
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
     pool = multiprocessing.Pool(processes=pool_size)
+
+    # restore the signal handler to what it was before
+    signal.signal(signal.SIGINT, original_sigint_handler)
+
     # Since we have to pass an iterable to pool.map(), and our worker function requires args to be passed we need to build a dictionary consisting of tuples. e.g:
     # [ (args, hash_1), (args, hash_2), (args, hash_n) ]
     logging.info("Running queries to get requested sections")
-    pool_output = pool.map(hash_worker,[(args,item) for item in input_data])
-    logging.info("Finished running queries for section data")
-    pool.terminate()
-    pool.join()
+    try:
+        pool_output = pool.map_async(hash_worker,[(args,item) for item in input_data])
+        pool_output.get(3600)
+    except KeyboardInterrupt:
+        # if we receive a sigint, kill the pool and exit.
+        pool.terminate()
+        logging.error("Caught Sigint.  Exiting.")
+        sys.exit(130)
+    else:
+        pool.close()
+        logging.info("Finished running queries for section data")
+    finally:
+        pool.join()
 
-    for item in pool_output:
+    for item in pool_output.get():
         # structure of item is [{'hash' : { analysis data keys/values }}]
         result_data[list(item.keys())[0]] = item[list(item.keys())[0]]
 
     return result_data
+
 
 # Hash worker function
 # Designed be be used for parallel processing of samples
@@ -471,6 +498,7 @@ def hash_worker(args_tuple):
         message_proc(sample_hash, args)
 
     return { sample_hash : hash_lookup(args,sample_hash) }
+
 
 # Hash Lookup Function
 # Basic hash lookup for a sample
@@ -628,6 +656,7 @@ def hash_lookup(args, query):
 
     return analysis_data
 
+
 # BGM Function
 # Returns human readable B(enign), G(rayware), and M(alware) counts
 # Reduces large numbers to abbreivated versions
@@ -657,6 +686,7 @@ def get_bgm(analysis):
     raw_line += "| %s" % analysis._raw_line
 
     return raw_line
+
 
 # Common Artifacts Function
 # Identifies lines that exist, per section, in every identified sample
@@ -708,6 +738,7 @@ def common_artifacts(args):
     common_data["hashes"] = list(hashes.keys())
 
     return common_data
+
 
 # Common Pieces Function
 # Similar to the "comnmon_artifact" function, but further breaks down each line to look for commonalities
@@ -766,6 +797,7 @@ def common_pieces(args):
 
     return common_pieces
 
+
 # Unique Sessions Function
 # Will gather session data from the identified samples and then report back the unique values per section
 # Session data isn't normalized quite the same as sample data so this may be more error-prone
@@ -811,6 +843,7 @@ def uniq_sessions(args):
 
     return session_data
 
+
 # Count Values Function
 # Totals up the unique values per section
 # Works with hash and session function
@@ -833,6 +866,7 @@ def count_values(count_list, args):
                     count_list[section].append(value)
 
     return count_list
+
 
 # Hash Scraper Function
 # Extracts all data from each section of the identified samples
@@ -866,6 +900,7 @@ def hash_scrape(args):
 
     return hash_data
 
+
 # HTTP Scraper Function
 # Extracts all HTTP requests made from the identified samples
 # BGM filtering is done on the entire line
@@ -894,6 +929,7 @@ def http_scrape(args):
     http_data["hashes"] = list(hashes.keys())
 
     return http_data
+
 
 # DNS Scraper Function
 # Extracts all DNS queries made from the identified samples
@@ -924,6 +960,7 @@ def dns_scrape(args):
 
     return dns_data
 
+
 # Mutex Scraper Function
 # Extracts all mutexes created within the identified samples
 # BGM filtering is done on the entire line
@@ -952,6 +989,7 @@ def mutex_scrape(args):
     mutex_data["hashes"] = list(hashes.keys())
 
     return mutex_data
+
 
 # Dropped File scraper function
 # Extracts all dropped files from the identified samples
@@ -1045,6 +1083,7 @@ def dropped_file_scrape(args):
 
     return dropped_file_data
 
+
 # Service Scraper Function
 # Extracts all service names from the identified samples
 # BGM filtering is done on the entire line
@@ -1072,6 +1111,7 @@ def service_scrape(args):
     service_data["hashes"] = list(hashes.keys())
 
     return service_data
+
 
 # Flat file reader function
 # Reads lines in from a file while checking for sha256 hashes.
@@ -1120,6 +1160,7 @@ def fetch_from_file(args,input_file):
 
         return query
 
+
 # Diff Function
 # Extracts all data from each section of the identified samples and finds differences
 # BGM filtering is done on the entire line
@@ -1163,6 +1204,7 @@ def diff(args):
 
     return hash_data
 
+
 # Tag Info
 # Pulls back specific tag details
 # Output should be similar to what's presented when looking at a tag in AF
@@ -1192,11 +1234,12 @@ def tag_info(args):
     tag_details += "%-15s : " % ("Tag Queries")
 
     for tagQuery in tag_info.tag_definitions:
-        tag_details += ("\n\n" + str(tagQuery).encode("utf-8"))
+        tag_details += ("\n\n" + str(tagQuery))
 
     message_proc("\n[+] Tag Info [+]\n%s\n" % tag_details, args)
 
     sys.exit(1)
+
 
 # Tag Checker
 # Tries to identify what artifact in a sample caused it to be tagged with the supplied tag
@@ -1313,8 +1356,8 @@ def tag_check(args):
         logging.info("[ ORIGINAL ]\n%s\n" % query_check)
 
         # Poor anchors for reverse converting at the end for special cases
-        query_check = query_check.replace('u"', "ABCSTARTQU0TEDEF")
-        query_check = query_check.replace("u'", "ABCSTARTQU0TEDEF")
+        query_check = query_check.replace('"', "ABCSTARTQU0TEDEF")
+        query_check = query_check.replace("'", "ABCSTARTQU0TEDEF")
         query_check = query_check.replace('",', "ABCENDQU0TEDEF")
         query_check = query_check.replace('"}', "ABCDICTQU0TEDEF")
         query_check = query_check.replace('"]', "ABCLISTQU0TEDEF")
@@ -1325,8 +1368,8 @@ def tag_check(args):
         query_check = query_check.replace('"', 'ABCDOULBEQU0TEDEF')
 
         # General replacements to massage query into acceptable query for API - single to double quotes
-        query_check = re.sub("(u')", "\"", query_check)
-        query_check = re.sub('(u")', "\"", query_check)
+        query_check = re.sub("(')", "\"", query_check)
+        query_check = re.sub('(")', "\"", query_check)
         query_check = re.sub("(': )", "\": ", query_check)
         query_check = re.sub("(', )", "\", ", query_check)
         query_check = re.sub("('})", "\"}", query_check)
@@ -1406,6 +1449,7 @@ def tag_check(args):
 
     return tag_data
 
+
 # Metadata Scraper Function
 # Extracts all metadata data from the identified samples
 # BGM filtering is done on the entire line
@@ -1446,6 +1490,7 @@ def meta_scrape(args):
                 break
 
     return results
+
 
 # Session Scraper Function
 # Extracts all session data from the identified samples
@@ -1489,6 +1534,7 @@ def session_scrape(args):
                 break
 
     return results
+
 
 ########################
 # OUTPUT SECTION BELOW #
@@ -1623,6 +1669,7 @@ def output_analysis(args, sample_data, funct_type):
         if not args.quiet:
             message_proc("\n[+] processed %s sessions [+]\n" % sample_data["count"], args)
 
+
 # Output List Function
 # This just returns sample based meta-data based on the query provided
 # Intended to be filtered/sorted afterwards by "|" pipe delimited characters
@@ -1739,6 +1786,7 @@ def build_output_string(args, item, type):
 
     return print_list
 
+
 def output_list(args):
 
     count   = 0
@@ -1827,6 +1875,7 @@ def output_list(args):
             if not args.quiet:
                 message_proc("\n[+] processed %s sessions [+]\n" % str(count), args)
 
+
 # AutoFocus Import Function
 # Builds a query for import into AutoFocus based on returned results
 # AutoFocus API has a limit on the lines allowed and too many results will make it more challenging to manage in the portal
@@ -1884,6 +1933,7 @@ def af_import(args, sample_data):
     import_query = import_query.replace("\\\\\"", "\\\"")
 
     message_proc("%s\n" % import_query, args)
+
 
 # Yara Rule Function
 # Attempts to take the likely data you might find from dynamic analysis and build a yara rule for memory process scanning using volatility/other tools
@@ -2051,6 +2101,7 @@ def yara_rule(args, sample_data):
     else:
         message_proc("No yara rule could be generated.\n")
 
+
 ################
 # MAIN PROGRAM #
 ################
@@ -2062,11 +2113,11 @@ def main():
         "uniq_sessions",
         "common_artifacts",
         "common_pieces",
-        "hash_scrape",
         "http_scrape",
         "dns_scrape",
         "mutex_scrape",
         "meta_scrape",
+        "sample_scrape (hash_scrape)",
         "service_scrape",
         "session_scrape",
         "diff",
@@ -2293,7 +2344,7 @@ def main():
     if args.run == "uniq_sessions":
         out_data = uniq_sessions(args)
         funct_type = "session"
-    elif args.run == "hash_scrape" or args.run == "coverage_scrape":
+    elif args.run == "hash_scrape" or args.run == "coverage_scrape" or args.run == "sample_scrape":
         out_data = hash_scrape(args)
     elif args.run == "common_artifacts":
         out_data = common_artifacts(args)

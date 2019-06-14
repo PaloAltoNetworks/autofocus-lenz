@@ -73,8 +73,8 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.3.0"
-__date__    = "06JUN2019"
+__version__ = "1.3.1"
+__date__    = "14JUN2019"
 
 
 #######################
@@ -2113,11 +2113,12 @@ def main():
         "uniq_sessions",
         "common_artifacts",
         "common_pieces",
+	"hash_scrape",
         "http_scrape",
         "dns_scrape",
         "mutex_scrape",
         "meta_scrape",
-        "sample_scrape (hash_scrape)",
+        "sample_scrape",
         "service_scrape",
         "session_scrape",
         "diff",

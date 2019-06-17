@@ -73,8 +73,8 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.3.1"
-__date__    = "14JUN2019"
+__version__ = "1.3.2"
+__date__    = "17JUN2019"
 
 
 #######################
@@ -1390,6 +1390,15 @@ def tag_check(args):
 
         # This fixes a hidden character from a specific query
         query_check = query_check.replace("\\xad","")
+
+        # This is more clean-up to get rid of the unicode that gets added with JSON
+        query_check = query_check.replace("': u'", "': '")\
+            .replace(" [{u\"", " [{\"")\
+            .replace("\", u\"", "\", \"")\
+            .replace(" {u\"", " {\"")\
+            .replace(" [u\"", " [\"")\
+            .replace(": u\"", ": \"")\
+            .replace(",{u\"", ",{\"")
 
         logging.info("[ MODIFIED ]\n%s\n" % query_check)
 

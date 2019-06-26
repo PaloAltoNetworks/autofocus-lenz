@@ -73,8 +73,8 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.3.2"
-__date__    = "17JUN2019"
+__version__ = "1.3.3"
+__date__    = "26JUN2019"
 
 
 #######################
@@ -106,7 +106,7 @@ class AFLenzNameSpace(object):
                  filter=10000,
                  ident="query",
                  limit=200,
-                 output="all",
+                 output=["all"],
                  query='{"operator":"all","children":[{"field":"sample.malware","operator":"is","value":1}]}',
                  quiet=True,
                  run_type="hash_scrape",
@@ -567,15 +567,14 @@ def hash_lookup(args, query):
     }
 
     # This may speed up large queries by reducing the volume of data returned from the API
-    if args.output == "all":
+    if args.output == ["all"]:
         section_value = None
     else:
         section_value = []
 
-        for section in args.output.split(","):
+        for section in args.output:
 
             for section_map in analysis_data_map:
-
                 if section == analysis_data_map[section_map]:
                     section_value.append(section_map)
 
@@ -637,6 +636,10 @@ def hash_lookup(args, query):
 
                     elif args.filter == "highly_suspicious":
                         if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count < 500):
+                            analysis_data[analysis_data_section].append(raw_line)
+
+                    elif args.filter == "all_suspicious":
+                        if analysis.malware_count > (analysis.benign_count * 3) and (analysis.malware_count >= 1):
                             analysis_data[analysis_data_section].append(raw_line)
 
                     elif (analysis.benign_count + analysis.grayware_count + analysis.malware_count) < int(args.filter):
@@ -852,7 +855,7 @@ def count_values(count_list, args):
 
     for section in count_list:
 
-        if args.output == "all" or section in args.output:
+        if args.output == ["all"] or section in args.output:
 
             unique_values = []
 
@@ -1555,7 +1558,7 @@ def session_scrape(args):
 
 def output_analysis(args, sample_data, funct_type):
 
-    output = args.output.split(",")
+    output = args.output
 
     section_list = [
         #Session
@@ -1685,7 +1688,7 @@ def output_analysis(args, sample_data, funct_type):
 
 def build_output_string(args, item, type):
 
-    output = args.output.split(",")
+    output = args.output
 
     #
     # Meta
@@ -1892,7 +1895,7 @@ def output_list(args):
 def af_import(args, sample_data):
 
     # Initialize some values
-    output = args.output.split(",")
+    output = args.output
 
     if "all" in output:
         output = []
@@ -1951,7 +1954,7 @@ def af_import(args, sample_data):
 def yara_rule(args, sample_data):
 
     # Initialize some values
-    output = args.output.split(",")
+    output = args.output
 
     if "all" in output:
         output = []
@@ -2122,7 +2125,7 @@ def main():
         "uniq_sessions",
         "common_artifacts",
         "common_pieces",
-	"hash_scrape",
+	    "hash_scrape",
         "http_scrape",
         "dns_scrape",
         "mutex_scrape",
@@ -2276,6 +2279,7 @@ def main():
         "yara_rule"
     ]
     filter = [
+        "all_suspicious",
         "highly_suspicious",
         "suspicious"
     ]
@@ -2297,7 +2301,7 @@ def main():
                                                "Session Sections [" + ", ".join(session_sections) + "]. "
                                                "Meta Sections [" + ", ".join(meta_sections) + "]. "
                                                "Coverage Sections [" + ", ".join(coverage_sections) + "]. " , metavar="<section_output>", default="all")
-    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Use \"suspicious\" and \"highly_suspicious\" for pre-built malware filtering. Use 0 for no filter.", metavar="<number>", default=10000)
+    parser.add_argument("-f", "--filter", help="Filter out Benign/Grayware/Malware counts over this number, default 10,000. Uses pre-built malware filtering from AF. Use 0 for no filter. [" + ", ".join(filter) + "]", metavar="<number>", default=10000)
     parser.add_argument("-l", "--limit", help="Limit the number of analyzed samples, default 200. Use 0 for no limit.", metavar="<number>", type=int, default=200)
     parser.add_argument("-r", "--run", choices=functions, help="Function to run. [" + ", ".join(functions) + "]", metavar='<function_name>', required=True)
     parser.add_argument("-s", "--special", choices=specials, help="Output data formated in a special way for other tools. [" + ", ".join(specials) + "]", metavar="<special_output>",default=[])
@@ -2320,6 +2324,22 @@ def main():
                             format  = "%(asctime)s %(levelname)-8s %(message)s",
                             datefmt = "%Y-%m-%d %H:%M:%S",
                             stream  = sys.stdout)
+
+    # Extrapolate sections
+    sections = []
+    if args.output == "all_apk" or args.output == "all_elf":
+        for section in sample_sections:
+            if section.startswith(args.output.split("_")[1]):
+                sections.append(section)
+    elif args.output == "all":
+        sections.append("all")
+    else:
+        for section in args.output.split(","):
+            if section in sample_sections:
+                sections.append(section)
+
+    args.output = sections
+
 
     if args.ident == "file_hashes":
         hashlist = fetch_from_file(args, args.query)

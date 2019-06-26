@@ -25,22 +25,24 @@ optional arguments:
   -o <section_output>, --output <section_output>
                         Section of data to return. Multiple values are comma
                         separated (no space) or "all" for everything, which is
-                        default. Sample Sections [apk_app_icon, apk_app_name,
-                        apk_cert_file, apk_certificate_id,
-                        apk_defined_activity, apk_defined_intent_filter,
-                        apk_defined_receiver, apk_defined_sensor,
-                        apk_defined_service, apk_digital_signer,
-                        apk_embedded_library, apk_embeded_url,
-                        apk_internal_file, apk_isrepackaged, apk_packagename,
-                        apk_requested_permission, apk_sensitive_api_call,
+                        default. Sample Sections [all_apk, all_elf,
+                        apk_app_icon, apk_app_name, apk_cert_file,
+                        apk_certificate_id, apk_defined_activity,
+                        apk_defined_intent_filter, apk_defined_receiver,
+                        apk_defined_sensor, apk_defined_service,
+                        apk_digital_signer, apk_embedded_library,
+                        apk_embeded_url, apk_internal_file, apk_isrepackaged,
+                        apk_packagename, apk_requested_permission,
+                        apk_sensitive_api_call,
                         apk_suspicious_action_monitored,
                         apk_suspicious_api_call, apk_suspicious_file,
                         apk_suspicious_pattern, apk_suspicious_string,
                         apk_version_num, behavior, behavior_type, connection,
                         default, digital_signer, dns, dropped_files,
-                        elf_command_action, elf_commands, elf_domains, 
-                        elf_file_activity, elf_file_paths, elf_functions, elf_ip_address,
-                        elf_suspicious_action, elf_suspicious_behavior, elf_urls, file, http,
+                        elf_commands, elf_command_action, elf_domains,
+                        elf_file_activity, elf_file_paths, elf_functions,
+                        elf_ip_address, elf_suspicious_action,
+                        elf_suspicious_behavior, elf_urls, file, http,
                         imphash, japi, mac_embedded_file, mac_embedded_url,
                         macro, misc, mutex, process, registry, service,
                         summary, user_agent]. Session Sections [account_name,
@@ -58,21 +60,21 @@ optional arguments:
                         Sections [dns_sig, fileurl_sig, url_cat, wf_av_sig].
   -f <number>, --filter <number>
                         Filter out Benign/Grayware/Malware counts over this
-                        number, default 10,000. Use "suspicious" and
-                        "highly_suspicious" for pre-built malware filtering.
-                        Use 0 for no filter.
+                        number, default 10,000. Uses pre-built malware
+                        filtering from AF. Use 0 for no filter.
+                        [all_suspicious, highly_suspicious, suspicious]
   -l <number>, --limit <number>
                         Limit the number of analyzed samples, default 200. Use
                         0 for no limit.
   -r <function_name>, --run <function_name>
                         Function to run. [uniq_sessions, common_artifacts,
                         common_pieces, hash_scrape, http_scrape, dns_scrape,
-                        mutex_scrape, meta_scrape, service_scrape,
-                        session_scrape, diff, tag_check, tag_info,
-                        dropped_file_scrape, coverage_scrape]
+                        mutex_scrape, meta_scrape, sample_scrape,
+                        service_scrape, session_scrape, diff, tag_check,
+                        tag_info, dropped_file_scrape, coverage_scrape]
   -s <special_output>, --special <special_output>
                         Output data formated in a special way for other tools.
-                        [yara_rule, af_import, range, count, tag_count, bgm]
+                        [af_import, bgm, count, range, tag_count, yara_rule]
   -c <integer_percent>, --commonality <integer_percent>
                         Commonality percentage for comparison functions,
                         default is 100
@@ -82,8 +84,8 @@ optional arguments:
                         Write output to a file instead of STDOUT.
   -d, --debug           Enable debug logging (limited usage).
   -p <platform>, --platform <platform>
-                        Limit results to the specific VM platform. [win7,
-                        win10, winxp, android, staticAnalyzer, mac]
+                        Limit results to the specific VM platform. [android,
+                        mac, staticAnalyzer, win10, win7, winxp]
 ```
 
 Quick links to examples:
@@ -1369,6 +1371,10 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 ```
 
 ### [+] CHANGE LOG [+]
+
+v1.3.3 - 26JUN2019
+* Added filter "all_suspicious" which combines both "highly_suspicious" and "suspicious" filters into one.
+* Added output "all_apk" and "all_elf" which will specify all of the respective fields for those file types.
 
 v1.3.2 - 17JUN2019
 * - Bug fixes

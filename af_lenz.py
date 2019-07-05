@@ -73,8 +73,8 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.3.3"
-__date__    = "26JUN2019"
+__version__ = "1.3.4"
+__date__    = "05JUL2019"
 
 
 #######################
@@ -2335,7 +2335,10 @@ def main():
         sections.append("all")
     else:
         for section in args.output.split(","):
-            if section in sample_sections:
+            if section in sample_sections or \
+                    section in meta_sections or \
+                    section in session_sections or \
+                    section in coverage_sections:
                 sections.append(section)
 
     args.output = sections

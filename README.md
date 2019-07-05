@@ -1372,16 +1372,19 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
+v1.3.5 - 05JUL2019
+* Bug fixes related to new "all_apk" and "all_elf" sections that got added.
+
 v1.3.3 - 26JUN2019
 * Added filter "all_suspicious" which combines both "highly_suspicious" and "suspicious" filters into one.
 * Added output "all_apk" and "all_elf" which will specify all of the respective fields for those file types.
 
 v1.3.2 - 17JUN2019
-* - Bug fixes
+* Bug fixes
 
 v1.3.0 - 06JUN2019
-* - Modified the implementation of multiprocessing to allow for graceful handling of SIGINT (CTRL-C).
-* - Converted to Python3.
+* Modified the implementation of multiprocessing to allow for graceful handling of SIGINT (CTRL-C).
+* Converted to Python3.
 
 v1.2.6 - 16MAY2018
 * Added section "upload_source" for session output.

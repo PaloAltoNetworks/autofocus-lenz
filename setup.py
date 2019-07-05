@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "af_lenz"
-VERSION = "1.3.3"
+VERSION = "1.3.4"
 
 REQUIRES = ["autofocus-client-library", "requests"]
 

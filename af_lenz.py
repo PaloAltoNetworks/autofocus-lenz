@@ -73,8 +73,8 @@ import sys, argparse, multiprocessing, os, re, json, logging, signal
 
 __author__  = "Jeff White [karttoon] @noottrak"
 __email__   = "jwhite@paloaltonetworks.com"
-__version__ = "1.3.5"
-__date__    = "05JUL2019"
+__version__ = "1.3.6"
+__date__    = "08JUL2019"
 
 
 #######################
@@ -116,7 +116,7 @@ class AFLenzNameSpace(object):
         self.filter = filter
         self.ident = ident
         self.limit = limit
-        self.output = output
+        self.output = output.split(",")
         self.query = query
         self.quiet = quiet
         self.run = run_type

@@ -1372,7 +1372,7 @@ Dapato.dr/Win32.fui.g , 2018-01-20 05:05:48 , 2499 , 2499 , True
 
 ### [+] CHANGE LOG [+]
 
-v1.3.5 - 05JUL2019
+v1.3.6 - 08JUL2019
 * Bug fixes related to new "all_apk" and "all_elf" sections that got added.
 
 v1.3.3 - 26JUN2019

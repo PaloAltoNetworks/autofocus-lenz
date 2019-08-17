@@ -130,136 +130,24 @@ class AFLenzNameSpace(object):
 ####################
 # Build structures #
 ####################
+def _build_field_structures(values_as_list=False):
 
-def build_field_list():
+    # We should use the private mappings for analysis sections used by the af lib - this will ensure we're always up to
+    # date
 
-    field_list = {
-        "apk_app_icon"                      : [],
-        "apk_app_name"                      : [],
-        "apk_cert_file"                     : [],
-        #"apk_certificate_id"                : [], # Unused currently
-        "apk_defined_activity"              : [],
-        "apk_defined_intent_filter"         : [],
-        "apk_defined_receiver"              : [],
-        "apk_defined_sensor"                : [],
-        "apk_defined_service"               : [],
-        "apk_digital_signer"                : [],
-        "apk_embedded_library"              : [],
-        "apk_embeded_url"                   : [],
-        "apk_internal_file"                 : [],
-        "apk_isrepackaged"                  : [],
-        "apk_packagename"                   : [],
-        "apk_requested_permission"          : [],
-        "apk_sensitive_api_call"            : [],
-        "apk_suspicious_action_monitored"   : [],
-        "apk_suspicious_api_call"           : [],
-        "apk_suspicious_file"               : [],
-        "apk_suspicious_pattern"            : [],
-        "apk_suspicious_string"             : [],
-        "apk_version_num"                   : [],
-        "behavior"                          : [],
-        "behavior_type"                     : [],
-        "connection"                        : [],
-        "default"                           : [],
-        "digital_signer"                    : [],
-        "dns"                               : [],
-        "dns_sig"                           : [],
-        "elf_commands"                      : [],
-        "elf_command_action"		        : [],
-        "elf_domains"                       : [],
-        "elf_file_activity"		            : [],
-        "elf_file_paths"                    : [],
-        "elf_functions"                     : [],
-        "elf_ip_address"                    : [],
-        "elf_suspicious_action"		        : [],
-        "elf_suspicious_behavior"           : [],
-        "elf_urls"                          : [],
-        "file"                              : [],
-        "fileurl_sig"                       : [],
-        "http"                              : [],
-        "imphash"                           : [],
-        "japi"                              : [],
-        "mac_embedded_file"                 : [],
-        "mac_embedded_url"                  : [],
-        "macro"                             : [],
-        "misc"                              : [],
-        "mutex"                             : [],
-        "process"                           : [],
-        "registry"                          : [],
-        "service"                           : [],
-        "summary"                           : [],
-        "url_cat"                           : [],
-        "user_agent"                        : [],
-        "wf_av_sig"                         : []
-    }
+    from autofocus.models.analysis import _analysis_2_class_map
+    from autofocus.models.coverage import _coverage_2_class_map
 
-    return field_list
-
+    ignore_fields = ('apk_certificate_id',)
+    other_fields = ["default", "digital_signer", "imphash"]
+    keys_to_prep = [v for v in _analysis_2_class_map.keys()] + [v for v in _coverage_2_class_map.keys()] + other_fields
+    return {k: [] if values_as_list else {} for k in keys_to_prep if k not in ignore_fields}
 
 def build_field_dict():
+    return _build_field_structures()
 
-    field_dict = {
-        "apk_app_icon"                      : {},
-        "apk_app_name"                      : {},
-        "apk_cert_file"                     : {},
-        #"apk_certificate_id"                : {}, # Unused currently
-        "apk_defined_activity"              : {},
-        "apk_defined_intent_filter"         : {},
-        "apk_defined_receiver"              : {},
-        "apk_defined_sensor"                : {},
-        "apk_defined_service"               : {},
-        "apk_digital_signer"                : {},
-        "apk_embedded_library"              : {},
-        "apk_embeded_url"                   : {},
-        "apk_internal_file"                 : {},
-        "apk_isrepackaged"                  : {},
-        "apk_packagename"                   : {},
-        "apk_requested_permission"          : {},
-        "apk_sensitive_api_call"            : {},
-        "apk_suspicious_action_monitored"   : {},
-        "apk_suspicious_api_call"           : {},
-        "apk_suspicious_file"               : {},
-        "apk_suspicious_pattern"            : {},
-        "apk_suspicious_string"             : {},
-        "apk_version_num"                   : {},
-        "behavior"                          : {},
-        "behavior_type"                     : {},
-        "connection"                        : {},
-        "default"                           : {},
-        "digital_signer"                    : {},
-        "dns"                               : {},
-        "dns_sig"                           : {},
-        "elf_commands"                      : {},
-        "elf_command_action"		        : {},
-        "elf_domains"                       : {},
-        "elf_file_activity"		            : {},
-        "elf_file_paths"                    : {},
-        "elf_functions"                     : {},
-        "elf_ip_address"                    : {},
-        "elf_suspicious_action"		        : {},
-        "elf_suspicious_behavior"           : {},
-        "elf_urls"                          : {},
-        "file"                              : {},
-        "fileurl_sig"                       : {},
-        "http"                              : {},
-        "imphash"                           : {},
-        "japi"                              : {},
-        "mac_embedded_file"                 : {},
-        "mac_embedded_url"                  : {},
-        "macro"                             : {},
-        "misc"                              : {},
-        "mutex"                             : {},
-        "process"                           : {},
-        "registry"                          : {},
-        "service"                           : {},
-        "summary"                           : {},
-        "url_cat"                           : {},
-        "user_agent"                        : {},
-        "wf_av_sig"                         : {}
-    }
-
-    return field_dict
-
+def new_build_field_list():
+    return _build_field_structures(values_as_list=True)
 
 def build_session_list():
 

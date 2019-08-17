@@ -146,7 +146,7 @@ def _build_field_structures(values_as_list=False):
 def build_field_dict():
     return _build_field_structures()
 
-def new_build_field_list():
+def build_field_list():
     return _build_field_structures(values_as_list=True)
 
 def build_session_list():

@@ -2,6 +2,7 @@
 from inspect import isfunction
 from autofocus import AutoFocusAPI
 from autofocus import AFSession, AFSample, AFTag, AFTagDefinition
+from collections import defaultdict
 # Analysis Sections
 from autofocus import \
     AFApiActivity, \
@@ -140,7 +141,7 @@ def _build_field_structures(values_as_list=False):
 
     ignore_fields = ('apk_certificate_id',)
     other_fields = ["default", "digital_signer", "imphash"]
-    keys_to_prep = [v for v in _analysis_2_class_map.keys()] + [v for v in _coverage_2_class_map.keys()] + other_fields
+    keys_to_prep = list(_analysis_2_class_map.keys()) + list(_coverage_2_class_map.keys()) + other_fields
     return {k: [] if values_as_list else {} for k in keys_to_prep if k not in ignore_fields}
 
 def build_field_dict():
@@ -148,47 +149,6 @@ def build_field_dict():
 
 def build_field_list():
     return _build_field_structures(values_as_list=True)
-
-def build_session_list():
-
-    session_list = {
-        "account_name"          : [],
-        "application"           : [],
-        "device_country_code"   : [],
-        "device_country"        : [],
-        "device_hostname"       : [],
-        "industry"              : [],
-        "business_line"         : [],
-        "device_model"          : [],
-        "device_serial"         : [],
-        "device_version"        : [],
-        "dst_country_code"      : [],
-        "dst_country"           : [],
-        "dst_ip"                : [],
-        "dst_is_private_ip"     : [],
-        "dst_port"              : [],
-        "email_recipient"       : [],
-        "email_charset"         : [],
-        "email_sender"          : [],
-        "email_subject"         : [],
-        "file_name"             : [],
-        "file_url"              : [],
-        "is_uploaded"           : [],
-        "session_id"            : [],
-        "sha256"                : [],
-        "src_country_code"      : [],
-        "src_country"           : [],
-        "src_ip"                : [],
-        "src_is_private_ip"     : [],
-        "src_port"              : [],
-        "timestamp"             : [],
-        "upload_source"         : [],
-        "user_id"               : [],
-        "_vsys"                 : []
-    }
-
-    return session_list
-
 
 ###############################
 # MESSAGE PROCESSING FUNCTION #
@@ -675,10 +635,10 @@ def common_pieces(args):
 # Unique Sessions Function
 # Will gather session data from the identified samples and then report back the unique values per section
 # Session data isn't normalized quite the same as sample data so this may be more error-prone
-
 def uniq_sessions(args):
 
-    session_data = build_session_list()
+    # We want to track session value counts - default to a dict that has a dict that defaults to 0
+    session_data = defaultdict(lambda: defaultdict(lambda: 0))
 
     query = af_query(args.ident, args.query)
 
@@ -688,23 +648,26 @@ def uniq_sessions(args):
 
         session_count += 1
 
-        unique_list = []
-        for section in session_data:
+        for section in session.__dict__.keys():
 
-            if args.special == "count" and session.__dict__[section] and session.__dict__[section] not in unique_list:
-                session_data[section].append(session.__dict__[section])
-                unique_list.append(session.__dict__[section])
+            # We only care about non-private attributes or the private attr _vsys
+            if section.startswith("_") and section != "_vsys":
+                continue
 
-            else:
-                if session.__dict__[section] not in session_data[section] and session.__dict__[section]:
-                    session_data[section].append(session.__dict__[section])
+            attr_value = getattr(session, section)
+            if attr_value is not None: # Only tracking attr_values that aren't None
+                session_data[section][attr_value] += 1
 
     if args.special == "count":
-        session_data = count_values(session_data, args)
+        res = {}
+        for attr, values in session_data.items():
+            res[attr] = ["%-4s | %s" % (v, k) for k, v in values.items()]
+        res['count'] = session_count
+        return res
 
-    session_data["count"] = session_count
-
-    return session_data
+    res = {k: list(v.keys()) for k, v in session_data.items()}
+    res["count"] = session_count
+    return res
 
 
 # Count Values Function

@@ -81,17 +81,19 @@ __date__    = "08JUL2019"
 # Check research mode #
 #######################
 
-research_mode = "False"
+research_mode = False
 
 try:
     import configparser
-    parser    = configparser.ConfigParser()
+    parser = configparser.ConfigParser()
     conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
     parser.read(os.path.expanduser(conf_path))
-    research_mode = parser.get("researcher", "enabled")
+    research_mode = parser.getboolean("researcher", "enabled")
 except:
     pass
 
+SampleFactoryMethod = AFSample.scan if research_mode else AFSample.search
+SessionFactoryMethod = AFSession.scan if research_mode else AFSession.search
 
 ################
 # AFLenz Class #
@@ -417,17 +419,13 @@ def hash_library(args):
     if not args.quiet:
         message_proc("\n[+] hashes [+]\n", args)
 
-    if research_mode == "True":
-        poll_af = AFSample.scan
-    else:
-        poll_af = AFSample.search
 
     count = 0
 
     if args.ident == "query":
         logging.info("Running query: %s", args.query)
 
-        for sample in poll_af(args.query):
+        for sample in SampleFactoryMethod(args.query):
             if count < args.limit:
                 input_data.append(sample.sha256)
                 count += 1
@@ -439,7 +437,7 @@ def hash_library(args):
     else:
         logging.info("Running query: %s", af_query(args.ident,args.query))
 
-        for sample in poll_af(af_query(args.ident,args.query)):
+        for sample in SampleFactoryMethod(af_query(args.ident,args.query)):
             if count < args.limit:
                 input_data.append(sample.sha256)
                 count += 1
@@ -816,12 +814,7 @@ def uniq_sessions(args):
     else:
         query = af_query(args.ident,args.query)
 
-    if research_mode == "True":
-        poll_af = AFSession.scan
-    else:
-        poll_af = AFSession.search
-
-    for session in poll_af(query):
+    for session in SessionFactoryMethod(query):
 
         unique_list = []
         for section in session_data:
@@ -1470,17 +1463,12 @@ def meta_scrape(args):
     results = []
     count = 0
 
-    if research_mode == "True":
-        poll_af = AFSample.scan
-    else:
-        poll_af = AFSample.search
-
     if not args.quiet:
         message_proc("\n[+] sample_meta [+]\n", args)
 
     if args.ident == "query":
 
-        for sample in poll_af(args.query):
+        for sample in SampleFactoryMethod(args.query):
 
             print_line = build_output_string(args, sample, "meta")
 
@@ -1491,7 +1479,7 @@ def meta_scrape(args):
                 break
 
     else:
-        for sample in poll_af(af_query(args.ident, args.query)):
+        for sample in SampleFactoryMethod(af_query(args.ident, args.query)):
 
             print_line = build_output_string(args, sample, "meta")
 
@@ -1513,17 +1501,12 @@ def session_scrape(args):
     results = []
     count   = 0
 
-    if research_mode == "True":
-        poll_af = AFSession.scan
-    else:
-        poll_af = AFSession.search
-
     if not args.quiet:
         message_proc("\n[+] session_meta [+]\n", args)
 
     if args.ident == "query":
 
-        for session in poll_af(args.query):
+        for session in SessionFactoryMethod(args.query):
 
             print_line = build_output_string(args, session, "session")
 
@@ -1535,7 +1518,7 @@ def session_scrape(args):
 
     else:
 
-        for session in poll_af(af_query(args.ident, args.query)):
+        for session in SessionFactoryMethod(af_query(args.ident, args.query)):
 
             print_line = build_output_string(args, session, "session")
 

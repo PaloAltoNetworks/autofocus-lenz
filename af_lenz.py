@@ -213,7 +213,10 @@ def message_proc(message, args):
 # Takes a type of query and the query itself as input.  Example: af_query("hash",<sha256 hash>)
 # Returns a properly formatted autofocus query to be passed to the autofocus API
 
-def af_query(ident,query):
+def af_query(ident, query):
+
+    if ident == "query":
+        return query
 
     # A callable to find the proper field_value for the input_type hash, based on the query_value
     def map_hash_value(qv):
@@ -307,32 +310,14 @@ def hash_library(args):
     if not args.quiet:
         message_proc("\n[+] hashes [+]\n", args)
 
+    query = af_query(args.ident, args.query)
 
-    count = 0
+    logging.info("Running query: %s", query)
 
-    if args.ident == "query":
-        logging.info("Running query: %s", args.query)
+    for sample in SampleFactoryMethod(query, limit=args.limit):
+        input_data.append(sample.sha256)
 
-        for sample in SampleFactoryMethod(args.query):
-            if count < args.limit:
-                input_data.append(sample.sha256)
-                count += 1
-            else:
-                break
-
-        logging.info("Finished running query: %s", args.query)
-
-    else:
-        logging.info("Running query: %s", af_query(args.ident,args.query))
-
-        for sample in SampleFactoryMethod(af_query(args.ident,args.query)):
-            if count < args.limit:
-                input_data.append(sample.sha256)
-                count += 1
-            else:
-                break
-
-        logging.info("Finished running query: %s", af_query(args.ident,args.query))
+    logging.info("Finished running query: %s", query)
 
     # Set the number of workers to be three times the number of cores.
     # These operations are not very CPU-intensive, we can get away with a higher number of processes.
@@ -475,7 +460,7 @@ def hash_lookup(args, query):
             platform_value.append(platform)
 
     # If there are no counts for the activity, ignore them for the filter
-    for sample in AFSample.search(af_query("hash",query)):
+    for sample in AFSample.search(af_query("hash", query)):
 
         # Coverage Specific Details
         if args.run == "coverage_scrape":
@@ -695,14 +680,13 @@ def uniq_sessions(args):
 
     session_data = build_session_list()
 
-    count = 0
+    query = af_query(args.ident, args.query)
 
-    if args.ident == "query":
-        query = args.query
-    else:
-        query = af_query(args.ident,args.query)
+    session_count = 0
 
-    for session in SessionFactoryMethod(query):
+    for session in SessionFactoryMethod(query, limit=args.limit):
+
+        session_count += 1
 
         unique_list = []
         for section in session_data:
@@ -715,15 +699,10 @@ def uniq_sessions(args):
                 if session.__dict__[section] not in session_data[section] and session.__dict__[section]:
                     session_data[section].append(session.__dict__[section])
 
-        count += 1
-
-        if count >= args.limit:
-            break
-
     if args.special == "count":
         session_data = count_values(session_data, args)
 
-    session_data["count"] = count
+    session_data["count"] = session_count
 
     return session_data
 
@@ -1349,33 +1328,14 @@ def tag_check(args):
 
 def meta_scrape(args):
     results = []
-    count = 0
 
     if not args.quiet:
         message_proc("\n[+] sample_meta [+]\n", args)
 
-    if args.ident == "query":
+    query = af_query(args.ident, args.query)
 
-        for sample in SampleFactoryMethod(args.query):
-
-            print_line = build_output_string(args, sample, "meta")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
-    else:
-        for sample in SampleFactoryMethod(af_query(args.ident, args.query)):
-
-            print_line = build_output_string(args, sample, "meta")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
+    for sample in SampleFactoryMethod(query, limit=args.limit):
+        results.append(build_output_string(args, sample, "meta"))
 
     return results
 
@@ -1386,36 +1346,14 @@ def meta_scrape(args):
 
 def session_scrape(args):
 
-    results = []
-    count   = 0
-
     if not args.quiet:
         message_proc("\n[+] session_meta [+]\n", args)
 
-    if args.ident == "query":
+    query = af_query(args.ident, args.query)
 
-        for session in SessionFactoryMethod(args.query):
-
-            print_line = build_output_string(args, session, "session")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
-    else:
-
-        for session in SessionFactoryMethod(af_query(args.ident, args.query)):
-
-            print_line = build_output_string(args, session, "session")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
+    results = []
+    for session in SessionFactoryMethod(query, limit=args.limit):
+        results.append(build_output_string(args, session, "session"))
     return results
 
 

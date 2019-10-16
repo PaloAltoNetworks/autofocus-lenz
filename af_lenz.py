@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
+import asyncio
+import aiohttp
 from inspect import isfunction
 from autofocus import AutoFocusAPI
 from autofocus import AFSession, AFSample, AFTag, AFTagDefinition
+from collections import defaultdict
+
+from autofocus.models.analysis import _class_2_analysis_map
+from autofocus.models.coverage import _class_2_coverage_map
+from autofocus.models.analysis import _analysis_2_class_map
+from autofocus.models.coverage import _coverage_2_class_map
+
+from autofocus import AFSampleFactory
+from autofocus import AsyncRequest
+from autofocus.factories.analysis import AnalysisFactory as AFAnalysisFactory
+from autofocus.factories.coverage import CoverageFactory as AFCoverageFactory
+
 # Analysis Sections
 from autofocus import \
     AFApiActivity, \
@@ -81,17 +95,19 @@ __date__    = "08JUL2019"
 # Check research mode #
 #######################
 
-research_mode = "False"
+research_mode = False
 
 try:
     import configparser
-    parser    = configparser.ConfigParser()
+    parser = configparser.ConfigParser()
     conf_path = os.environ.get("PANW_CONFIG", "~/.config/panw")
     parser.read(os.path.expanduser(conf_path))
-    research_mode = parser.get("researcher", "enabled")
+    research_mode = parser.getboolean("researcher", "enabled")
 except:
     pass
 
+SampleFactoryMethod = AFSample.scan if research_mode else AFSample.search
+SessionFactoryMethod = AFSession.scan if research_mode else AFSession.search
 
 ################
 # AFLenz Class #
@@ -128,177 +144,26 @@ class AFLenzNameSpace(object):
 ####################
 # Build structures #
 ####################
+def _build_field_structures(values_as_list=False):
 
-def build_field_list():
+    # We should use the private mappings for analysis sections used by the af lib - this will ensure we're always up to
+    # date
 
-    field_list = {
-        "apk_app_icon"                      : [],
-        "apk_app_name"                      : [],
-        "apk_cert_file"                     : [],
-        #"apk_certificate_id"                : [], # Unused currently
-        "apk_defined_activity"              : [],
-        "apk_defined_intent_filter"         : [],
-        "apk_defined_receiver"              : [],
-        "apk_defined_sensor"                : [],
-        "apk_defined_service"               : [],
-        "apk_digital_signer"                : [],
-        "apk_embedded_library"              : [],
-        "apk_embeded_url"                   : [],
-        "apk_internal_file"                 : [],
-        "apk_isrepackaged"                  : [],
-        "apk_packagename"                   : [],
-        "apk_requested_permission"          : [],
-        "apk_sensitive_api_call"            : [],
-        "apk_suspicious_action_monitored"   : [],
-        "apk_suspicious_api_call"           : [],
-        "apk_suspicious_file"               : [],
-        "apk_suspicious_pattern"            : [],
-        "apk_suspicious_string"             : [],
-        "apk_version_num"                   : [],
-        "behavior"                          : [],
-        "behavior_type"                     : [],
-        "connection"                        : [],
-        "default"                           : [],
-        "digital_signer"                    : [],
-        "dns"                               : [],
-        "dns_sig"                           : [],
-        "elf_commands"                      : [],
-        "elf_command_action"		        : [],
-        "elf_domains"                       : [],
-        "elf_file_activity"		            : [],
-        "elf_file_paths"                    : [],
-        "elf_functions"                     : [],
-        "elf_ip_address"                    : [],
-        "elf_suspicious_action"		        : [],
-        "elf_suspicious_behavior"           : [],
-        "elf_urls"                          : [],
-        "file"                              : [],
-        "fileurl_sig"                       : [],
-        "http"                              : [],
-        "imphash"                           : [],
-        "japi"                              : [],
-        "mac_embedded_file"                 : [],
-        "mac_embedded_url"                  : [],
-        "macro"                             : [],
-        "misc"                              : [],
-        "mutex"                             : [],
-        "process"                           : [],
-        "registry"                          : [],
-        "service"                           : [],
-        "summary"                           : [],
-        "url_cat"                           : [],
-        "user_agent"                        : [],
-        "wf_av_sig"                         : []
-    }
+    # Fields we don't want to return
+    ignore_fields = ('apk_certificate_id',)
 
-    return field_list
+    # Fields that aren't part of the mapping that need to be included
+    other_fields = ["default", "digital_signer", "imphash"]
 
+    # Load up the keys to build, and then build either a list or a dictionary based on function input
+    keys_to_prep = list(_analysis_2_class_map.keys()) + list(_coverage_2_class_map.keys()) + other_fields
+    return {k: [] if values_as_list else {} for k in keys_to_prep if k not in ignore_fields}
 
 def build_field_dict():
+    return _build_field_structures()
 
-    field_dict = {
-        "apk_app_icon"                      : {},
-        "apk_app_name"                      : {},
-        "apk_cert_file"                     : {},
-        #"apk_certificate_id"                : {}, # Unused currently
-        "apk_defined_activity"              : {},
-        "apk_defined_intent_filter"         : {},
-        "apk_defined_receiver"              : {},
-        "apk_defined_sensor"                : {},
-        "apk_defined_service"               : {},
-        "apk_digital_signer"                : {},
-        "apk_embedded_library"              : {},
-        "apk_embeded_url"                   : {},
-        "apk_internal_file"                 : {},
-        "apk_isrepackaged"                  : {},
-        "apk_packagename"                   : {},
-        "apk_requested_permission"          : {},
-        "apk_sensitive_api_call"            : {},
-        "apk_suspicious_action_monitored"   : {},
-        "apk_suspicious_api_call"           : {},
-        "apk_suspicious_file"               : {},
-        "apk_suspicious_pattern"            : {},
-        "apk_suspicious_string"             : {},
-        "apk_version_num"                   : {},
-        "behavior"                          : {},
-        "behavior_type"                     : {},
-        "connection"                        : {},
-        "default"                           : {},
-        "digital_signer"                    : {},
-        "dns"                               : {},
-        "dns_sig"                           : {},
-        "elf_commands"                      : {},
-        "elf_command_action"		        : {},
-        "elf_domains"                       : {},
-        "elf_file_activity"		            : {},
-        "elf_file_paths"                    : {},
-        "elf_functions"                     : {},
-        "elf_ip_address"                    : {},
-        "elf_suspicious_action"		        : {},
-        "elf_suspicious_behavior"           : {},
-        "elf_urls"                          : {},
-        "file"                              : {},
-        "fileurl_sig"                       : {},
-        "http"                              : {},
-        "imphash"                           : {},
-        "japi"                              : {},
-        "mac_embedded_file"                 : {},
-        "mac_embedded_url"                  : {},
-        "macro"                             : {},
-        "misc"                              : {},
-        "mutex"                             : {},
-        "process"                           : {},
-        "registry"                          : {},
-        "service"                           : {},
-        "summary"                           : {},
-        "url_cat"                           : {},
-        "user_agent"                        : {},
-        "wf_av_sig"                         : {}
-    }
-
-    return field_dict
-
-
-def build_session_list():
-
-    session_list = {
-        "account_name"          : [],
-        "application"           : [],
-        "device_country_code"   : [],
-        "device_country"        : [],
-        "device_hostname"       : [],
-        "industry"              : [],
-        "business_line"         : [],
-        "device_model"          : [],
-        "device_serial"         : [],
-        "device_version"        : [],
-        "dst_country_code"      : [],
-        "dst_country"           : [],
-        "dst_ip"                : [],
-        "dst_is_private_ip"     : [],
-        "dst_port"              : [],
-        "email_recipient"       : [],
-        "email_charset"         : [],
-        "email_sender"          : [],
-        "email_subject"         : [],
-        "file_name"             : [],
-        "file_url"              : [],
-        "is_uploaded"           : [],
-        "session_id"            : [],
-        "sha256"                : [],
-        "src_country_code"      : [],
-        "src_country"           : [],
-        "src_ip"                : [],
-        "src_is_private_ip"     : [],
-        "src_port"              : [],
-        "timestamp"             : [],
-        "upload_source"         : [],
-        "user_id"               : [],
-        "_vsys"                 : []
-    }
-
-    return session_list
-
+def build_field_list():
+    return _build_field_structures(values_as_list=True)
 
 ###############################
 # MESSAGE PROCESSING FUNCTION #
@@ -323,7 +188,10 @@ def message_proc(message, args):
 # Takes a type of query and the query itself as input.  Example: af_query("hash",<sha256 hash>)
 # Returns a properly formatted autofocus query to be passed to the autofocus API
 
-def af_query(ident,query):
+def af_query(ident, query):
+
+    if ident == "query":
+        return query
 
     # A callable to find the proper field_value for the input_type hash, based on the query_value
     def map_hash_value(qv):
@@ -411,160 +279,84 @@ def af_query(ident,query):
 
 def hash_library(args):
 
-    result_data = {}
-    input_data  = []
-
     if not args.quiet:
         message_proc("\n[+] hashes [+]\n", args)
 
-    if research_mode == "True":
-        poll_af = AFSample.scan
-    else:
-        poll_af = AFSample.search
+    query = af_query(args.ident, args.query)
 
-    count = 0
+    async def _do_async_work():
 
-    if args.ident == "query":
-        logging.info("Running query: %s", args.query)
+        results = {}
 
-        for sample in poll_af(args.query):
-            if count < args.limit:
-                input_data.append(sample.sha256)
-                count += 1
-            else:
-                break
+        # A coroutine for pulling sample data
+        async def _hash_lookup(queue, async_request):
 
-        logging.info("Finished running query: %s", args.query)
+            while True:
 
-    else:
-        logging.info("Running query: %s", af_query(args.ident,args.query))
+                sha256 = await queue.get()
 
-        for sample in poll_af(af_query(args.ident,args.query)):
-            if count < args.limit:
-                input_data.append(sample.sha256)
-                count += 1
-            else:
-                break
+                if not args.quiet:
+                    message_proc(sha256, args)
 
-        logging.info("Finished running query: %s", af_query(args.ident,args.query))
+                results[sha256] = await hash_lookup(args, sha256, async_request)
 
-    # Set the number of workers to be three times the number of cores.
-    # These operations are not very CPU-intensive, we can get away with a higher number of processes.
-    pool_size = multiprocessing.cpu_count() * 3
+                queue.task_done()
 
-    # Due to a bug in python with mutiprocessing, we need to set our script to ignore SIGINT before creating the pool.
-    # Shoutout: https://stackoverflow.com/a/35134329
-    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        async with aiohttp.ClientSession() as session:
 
-    pool = multiprocessing.Pool(processes=pool_size)
+            queue = asyncio.Queue()
 
-    # restore the signal handler to what it was before
-    signal.signal(signal.SIGINT, original_sigint_handler)
+            # Create a factory worker that's using our async_request and session
+            async_request = AsyncRequest(session=session)
+            sample_factory = AFSampleFactory(async_request=async_request)
 
-    # Since we have to pass an iterable to pool.map(), and our worker function requires args to be passed we need to build a dictionary consisting of tuples. e.g:
-    # [ (args, hash_1), (args, hash_2), (args, hash_n) ]
-    logging.info("Running queries to get requested sections")
-    try:
-        pool_output = pool.map_async(hash_worker,[(args,item) for item in input_data])
-        pool_output.get(3600)
-    except KeyboardInterrupt:
-        # if we receive a sigint, kill the pool and exit.
-        pool.terminate()
-        logging.error("Caught Sigint.  Exiting.")
-        sys.exit(130)
-    else:
-        pool.close()
-        logging.info("Finished running queries for section data")
-    finally:
-        pool.join()
+            logging.info("Running query: %s", query)
 
-    for item in pool_output.get():
-        # structure of item is [{'hash' : { analysis data keys/values }}]
-        result_data[list(item.keys())[0]] = item[list(item.keys())[0]]
+            # Load the sample sha256s into the queue
+            async for sample in sample_factory.search(query, limit=args.limit):
+                queue.put_nowait(sample.sha256)
 
+            logging.info("Finished running query: %s", query)
+
+            # Let's spin up 10 task workers
+            tasks = [asyncio.create_task(_hash_lookup(queue, async_request)) for _ in range(0, 10)]
+
+            # Run the tasks against what's in the queue
+            await queue.join()
+
+            # All the work in the queue is done, signal that the running tasks
+            # should shutodnw (no more message going into the queue)
+            for task in tasks:
+                task.cancel()
+
+            await asyncio.gather(*tasks, return_exceptions=True) # Wait for all the tasks to complete
+
+        return results
+
+    loop = asyncio.get_event_loop()
+    result_data = loop.run_until_complete(_do_async_work())
+    loop.stop()
     return result_data
-
-
-# Hash worker function
-# Designed be be used for parallel processing of samples
-# Takes single tuple as argument from pool.map() and transforms those arguments to be used
-# in hash_lookup()
-
-def hash_worker(args_tuple):
-
-    args,sample_hash = args_tuple
-
-    if not args.quiet:
-        message_proc(sample_hash, args)
-
-    return { sample_hash : hash_lookup(args,sample_hash) }
 
 
 # Hash Lookup Function
 # Basic hash lookup for a sample
 # Provides raw data for each section requested
+async def hash_lookup(args, query, async_request=None):
 
-def hash_lookup(args, query):
+    if not async_request:
+        async_request = AsyncRequest()
+
+    sample_factory = AFSampleFactory(async_request=async_request)
+    analysis_factory = AFAnalysisFactory(async_request=async_request)
+    coverage_factory = AFCoverageFactory(async_request=async_request)
 
     # Dictionary mapping the raw data for each type of sample analysis
     analysis_data = build_field_list()
 
-    # Map analysis types to analysis_data keys
-    analysis_data_map = {
-        AFAVSignature                       : "wf_av_sig",
-        AFAnalysisSummary                   : "summary",
-        AFApiActivity                       : "misc",
-        AFApkActivityAnalysis               : "apk_defined_activity",
-        AFApkAppName                        : "apk_app_name",
-        AFApkCertificate                    : "apk_cert_file",
-        #AFApkCertificate                    : "apk_certificate_id", # Client library passes both fields into one
-        AFApkEmbeddedFile                   : "apk_internal_file",
-        AFApkEmbeddedLibrary                : "apk_embedded_library",
-        AFApkEmbededUrlAnalysis             : "apk_embeded_url",
-        AFApkIcon                           : "apk_app_icon",
-        AFApkIntentFilterAnalysis           : "apk_defined_intent_filter",
-        AFApkPackage                        : "apk_packagename",
-        AFApkReceiverAnalysis               : "apk_defined_receiver",
-        AFApkRepackaged                     : "apk_isrepackaged",
-        AFApkRequestedPermissionAnalysis    : "apk_requested_permission",
-        AFApkSensitiveApiCallAnalysis       : "apk_sensitive_api_call",
-        AFApkSensorAnalysis                 : "apk_defined_sensor",
-        AFApkServiceAnalysis                : "apk_defined_service",
-        AFApkSuspiciousActivitySummary      : "apk_suspicious_action_monitored",
-        AFApkSuspiciousApiCallAnalysis      : "apk_suspicious_api_call",
-        AFApkSuspiciousFileAnalysis         : "apk_suspicious_file",
-        AFApkSuspiciousPattern              : "apk_suspicious_pattern",
-        AFApkSuspiciousStringAnalysis       : "apk_suspicious_string",
-        AFApkVersion                        : "apk_version_num",
-        AFBehaviorAnalysis                  : "behavior",
-        AFBehaviorTypeAnalysis              : "behavior_type",
-        AFC2DomainSignature                 : "dns_sig",
-        AFConnectionActivity                : "connection",
-        AFDNSDownloadSignature              : "fileurl_sig",
-        AFDigitalSigner                     : "apk_digital_signer",
-        AFDnsActivity                       : "dns",
-        AFELFCommands                       : "elf_commands",
-        AFELFCommandAction		            : "elf_command_action",
-        AFELFDomain                         : "elf_domains",
-        AFELFFileActivity		            : "elf_file_activity",
-        AFELFFilePath                       : "elf_file_paths",
-        AFELFFunction                       : "elf_functions",
-        AFELFIPAddress                      : "elf_ip_address",
-        AFELFSuspiciousActionMonitored	    : "elf_suspicious_action",
-        AFELFSuspiciousBehavior             : "elf_suspicious_behavior",
-        AFELFURL                            : "elf_urls",
-        AFHttpActivity                      : "http",
-        AFJavaApiActivity                   : "japi",
-        AFMacEmbeddedFile                   : "mac_embedded_file",
-        AFMacEmbeddedURL                    : "mac_embedded_url",
-        AFMutexActivity                     : "mutex",
-        AFProcessActivity                   : "process",
-        AFRegistryActivity                  : "registry",
-        AFRelatedMacro                      : "macro",
-        AFServiceActivity                   : "service",
-        AFURLCatogorization                 : "url_cat",
-        AFUserAgentFragment                 : "user_agent"
-    }
+    # Create copies of these maps so we can alter them without hurting the lib
+    analysis_data_map = _class_2_analysis_map.copy()
+    coverage_data_map = _class_2_coverage_map.copy()
 
     # This may speed up large queries by reducing the volume of data returned from the API
     if args.output == ["all"]:
@@ -572,11 +364,13 @@ def hash_lookup(args, query):
     else:
         section_value = []
 
-        for section in args.output:
-
-            for section_map in analysis_data_map:
-                if section == analysis_data_map[section_map]:
-                    section_value.append(section_map)
+        for wanted_section in args.output:
+            for af_cls, section in analysis_data_map.items():
+                if wanted_section == section:
+                    section_value.append(af_cls)
+            for af_cls, section in coverage_data_map.items():
+                if wanted_section == section:
+                    section_value.append(af_cls)
 
     # Specify platform to restrict results further
     if args.platform == "all":
@@ -589,36 +383,36 @@ def hash_lookup(args, query):
             platform_value.append(platform)
 
     # If there are no counts for the activity, ignore them for the filter
-    for sample in AFSample.search(af_query("hash",query)):
+    async for sample in sample_factory.search(af_query("hash", query)):
 
         # Coverage Specific Details
         if args.run == "coverage_scrape":
 
-            for coverage in sample.get_coverage():
+            # We don't want all of the attributes from the coverage objects, only interesting ones. Map them out here
+            interesting_attrs_map = {
+                AFURLCatogorization: ("url", "category"),
+                AFDNSDownloadSignature:
+                    ("domain", "name", "time", "first_daily_release", "latest_daily_release",
+                     "current_daily_release"),
+                AFC2DomainSignature:
+                    ("domain", "name", "time", "first_daily_release", "latest_daily_release",
+                     "current_daily_release"),
+                AFAVSignature:
+                    ("name", "time", "first_daily_release", "latest_daily_release", "current_daily_release"),
+            }
 
-                coverage_data_section = analysis_data_map.get(type(coverage), "default")
+            for coverage in await coverage_factory.get_coverage_by_hash(sample.sha256):
+                # Pull the section, get the attrs by class type, then add them as CSV to the analysis_data.
+                # Will be empty string if we add new coverage that doesn't map interesting attrs
+                section = analysis_data_map.get(type(coverage), "default")
+                interesting_attrs = interesting_attrs_map.get(type(coverage), [])
+                analysis_data[section] = " , ".join([str(getattr(coverage, v)) for v in interesting_attrs])
 
-                if coverage_data_section == "url_cat":
-                    analysis_data[coverage_data_section].append("%s , %s" % (coverage.url,
-                                                                             coverage.category))
+        else:
 
-                if coverage_data_section == "dns_sig" or coverage_data_section == "fileurl_sig":
-                    analysis_data[coverage_data_section].append("%s , %s , %s , %s , %s , %s" % (coverage.domain,
-                                                                                                 coverage.name,
-                                                                                                 coverage.time,
-                                                                                                 coverage.first_daily_release,
-                                                                                                 coverage.latest_daily_release,
-                                                                                                 coverage.current_daily_release))
-
-                if coverage_data_section == "wf_av_sig":
-                    analysis_data[coverage_data_section].append("%s , %s , %s , %s , %s" % (coverage.name,
-                                                                                            coverage.time,
-                                                                                            coverage.first_daily_release,
-                                                                                            coverage.latest_daily_release,
-                                                                                            coverage.current_daily_release))
-        if args.run != "coverage_scrape":
             # Sample Analysis Specific Details
-            for analysis in sample.get_analyses(sections=section_value, platforms=platform_value):
+            for analysis in await analysis_factory.get_analyses_by_hash(sample.sha256,
+                sections=section_value, platforms=platform_value):
 
                 analysis_data_section = analysis_data_map.get(type(analysis), "default")
 
@@ -804,47 +598,39 @@ def common_pieces(args):
 # Unique Sessions Function
 # Will gather session data from the identified samples and then report back the unique values per section
 # Session data isn't normalized quite the same as sample data so this may be more error-prone
-
 def uniq_sessions(args):
 
-    session_data = build_session_list()
+    # We want to track session value counts - default to a dict that has a dict that defaults to 0
+    session_data = defaultdict(lambda: defaultdict(lambda: 0))
 
-    count = 0
+    query = af_query(args.ident, args.query)
 
-    if args.ident == "query":
-        query = args.query
-    else:
-        query = af_query(args.ident,args.query)
+    session_count = 0
 
-    if research_mode == "True":
-        poll_af = AFSession.scan
-    else:
-        poll_af = AFSession.search
+    for session in SessionFactoryMethod(query, limit=args.limit):
 
-    for session in poll_af(query):
+        session_count += 1
 
-        unique_list = []
-        for section in session_data:
+        for section in session.__dict__.keys():
 
-            if args.special == "count" and session.__dict__[section] and session.__dict__[section] not in unique_list:
-                session_data[section].append(session.__dict__[section])
-                unique_list.append(session.__dict__[section])
+            # We only care about non-private attributes or the private attr _vsys
+            if section.startswith("_") and section != "_vsys":
+                continue
 
-            else:
-                if session.__dict__[section] not in session_data[section] and session.__dict__[section]:
-                    session_data[section].append(session.__dict__[section])
-
-        count += 1
-
-        if count >= args.limit:
-            break
+            attr_value = getattr(session, section)
+            if attr_value is not None: # Only tracking attr_values that aren't None
+                session_data[section][attr_value] += 1
 
     if args.special == "count":
-        session_data = count_values(session_data, args)
+        res = {}
+        for attr, values in session_data.items():
+            res[attr] = ["%-4s | %s" % (v, k) for k, v in values.items()]
+        res['count'] = session_count
+        return res
 
-    session_data["count"] = count
-
-    return session_data
+    res = {k: list(v.keys()) for k, v in session_data.items()}
+    res["count"] = session_count
+    return res
 
 
 # Count Values Function
@@ -1266,7 +1052,10 @@ def tag_check(args):
     args.ident = "hash"
 
     logging.info("Retrieving data for sample %s" % tag_data["hash_value"])
-    hash_detail = hash_lookup(args, tag_data["hash_value"])
+
+    loop = asyncio.get_event_loop()
+    hash_detail = loop.run_until_complete(hash_lookup(args, tag_data["hash_value"]))
+    loop.stop()
 
     hash_data = build_field_list()
 
@@ -1468,38 +1257,14 @@ def tag_check(args):
 
 def meta_scrape(args):
     results = []
-    count = 0
-
-    if research_mode == "True":
-        poll_af = AFSample.scan
-    else:
-        poll_af = AFSample.search
 
     if not args.quiet:
         message_proc("\n[+] sample_meta [+]\n", args)
 
-    if args.ident == "query":
+    query = af_query(args.ident, args.query)
 
-        for sample in poll_af(args.query):
-
-            print_line = build_output_string(args, sample, "meta")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
-    else:
-        for sample in poll_af(af_query(args.ident, args.query)):
-
-            print_line = build_output_string(args, sample, "meta")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
+    for sample in SampleFactoryMethod(query, limit=args.limit):
+        results.append(build_output_string(args, sample, "meta"))
 
     return results
 
@@ -1510,41 +1275,14 @@ def meta_scrape(args):
 
 def session_scrape(args):
 
-    results = []
-    count   = 0
-
-    if research_mode == "True":
-        poll_af = AFSession.scan
-    else:
-        poll_af = AFSession.search
-
     if not args.quiet:
         message_proc("\n[+] session_meta [+]\n", args)
 
-    if args.ident == "query":
+    query = af_query(args.ident, args.query)
 
-        for session in poll_af(args.query):
-
-            print_line = build_output_string(args, session, "session")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
-    else:
-
-        for session in poll_af(af_query(args.ident, args.query)):
-
-            print_line = build_output_string(args, session, "session")
-
-            if count < args.limit:
-                results.append(print_line)
-                count += 1
-            else:
-                break
-
+    results = []
+    for session in SessionFactoryMethod(query, limit=args.limit):
+        results.append(build_output_string(args, session, "session"))
     return results
 
 
